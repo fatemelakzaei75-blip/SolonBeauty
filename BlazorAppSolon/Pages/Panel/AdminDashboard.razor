@@ -258,7 +258,7 @@
 @* ==================== مودال ثبت رزرو حضوری (بند ۱۴ سند نیازمندی‌ها) ==================== *@
 @if (_showInPersonModal)
 {
-    <div class="search-overlay" @onclick="@(() => _showInPersonModal = false)">
+    <div class="search-overlay">
         <div class="search-modal" @onclick:stopPropagation style="max-width:680px">
             <div class="staff-modal-header">
                 <h3>ثبت نوبت حضوری یا تلفنی (بند ۱۴ سند)</h3>
@@ -276,21 +276,11 @@
                     </div>
                     <div class="form-field">
                         <label>انتخاب خدمت سالن <span class="req">*</span></label>
-                        <select class="panel-input" @bind="_inpService">
-                            @foreach (var s in PortfolioCatalog.Services)
-                            {
-                                <option value="@s.Title">@s.Title</option>
-                            }
-                        </select>
+                        <SearchableSelectText @bind-Value="_inpService" Items="_serviceTitles" Placeholder="جستجو و انتخاب خدمت..." />
                     </div>
                     <div class="form-field">
                         <label>پرسنل مجری <span class="req">*</span></label>
-                        <select class="panel-input" @bind="_inpPersonal">
-                            @foreach (var st in _staffList)
-                            {
-                                <option value="@st.FullName">@st.FullName (@st.Line)</option>
-                            }
-                        </select>
+                        <SearchableSelectText @bind-Value="_inpPersonal" Items="_staffNames" Placeholder="جستجو و انتخاب متخصص..." />
                     </div>
                     <div class="form-field">
                         <label>تاریخ نوبت (شمسی)</label>
@@ -307,10 +297,10 @@
                     <div class="form-field">
                         <label>روش پرداخت (بند ۱۴)</label>
                         <select class="panel-input" @bind="_inpMethod">
-                            <option value="@PaymentMethod.CardReader">دستگاه کارت‌خوان سالن (POS)</option>
+                            <option value="@PaymentMethod.CardReader">دستگاه کارت‌خوان سالن</option>
                             <option value="@PaymentMethod.Cash">پرداخت نقدی در سالن</option>
                             <option value="@PaymentMethod.CardToCard">کارت به کارت</option>
-                            <option value="@PaymentMethod.OnlineGateway">درگاه آنلاین</option>
+                            <option value="@PaymentMethod.OnlineGateway">درگاه آنلاین بانکی</option>
                         </select>
                     </div>
                     <div class="form-field" style="grid-column:1/-1">
@@ -333,10 +323,10 @@
 @* ==================== مودال لغو رزرو با استرداد وجه (بند ۱۵ سند نیازمندی‌ها) ==================== *@
 @if (_selectedRsvForRefund is not null)
 {
-    <div class="search-overlay" @onclick="@(() => _selectedRsvForRefund = null)">
+    <div class="search-overlay">
         <div class="search-modal" @onclick:stopPropagation style="max-width:540px">
             <div class="staff-modal-header">
-                <h3>لغو نوبت و فرآیند بازپرداخت مالی (Refund)</h3>
+                <h3>لغو نوبت و فرآیند بازپرداخت مالی و استرداد وجه</h3>
                 <button class="search-close-btn" @onclick="@(() => _selectedRsvForRefund = null)">✕</button>
             </div>
             <div class="staff-modal-body">
@@ -411,6 +401,8 @@
     private decimal _inpPrice = 1_900_000;
     private PaymentMethod _inpMethod = PaymentMethod.CardReader;
     private string _inpNote = "";
+    private List<string> _serviceTitles = new();
+    private List<string> _staffNames = new();
 
     // استرداد (بند ۱۵)
     private Tbl_Reservation? _selectedRsvForRefund;
@@ -418,7 +410,11 @@
     private string _refundRef = "";
     private string _refundReason = "درخواست کنسلی توسط مراجع";
 
-    protected override async Task OnInitializedAsync() => await LoadDashboardData();
+    protected override async Task OnInitializedAsync()
+    {
+        _serviceTitles = PortfolioCatalog.Services.Select(s => s.Title).ToList();
+        await LoadDashboardData();
+    }
 
     private async Task LoadDashboardData()
     {
@@ -426,6 +422,8 @@
         {
             _reservations = await Store.AllAsync<Tbl_Reservation>();
             _staffList = await Store.AllAsync<Tbl_Personal>();
+            _staffNames = _staffList.Select(st => $"{st.FullName} ({st.Line})").ToList();
+            if (!_staffNames.Any()) _staffNames = new List<string> { "سارا محمدی (ناخن)", "حدیث رحیمی (میکاپ)", "الهام نوری (پوست)" };
             _customerCount = await Store.CountAsync<Tbl_Customer>();
             _personnelCount = _staffList.Count(s => s.IsActive && s.IsApproved);
 

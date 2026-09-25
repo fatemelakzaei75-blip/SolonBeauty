@@ -1,0 +1,75 @@
+@using System.Linq
+
+<div class="searchable-select-container">
+    <div class="select-trigger @(_isOpen ? "active" : "")" @onclick="Toggle">
+        <span class="select-label">@(string.IsNullOrWhiteSpace(Value) ? Placeholder : Value)</span>
+        <span class="select-arrow">@(_isOpen ? "▲" : "▼")</span>
+    </div>
+
+    @if (_isOpen)
+    {
+        <div class="select-dropdown">
+            <div class="select-search-box">
+                <input type="text"
+                       class="select-search-input"
+                       placeholder="جستجو در گزینه‌ها..."
+                       @bind="_search"
+                       @bind:event="oninput"
+                       @onclick:stopPropagation />
+            </div>
+
+            <ul class="select-options-list">
+                @foreach (var item in FilteredItems)
+                {
+                    var isSelected = item == Value;
+                    <li class="select-option @(isSelected ? "selected" : "")"
+                        @onclick="() => Select(item)">
+                        <span>@item</span>
+                        @if (isSelected)
+                        {
+                            <span class="check-icon">✓</span>
+                        }
+                    </li>
+                }
+
+                @if (!FilteredItems.Any())
+                {
+                    <li class="select-no-results">موردی یافت نشد</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public List<string> Items { get; set; } = new();
+    [Parameter] public string Placeholder { get; set; } = "انتخاب کنید...";
+
+    private bool _isOpen = false;
+    private string _search = "";
+
+    private IEnumerable<string> FilteredItems
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_search)) return Items;
+            return Items.Where(i => i.Contains(_search, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private void Toggle()
+    {
+        _isOpen = !_isOpen;
+        if (_isOpen) _search = "";
+    }
+
+    private async Task Select(string val)
+    {
+        Value = val;
+        await ValueChanged.InvokeAsync(val);
+        _isOpen = false;
+        _search = "";
+    }
+}

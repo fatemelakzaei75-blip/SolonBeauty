@@ -95,6 +95,6 @@
     private async Task Logout()
     {
         await Auth.LogoutAsync();
-        Nav.NavigateTo("login", true);
+        Nav.NavigateTo("", forceLoad: false);
     }
 }

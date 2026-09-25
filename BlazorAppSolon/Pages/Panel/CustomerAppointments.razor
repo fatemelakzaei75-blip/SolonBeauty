@@ -18,13 +18,8 @@
 
     <div class="form-grid">
         <div class="form-field">
-            <label>خدمت</label>
-            <select class="panel-input" @bind="_service">
-                @foreach (var s in _services)
-                {
-                    <option value="@s.ServiceName">@s.ServiceName — @s.Price.ToString("#,0") تومان</option>
-                }
-            </select>
+            <label>خدمت انتخابی</label>
+            <SearchableSelectText @bind-Value="_service" Items="_serviceNames" Placeholder="جستجو و انتخاب خدمت..." />
         </div>
         <div class="form-field">
             <label>تاریخ نوبت (شمسی)</label>
@@ -83,6 +78,7 @@
 
 @code {
     private List<Tbl_SalonSerice> _services = new();
+    private List<string> _serviceNames = new();
     private List<Tbl_Reservation> _items = new();
 
     private string _service = "";
@@ -95,6 +91,7 @@
     protected override async Task OnInitializedAsync()
     {
         _services = await Store.AllAsync<Tbl_SalonSerice>();
+        _serviceNames = _services.Select(s => s.ServiceName).ToList();
         _service = _services.FirstOrDefault()?.ServiceName ?? "";
         await LoadAsync();
     }

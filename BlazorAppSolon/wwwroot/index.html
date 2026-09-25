@@ -13,6 +13,7 @@
     <!-- پیش‌بارگذاری فونت‌های اصلی جهت بهینه‌سازی سرعت و Core Web Vitals -->
     <link rel="preload" href="fonts/vazirmatn-arabic.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="fonts/playfair-display-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="css/app.css" as="style" />
 
     <!-- لینک کنونیکال و متاتگ‌های Open Graph و توییتر پایه -->
     <link rel="canonical" href="https://hadisbeauty.salon/" />
@@ -39,37 +40,25 @@
 
 <body>
     <div id="app">
-        <!-- محتوای معنایی اولیه جهت خوانش موتورهای جستجو قبل از لود جاوااسکریپت (Crawler-friendly Fallback) -->
-        <header style="text-align:center; padding:2rem 1rem;">
-            <h1 style="color:#d4af37; font-size:1.8rem; margin-bottom:.5rem;">سالن زیبایی حدیث | Hadis Beauty Lounge</h1>
-            <p style="color:#666; font-size:1rem; max-width:640px; margin:0 auto;">
-                ارائه‌دهنده خدمات تخصصی زیبایی، میکاپ عروس، سلامت مو، پوست، کاشت ناخن و رنگ و لایت با به‌روزترین متدهای بین‌المللی
-            </p>
-        </header>
+        <!-- لودر هماهنگ و یکپارچه با تم طلایی لوکس سالن بدون پرش یا بهم‌ریختگی ظاهری -->
+        <div style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#FAF7F2; color:#333; font-family:Vazirmatn,system-ui,sans-serif;">
+            <div style="font-family:'Playfair Display',serif; font-size:2.4rem; color:#B89047; font-weight:700; letter-spacing:2px; margin-bottom:.5rem;">HB</div>
+            <div style="font-size:1.1rem; font-weight:600; color:#1A1A1A; margin-bottom:1.5rem;">سالن زیبایی حدیث</div>
+            <svg class="loading-progress" aria-label="در حال بارگذاری" style="width:42px; height:42px;">
+                <circle r="40%" cx="50%" cy="50%" style="stroke:#E8DFD3; stroke-width:3px; fill:none;" />
+                <circle r="40%" cx="50%" cy="50%" style="stroke:#B89047; stroke-width:3px; stroke-dasharray:120; stroke-dashoffset:50; fill:none;" />
+            </svg>
+            <div class="loading-progress-text" style="font-size:.85rem; color:#888; margin-top:1rem;">در حال بارگذاری...</div>
 
-        <main style="max-width:800px; margin:0 auto; padding:0 1rem; text-align:center;">
-            <h2 style="font-size:1.2rem; color:#333; margin-top:1rem;">لاین‌های تخصصی زیبایی</h2>
-            <ul style="list-style:none; padding:0; display:flex; flex-wrap:wrap; justify-content:center; gap:1rem; margin-top:1rem;">
-                <li><a href="services/nail" style="color:#111; text-decoration:none; padding:.5rem 1rem; border:1px solid #ddd; border-radius:8px;">کاشت و طراحی ناخن</a></li>
-                <li><a href="services/hair" style="color:#111; text-decoration:none; padding:.5rem 1rem; border:1px solid #ddd; border-radius:8px;">رنگ، لایت و کراتین مو</a></li>
-                <li><a href="services/bride" style="color:#111; text-decoration:none; padding:.5rem 1rem; border:1px solid #ddd; border-radius:8px;">میکاپ و گریم تخصصی عروس</a></li>
-                <li><a href="services/skin" style="color:#111; text-decoration:none; padding:.5rem 1rem; border:1px solid #ddd; border-radius:8px;">فیشال و پاکسازی پوست</a></li>
-                <li><a href="services/lash" style="color:#111; text-decoration:none; padding:.5rem 1rem; border:1px solid #ddd; border-radius:8px;">اکستنشن مژه و لیفت ابرو</a></li>
-            </ul>
-
-            <div style="margin-top:2rem; font-size:.9rem; color:#777;">
-                <p>📍 آدرس: تهران، زعفرانیه، خیابان مقدس اردبیلی، پلاک ۲۴، ساختمان تجاری حدیث، طبقه ۳</p>
-                <p>📞 تلفن تماس: ۰۲۱-۱۲۳۴۵۶۷۸ | ۰۹۱۲۰۰۰۰۰۰۱</p>
-            </div>
-
-            <div style="margin-top:2rem;">
-                <svg class="loading-progress" aria-label="در حال بارگذاری">
-                    <circle r="40%" cx="50%" cy="50%" />
-                    <circle r="40%" cx="50%" cy="50%" />
-                </svg>
-                <div class="loading-progress-text" style="font-size:.85rem; color:#888; margin-top:.5rem;">در حال بارگذاری سامانه سالن زیبایی حدیث...</div>
-            </div>
-        </main>
+            <!-- ساختار معنایی جهت خزش موتورهای جستجو (خارج از دید مزاحم کاربر) -->
+            <noscript>
+                <div style="padding:2rem; text-align:center;">
+                    <h1>سالن تخصصی زیبایی حدیث — تهران، زعفرانیه</h1>
+                    <p>ارائه‌دهنده خدمات تخصصی کاشت ناخن، رنگ و لایت، میکاپ عروس، فیشال و کراتین مو.</p>
+                    <p>تلفن: ۰۲۱-۱۲۳۴۵۶۷۸ | ۰۹۱۲۰۰۰۰۰۰۱</p>
+                </div>
+            </noscript>
+        </div>
     </div>
 
     <div id="blazor-error-ui">

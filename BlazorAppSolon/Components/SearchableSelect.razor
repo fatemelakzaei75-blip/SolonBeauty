@@ -1,0 +1,94 @@
+@using System.Linq
+
+<div class="searchable-select-container">
+    <div class="select-trigger @(_isOpen ? "active" : "")" @onclick="Toggle">
+        <span class="select-label">@SelectedTitle</span>
+        <span class="select-arrow">@(_isOpen ? "▲" : "▼")</span>
+    </div>
+
+    @if (_isOpen)
+    {
+        <div class="select-dropdown">
+            <div class="select-search-box">
+                <input type="text"
+                       class="select-search-input"
+                       placeholder="جستجو در گزینه‌ها..."
+                       @bind="_search"
+                       @bind:event="oninput"
+                       @onclick:stopPropagation />
+            </div>
+
+            <ul class="select-options-list">
+                @if (ShowEmptyOption)
+                {
+                    <li class="select-option @(Value == Guid.Empty ? "selected" : "")"
+                        @onclick="() => Select(Guid.Empty)">
+                        <span class="option-empty">@Placeholder</span>
+                    </li>
+                }
+
+                @foreach (var item in FilteredItems)
+                {
+                    var isSelected = item.Id == Value;
+                    <li class="select-option @(isSelected ? "selected" : "")"
+                        @onclick="() => Select(item.Id)">
+                        <span>@item.Name</span>
+                        @if (isSelected)
+                        {
+                            <span class="check-icon">✓</span>
+                        }
+                    </li>
+                }
+
+                @if (!FilteredItems.Any())
+                {
+                    <li class="select-no-results">موردی یافت نشد</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Value { get; set; } = Guid.Empty;
+    [Parameter] public EventCallback<Guid> ValueChanged { get; set; }
+    [Parameter] public List<(Guid Id, string Name)> Items { get; set; } = new();
+    [Parameter] public string Placeholder { get; set; } = "انتخاب کنید...";
+    [Parameter] public bool ShowEmptyOption { get; set; } = true;
+
+    private bool _isOpen = false;
+    private string _search = "";
+
+    private string SelectedTitle
+    {
+        get
+        {
+            if (Value == Guid.Empty) return Placeholder;
+            var found = Items.FirstOrDefault(i => i.Id == Value);
+            return string.IsNullOrEmpty(found.Name) ? Placeholder : found.Name;
+        }
+    }
+
+    private IEnumerable<(Guid Id, string Name)> FilteredItems
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_search)) return Items;
+            return Items.Where(i => i.Name.Contains(_search, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private void Toggle()
+    {
+        _isOpen = !_isOpen;
+        if (_isOpen) _search = "";
+    }
+
+    private async Task Select(Guid id)
+    {
+        Value = id;
+        await ValueChanged.InvokeAsync(id);
+        _isOpen = false;
+        _search = "";
+    }
+}

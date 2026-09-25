@@ -2127,3 +2127,141 @@ a { color: inherit; text-decoration: none; }
     color: #BBB;
     font-size: 0.95rem;
 }
+
+/* ---------- استایل‌های کمبوباکس جستجودار (Searchable Combobox) ---------- */
+.searchable-select-container {
+    position: relative;
+    width: 100%;
+}
+.select-trigger {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #DDD;
+    border-radius: 8px;
+    background: #FFF;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.select-trigger:hover, .select-trigger.active {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+}
+.select-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.select-arrow {
+    font-size: 0.75rem;
+    color: #888;
+    margin-right: 8px;
+}
+.select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #FFF;
+    border: 1px solid #D4AF37;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1050;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.select-search-box {
+    padding: 8px;
+    background: #FAF7F2;
+    border-bottom: 1px solid #EFEAE3;
+}
+.select-search-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #DDD;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    outline: none;
+    font-family: inherit;
+    background: #FFF;
+}
+.select-search-input:focus {
+    border-color: #D4AF37;
+}
+.select-options-list {
+    list-style: none;
+    padding: 4px 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.select-option {
+    padding: 8px 14px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #333;
+    transition: background 0.15s ease;
+}
+.select-option:hover {
+    background: #FAF5EB;
+    color: #B89047;
+}
+.select-option.selected {
+    background: #F3EBDD;
+    font-weight: 600;
+    color: #721C24;
+}
+.select-option .check-icon {
+    color: #721C24;
+    font-weight: bold;
+}
+.select-no-results {
+    padding: 12px;
+    text-align: center;
+    color: #999;
+    font-size: 0.85rem;
+}
+.option-empty {
+    color: #888;
+    font-style: italic;
+}
+
+[data-theme="dark"] .select-trigger {
+    background: #2C2926;
+    border-color: #444;
+    color: #EEE;
+}
+[data-theme="dark"] .select-dropdown {
+    background: #22201E;
+    border-color: #B89047;
+}
+[data-theme="dark"] .select-search-box {
+    background: #2C2926;
+    border-bottom-color: #383430;
+}
+[data-theme="dark"] .select-search-input {
+    background: #1B1A19;
+    border-color: #444;
+    color: #FFF;
+}
+[data-theme="dark"] .select-option {
+    color: #EEE;
+}
+[data-theme="dark"] .select-option:hover {
+    background: #383430;
+    color: #D4AF37;
+}
+[data-theme="dark"] .select-option.selected {
+    background: #443B33;
+    color: #D4AF37;
+}

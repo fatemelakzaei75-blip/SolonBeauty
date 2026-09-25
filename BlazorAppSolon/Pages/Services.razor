@@ -57,11 +57,11 @@
         {
             <!-- ساختار سالن چندخدمتی: دسته‌بندی/لاین -> خدمات همان دسته (بند ۳ سند) -->
             <div class="multi-service-structure">
-                <div class="services-filter-tabs">
-                    <button class="filter-tab @(_activeFilter == "all" ? "active" : "")" @onclick="@(() => _activeFilter = "all")">همه لاین‌ها</button>
+                <div class="filter-bar" style="justify-content:center; margin-bottom:2.5rem;">
+                    <button class="chip @(_activeFilter == "all" ? "on" : "")" @onclick="@(() => _activeFilter = "all")">همه لاین‌ها</button>
                     @foreach (var cat in PortfolioCatalog.Services)
                     {
-                        <button class="filter-tab @(_activeFilter == cat.Slug ? "active" : "")" @onclick="@(() => _activeFilter = cat.Slug)">
+                        <button class="chip @(_activeFilter == cat.Slug ? "on" : "")" @onclick="@(() => _activeFilter = cat.Slug)">
                             @cat.Title
                         </button>
                     }
