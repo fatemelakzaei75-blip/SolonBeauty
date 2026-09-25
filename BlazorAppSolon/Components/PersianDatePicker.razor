@@ -12,12 +12,22 @@
     {
         <div class="shamsi-dropdown">
             <div class="calendar-header">
-                <button type="button" class="cal-nav-btn" @onclick="NextMonth">❮</button>
-                <div class="cal-title">
-                    <span>@PersianDateHelper.GetMonthName(_currentMonth)</span>
-                    <span>@_currentYear</span>
+                <button type="button" class="cal-nav-btn" @onclick="NextMonth" title="ماه بعد">❮</button>
+                <div class="cal-title" style="display:flex;gap:0.3rem;align-items:center;">
+                    <select class="cal-select" value="@_currentMonth" @onchange="OnMonthChanged">
+                        @for (int m = 1; m <= 12; m++)
+                        {
+                            <option value="@m">@PersianDateHelper.GetMonthName(m)</option>
+                        }
+                    </select>
+                    <select class="cal-select" value="@_currentYear" @onchange="OnYearChanged">
+                        @for (int y = _minYear; y <= _maxYear; y++)
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    </select>
                 </div>
-                <button type="button" class="cal-nav-btn" @onclick="PrevMonth">❯</button>
+                <button type="button" class="cal-nav-btn" @onclick="PrevMonth" title="ماه قبل">❯</button>
             </div>
 
             <div class="calendar-weekdays">
@@ -47,7 +57,7 @@
 
             <div class="calendar-footer">
                 <button type="button" class="cal-today-btn" @onclick="GoToToday">امروز</button>
-                <button type="button" class="cal-close-btn" @onclick="Close">تأیید</button>
+                <button type="button" class="cal-close-btn" @onclick="Close">بستن</button>
             </div>
         </div>
     }
@@ -63,12 +73,16 @@
     private int _currentMonth;
     private int _daysInMonth;
     private int _emptyLeadingDays;
+    private int _minYear;
+    private int _maxYear;
 
     protected override void OnInitialized()
     {
         var (y, m, _) = PersianDateHelper.GetShamsiParts(Value == default ? DateTime.Today : Value);
         _currentYear = y;
         _currentMonth = m;
+        _minYear = y - 70;
+        _maxYear = y + 10;
         CalculateMonth();
     }
 
@@ -85,6 +99,24 @@
     }
 
     private void Close() => _isOpen = false;
+
+    private void OnMonthChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var m))
+        {
+            _currentMonth = m;
+            CalculateMonth();
+        }
+    }
+
+    private void OnYearChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var y))
+        {
+            _currentYear = y;
+            CalculateMonth();
+        }
+    }
 
     private void CalculateMonth()
     {

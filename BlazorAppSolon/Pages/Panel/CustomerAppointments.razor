@@ -27,8 +27,8 @@
             </select>
         </div>
         <div class="form-field">
-            <label>تاریخ</label>
-            <input type="date" class="panel-input" @bind="_date" />
+            <label>تاریخ نوبت (شمسی)</label>
+            <PersianDatePicker @bind-Value="_date" DisablePast="true" />
         </div>
         <div class="form-field">
             <label>ساعت</label>

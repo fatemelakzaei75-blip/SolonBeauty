@@ -409,15 +409,25 @@
             return;
         }
 
-        // ۱۰. سایر فیلدهای استاندارد
-        var inputType = type == typeof(DateTime) ? "date"
-            : (type == typeof(int) || type == typeof(decimal) || type == typeof(double)) ? "number"
+        // ۱۰. فیلدهای تاریخ — استفاده انحصاری از دیت‌پیکر شمسی (PersianDatePicker)
+        if (type == typeof(DateTime))
+        {
+            var dt = (DateTime)(value ?? DateTime.Today);
+            builder.OpenComponent<BlazorAppSolon.Components.PersianDatePicker>(0);
+            builder.AddAttribute(1, "Value", dt);
+            builder.AddAttribute(2, "DisablePast", false);
+            builder.AddAttribute(3, "ValueChanged", EventCallback.Factory.Create<DateTime>(this, d => p.SetValue(_editing, d)));
+            builder.CloseComponent();
+            return;
+        }
+
+        // ۱۱. سایر فیلدهای استاندارد
+        var inputType = (type == typeof(int) || type == typeof(decimal) || type == typeof(double)) ? "number"
             : type == typeof(TimeSpan) ? "time"
             : "text";
 
         var text = value switch
         {
-            DateTime d => d.ToString("yyyy-MM-dd"),
             TimeSpan t => t.ToString(@"hh\:mm"),
             null => "",
             _ => value.ToString() ?? ""
