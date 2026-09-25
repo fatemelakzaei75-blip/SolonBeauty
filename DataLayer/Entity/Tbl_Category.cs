@@ -6,8 +6,8 @@ namespace DataLayer.Entity
 {
     public class Tbl_Category : Tbl_BaseEntity
     {
-        [Display(Name = "TC سالن")]
-        [Required(ErrorMessage = "TC سالن الزامی است")]
+        [Display(Name = "سالن زیبایی")]
+        [Required(ErrorMessage = "انتخاب سالن الزامی است")]
         public Guid SalonTC { get; set; }
 
         [Display(Name = "نام دسته‌بندی")]

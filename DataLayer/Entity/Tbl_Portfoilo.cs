@@ -6,8 +6,8 @@ namespace DataLayer.Entity
 {
     public class Tbl_Portfoilo : Tbl_BaseEntity
     {
-        [Display(Name = "TC نمونه")]
-        [Required(ErrorMessage = "TC نمونه الزامی است")]
+        [Display(Name = "دسته‌بندی نمونه‌کار")]
+        [Required(ErrorMessage = "انتخاب دسته‌بندی نمونه‌کار الزامی است")]
         public Guid SampleTC { get; set; }
 
         [Display(Name = "عنوان")]

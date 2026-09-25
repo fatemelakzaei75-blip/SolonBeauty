@@ -191,7 +191,7 @@
         <div class="panel-card-head">
             <h3>مدیریت و پیگیری نوبت‌های سالن</h3>
             <div style="display:flex;gap:.5rem">
-                <input class="panel-input" placeholder="جستجو بر اساس نام یا کد TC..." @bind="_rsvSearch" @bind:event="oninput" style="width:240px" />
+                <input class="panel-input" placeholder="جستجو بر اساس نام یا کد پیگیری..." @bind="_rsvSearch" @bind:event="oninput" style="width:240px" />
                 <button class="btn-solon red sm" @onclick="@(() => _showInPersonModal = true)">+ ثبت رزرو حضوری</button>
             </div>
         </div>
@@ -200,7 +200,7 @@
             <table class="panel-table">
                 <thead>
                     <tr>
-                        <th>کد پیگیری (TC)</th>
+                        <th>کد پیگیری</th>
                         <th>نام مشتری</th>
                         <th>خدمت</th>
                         <th>پرسنل</th>

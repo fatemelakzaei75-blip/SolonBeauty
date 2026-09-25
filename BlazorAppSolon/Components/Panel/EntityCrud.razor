@@ -112,12 +112,15 @@
     private TEntity? _editing;
     private bool _isNew;
 
-    // بند ۲۰: حذف فیلدهای فنی TC از ورودی دستی کاربر
-    private static readonly string[] Hidden = { "ID", "Tc", "IsActive", "IsDelete", "RegisterData" };
+    // شناسه‌ها و کدهای سیستمی که هرگز نباید به عنوان ورودی خام دستی به کاربر نشان داده شوند
+    private static readonly string[] HiddenFromEdit = {
+        "ID", "Tc", "IsActive", "IsDelete", "RegisterData",
+        "TrackingCode", "SalonTC", "TC_Salon", "salon_Tc"
+    };
 
     private static List<PropertyInfo> AllProps => typeof(TEntity)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(p => p.CanWrite && !Hidden.Contains(p.Name))
+        .Where(p => p.CanWrite && !HiddenFromEdit.Contains(p.Name))
         .ToList();
 
     private List<PropertyInfo> EditableProps => AllProps;
@@ -129,10 +132,26 @@
         => ImageKeywords.Any(k => name.Contains(k, StringComparison.OrdinalIgnoreCase));
 
     private static string Label(PropertyInfo p)
-        => p.GetCustomAttribute<DisplayAttribute>()?.Name ?? p.Name;
+    {
+        var raw = p.GetCustomAttribute<DisplayAttribute>()?.Name ?? p.Name;
+        // پالایش کامل نام‌ها جهت عدم نمایش کلمات فنی TC به کاربر
+        return raw.Replace("(TC)", "")
+                  .Replace("TC", "")
+                  .Replace("کد پیگیری سیستمی", "کد پیگیری")
+                  .Trim();
+    }
 
-    // نگاشت شناسه‌ها به نام‌ها طبق بند ۲۰ سند
+    // نگاشت شناسه‌ها به عناوین ملموس (نام سالن، نام خدمت، دسته‌بندی و...)
+    private Guid _currentSalonTc = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private string _currentSalonName = "سالن تخصصی زیبایی حدیث";
     private Dictionary<Guid, string> _nameLookup = new();
+    private List<(Guid Id, string Name)> _categories = new();
+    private List<(Guid Id, string Name)> _services = new();
+    private List<(Guid Id, string Name)> _personnel = new();
+    private List<(Guid Id, string Name)> _customers = new();
+    private List<(Guid Id, string Name)> _roles = new();
+    private List<(Guid Id, string Name)> _permissions = new();
+    private List<(Guid Id, string Name)> _sampleCategories = new();
 
     private string DisplayValue(PropertyInfo p, object? value)
     {
@@ -143,8 +162,9 @@
         if (value is Guid g)
         {
             if (g == Guid.Empty) return "-";
+            if (g == _currentSalonTc) return _currentSalonName;
             if (_nameLookup.TryGetValue(g, out var name)) return name;
-            return g.ToString()[..8] + "…";
+            return "انتخاب شده";
         }
         return value.ToString() ?? "-";
     }
@@ -162,17 +182,42 @@
     {
         try
         {
+            var salonSettings = await Store.AllAsync<Tbl_SalonSetting>();
+            var sSetting = salonSettings.FirstOrDefault();
+            if (sSetting is not null)
+            {
+                _currentSalonTc = sSetting.Tc;
+                _currentSalonName = sSetting.SalonName;
+                _nameLookup[sSetting.Tc] = sSetting.SalonName;
+            }
+
             var cats = await Store.AllAsync<Tbl_Category>();
+            _categories = cats.Select(c => (c.Tc, c.CategoryName)).ToList();
             foreach (var c in cats) _nameLookup[c.Tc] = c.CategoryName;
 
             var services = await Store.AllAsync<Tbl_SalonSerice>();
+            _services = services.Select(s => (s.Tc, s.ServiceName)).ToList();
             foreach (var s in services) _nameLookup[s.Tc] = s.ServiceName;
 
             var staff = await Store.AllAsync<Tbl_Personal>();
+            _personnel = staff.Select(st => (st.Tc, st.FullName)).ToList();
             foreach (var st in staff) _nameLookup[st.Tc] = st.FullName;
 
             var customers = await Store.AllAsync<Tbl_Customer>();
+            _customers = customers.Select(cu => (cu.Tc, cu.FullName)).ToList();
             foreach (var cu in customers) _nameLookup[cu.Tc] = cu.FullName;
+
+            var roles = await Store.AllAsync<Tbl_Roles>();
+            _roles = roles.Select(r => (r.Tc, r.RoleName)).ToList();
+            foreach (var r in roles) _nameLookup[r.Tc] = r.RoleName;
+
+            var perms = await Store.AllAsync<Tbl_Permission>();
+            _permissions = perms.Select(pe => (pe.Tc, pe.PermissionName)).ToList();
+            foreach (var pe in perms) _nameLookup[pe.Tc] = pe.PermissionName;
+
+            var sampleCats = await Store.AllAsync<Tbl_CategoryPortfolio>();
+            _sampleCategories = sampleCats.Select(sc => (sc.Tc, sc.CategoryNameSample)).ToList();
+            foreach (var sc in sampleCats) _nameLookup[sc.Tc] = sc.CategoryNameSample;
         }
         catch { }
     }
@@ -199,15 +244,52 @@
         _editing.IsActive = true;
         _editing.RegisterData = DateTime.Now;
 
-        // تولید خودکار مقادیر سیستمی برای عدم نیاز به ورود دستی TC
+        // انتساب خودکار شناسه سالن بدون دخالت و نمایش کدهای سیستمی به کاربر
+        SetEntityPropertyIfExists(_editing, "SalonTC", _currentSalonTc);
+        SetEntityPropertyIfExists(_editing, "TC_Salon", _currentSalonTc);
+        SetEntityPropertyIfExists(_editing, "salon_Tc", _currentSalonTc);
+
+        // تولید خودکار کد پیگیری نوبت
         var tcProp = typeof(TEntity).GetProperty("TrackingCode");
         if (tcProp != null && tcProp.CanWrite)
         {
-            tcProp.SetValue(_editing, $"TC-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}");
+            tcProp.SetValue(_editing, $"HB-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}");
         }
+
+        // مقداردهی پیش‌فرض کلیدهای خارجی با اولین مورد موجود در صورت نیاز
+        if (_categories.Any()) SetEntityPropertyIfGuidEmpty(_editing, "CategoryTC", _categories[0].Id);
+        if (_services.Any()) SetEntityPropertyIfGuidEmpty(_editing, "ServiceTC", _services[0].Id);
+        if (_services.Any()) SetEntityPropertyIfGuidEmpty(_editing, "TC_Service", _services[0].Id);
+        if (_personnel.Any()) SetEntityPropertyIfGuidEmpty(_editing, "PersonalTC", _personnel[0].Id);
+        if (_personnel.Any()) SetEntityPropertyIfGuidEmpty(_editing, "TC_Personal", _personnel[0].Id);
+        if (_sampleCategories.Any()) SetEntityPropertyIfGuidEmpty(_editing, "SampleTC", _sampleCategories[0].Id);
+        if (_roles.Any()) SetEntityPropertyIfGuidEmpty(_editing, "RoleTC", _roles[0].Id);
+        if (_permissions.Any()) SetEntityPropertyIfGuidEmpty(_editing, "PermissionTC", _permissions[0].Id);
 
         _isNew = true;
         _message = null;
+    }
+
+    private static void SetEntityPropertyIfExists(object entity, string propName, Guid val)
+    {
+        var prop = entity.GetType().GetProperty(propName);
+        if (prop != null && prop.CanWrite && prop.PropertyType == typeof(Guid))
+        {
+            prop.SetValue(entity, val);
+        }
+    }
+
+    private static void SetEntityPropertyIfGuidEmpty(object entity, string propName, Guid val)
+    {
+        var prop = entity.GetType().GetProperty(propName);
+        if (prop != null && prop.CanWrite && prop.PropertyType == typeof(Guid))
+        {
+            var cur = (Guid)(prop.GetValue(entity) ?? Guid.Empty);
+            if (cur == Guid.Empty)
+            {
+                prop.SetValue(entity, val);
+            }
+        }
     }
 
     private void StartEdit(TEntity item)
@@ -223,6 +305,12 @@
     private async Task Save()
     {
         if (_editing is null) return;
+
+        // اطمینان از مقداردهی سالن جاری
+        SetEntityPropertyIfExists(_editing, "SalonTC", _currentSalonTc);
+        SetEntityPropertyIfExists(_editing, "TC_Salon", _currentSalonTc);
+        SetEntityPropertyIfExists(_editing, "salon_Tc", _currentSalonTc);
+
         var ok = _isNew ? await Store.AddAsync(_editing) : await Store.UpdateAsync(_editing);
         _message = ok
             ? (_isNew ? "رکورد جدید با موفقیت ثبت شد" : "تغییرات ذخیره شد")
@@ -244,7 +332,60 @@
     {
         var type = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType;
         var value = p.GetValue(_editing);
+        var propName = p.Name;
 
+        // ۱. فیلدهای انتخابی خدمت (کاربر فقط نام خدمت را می‌بیند و انتخاب می‌کند)
+        if (propName.Equals("ServiceTC", StringComparison.OrdinalIgnoreCase) ||
+            propName.Equals("TC_Service", StringComparison.OrdinalIgnoreCase))
+        {
+            RenderDropdown(builder, p, _services, "انتخاب خدمت...");
+            return;
+        }
+
+        // ۲. فیلدهای انتخابی دسته‌بندی
+        if (propName.Equals("CategoryTC", StringComparison.OrdinalIgnoreCase))
+        {
+            RenderDropdown(builder, p, _categories, "انتخاب دسته‌بندی...");
+            return;
+        }
+
+        // ۳. فیلدهای انتخابی پرسنل / متخصص
+        if (propName.Equals("PersonalTC", StringComparison.OrdinalIgnoreCase) ||
+            propName.Equals("TC_Personal", StringComparison.OrdinalIgnoreCase))
+        {
+            RenderDropdown(builder, p, _personnel, "انتخاب متخصص...");
+            return;
+        }
+
+        // ۴. فیلدهای انتخابی نمونه‌کار
+        if (propName.Equals("SampleTC", StringComparison.OrdinalIgnoreCase))
+        {
+            RenderDropdown(builder, p, _sampleCategories, "انتخاب دسته‌بندی نمونه‌کار...");
+            return;
+        }
+
+        // ۵. فیلدهای انتخابی نقش
+        if (propName.Equals("RoleTC", StringComparison.OrdinalIgnoreCase))
+        {
+            RenderDropdown(builder, p, _roles, "انتخاب نقش...");
+            return;
+        }
+
+        // ۶. فیلدهای انتخابی دسترسی
+        if (propName.Equals("PermissionTC", StringComparison.OrdinalIgnoreCase))
+        {
+            RenderDropdown(builder, p, _permissions, "انتخاب دسترسی...");
+            return;
+        }
+
+        // ۷. فیلدهای انتخابی مشتری
+        if (propName.Equals("CustomerTC", StringComparison.OrdinalIgnoreCase))
+        {
+            RenderDropdown(builder, p, _customers, "انتخاب مشتری...");
+            return;
+        }
+
+        // ۸. فیلدهای تصویر
         if (type == typeof(string) && IsImageField(p.Name))
         {
             builder.OpenComponent<BlazorAppSolon.Components.Panel.ImageUpload>(0);
@@ -256,6 +397,7 @@
             return;
         }
 
+        // ۹. فیلدهای بولی
         if (type == typeof(bool))
         {
             builder.OpenElement(0, "input");
@@ -267,6 +409,7 @@
             return;
         }
 
+        // ۱۰. سایر فیلدهای استاندارد
         var inputType = type == typeof(DateTime) ? "date"
             : (type == typeof(int) || type == typeof(decimal) || type == typeof(double)) ? "number"
             : type == typeof(TimeSpan) ? "time"
@@ -288,6 +431,46 @@
             e => SetValue(p, type, e.Value?.ToString())));
         builder.CloseElement();
     };
+
+    private void RenderDropdown(
+        Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder,
+        PropertyInfo p,
+        List<(Guid Id, string Name)> items,
+        string placeholder)
+    {
+        var curVal = (Guid?)(p.GetValue(_editing)) ?? Guid.Empty;
+
+        builder.OpenElement(0, "select");
+        builder.AddAttribute(1, "class", "panel-input");
+        builder.AddAttribute(2, "value", curVal.ToString());
+        builder.AddAttribute(3, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e =>
+        {
+            if (Guid.TryParse(e.Value?.ToString(), out var parsed))
+            {
+                p.SetValue(_editing, parsed);
+            }
+        }));
+
+        if (!items.Any(i => i.Id == curVal))
+        {
+            builder.OpenElement(4, "option");
+            builder.AddAttribute(5, "value", Guid.Empty.ToString());
+            builder.AddContent(6, placeholder);
+            builder.CloseElement();
+        }
+
+        int seq = 7;
+        foreach (var item in items)
+        {
+            builder.OpenElement(seq++, "option");
+            builder.AddAttribute(seq++, "value", item.Id.ToString());
+            builder.AddAttribute(seq++, "selected", item.Id == curVal);
+            builder.AddContent(seq++, item.Name);
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    }
 
     private void SetValue(PropertyInfo p, Type type, string? raw)
     {

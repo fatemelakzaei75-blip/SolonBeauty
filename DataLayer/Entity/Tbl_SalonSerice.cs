@@ -1,4 +1,4 @@
-﻿using DataLayer.Entity.BaseEntity;
+using DataLayer.Entity.BaseEntity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,11 +10,11 @@ namespace DataLayer.Entity
 {
     public class Tbl_SalonSerice:Tbl_BaseEntity
     {
-        [Display(Name = "TC سالن")]
-        [Required(ErrorMessage = "TC سالن الزامی است")]
+        [Display(Name = "سالن زیبایی")]
+        [Required(ErrorMessage = "انتخاب سالن الزامی است")]
         public Guid SalonTC { get; set; }
-        [Display(Name = "TC دسته‌بندی")]
-        [Required(ErrorMessage = "TC دسته‌بندی الزامی است")]
+        [Display(Name = "دسته‌بندی خدمت")]
+        [Required(ErrorMessage = "انتخاب دسته‌بندی الزامی است")]
         public Guid CategoryTC { get; set; }
         [Display(Name = "نام سرویس")]
         [Required(ErrorMessage = "نام سرویس الزامی است")]

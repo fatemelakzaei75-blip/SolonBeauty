@@ -48,17 +48,17 @@ namespace DataLayer.Entity
     /// <summary>نوبت رزرو شده مشتری با کلیه اطلاعات مالی و فرآیندی (بند ۸، ۱۰، ۱۴ و ۱۵)</summary>
     public class Tbl_Reservation : Tbl_BaseEntity
     {
-        [Display(Name = "کد پیگیری سیستمی (TC)")]
+        [Display(Name = "کد پیگیری")]
         [MaxLength(50)]
         public string TrackingCode { get; set; } = string.Empty;
 
         [Display(Name = "نوع رزرو")]
         public ReservationType ReservationType { get; set; } = ReservationType.Online;
 
-        [Display(Name = "TC سالن")]
+        [Display(Name = "سالن زیبایی")]
         public Guid SalonTC { get; set; }
 
-        [Display(Name = "TC مشتری")]
+        [Display(Name = "مشتری")]
         public Guid CustomerTC { get; set; }
 
         [Display(Name = "نام مشتری")]
@@ -71,7 +71,7 @@ namespace DataLayer.Entity
         [MaxLength(15)]
         public string MobileNumber { get; set; } = string.Empty;
 
-        [Display(Name = "TC خدمت")]
+        [Display(Name = "خدمت")]
         public Guid ServiceTC { get; set; }
 
         [Display(Name = "نام خدمت")]
@@ -79,14 +79,14 @@ namespace DataLayer.Entity
         [MaxLength(150)]
         public string ServiceName { get; set; } = string.Empty;
 
-        [Display(Name = "TC پرسنل")]
+        [Display(Name = "متخصص")]
         public Guid PersonalTC { get; set; }
 
         [Display(Name = "نام پرسنل")]
         [MaxLength(100)]
         public string? PersonalName { get; set; }
 
-        [Display(Name = "TC نمونه کار مرجع")]
+        [Display(Name = "نمونه کار مرجع")]
         public Guid? PortfolioTC { get; set; }
 
         [Display(Name = "تاریخ نوبت (میلادی در دیتابیس)")]

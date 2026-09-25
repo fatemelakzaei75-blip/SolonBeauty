@@ -1,4 +1,4 @@
-﻿using DataLayer.Entity.BaseEntity;
+using DataLayer.Entity.BaseEntity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,13 +10,13 @@ namespace DataLayer.Entity
 {
     public class Tbl_UserRole:Tbl_BaseEntity
     {
-        [Display(Name = "TC نقش")]
-        [Required(ErrorMessage = "TC نقش الزامی است")]
+        [Display(Name = "نقش کاربری")]
+        [Required(ErrorMessage = "انتخاب نقش الزامی است")]
         public Guid RoleTC { get; set; }
 
 
-        [Display(Name = "TC پرسنل")]
-        [Required(ErrorMessage = "TC پرسنل الزامی است")]
+        [Display(Name = "پرسنل")]
+        [Required(ErrorMessage = "انتخاب پرسنل الزامی است")]
         public Guid PersonalTC { get; set; }
     }
 }

@@ -20,7 +20,7 @@ namespace DataLayer.Entity
         [Display(Name = "نام و نام خانوادگی")]
         public string FullName => $"{FirstName} {LastName}".Trim();
 
-        [Display(Name = "کد پرسنلی سیستمی (TC)")]
+        [Display(Name = "کد پرسنلی")]
         [MaxLength(50)]
         public string PersonalCode { get; set; } = string.Empty;
 
@@ -61,7 +61,7 @@ namespace DataLayer.Entity
         [Display(Name = "تاریخ تولد")]
         public DateTime BirthDate { get; set; } = DateTime.Today.AddYears(-25);
 
-        [Display(Name = "TC سرویس")]
+        [Display(Name = "خدمت تخصصی")]
         public Guid TC_Service { get; set; }
     }
 }

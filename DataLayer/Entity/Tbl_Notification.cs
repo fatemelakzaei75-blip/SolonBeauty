@@ -11,7 +11,7 @@ namespace DataLayer.Entity
         [MaxLength(50)]
         public string TargetRole { get; set; } = "Admin"; // Admin, Personnel, Customer
 
-        [Display(Name = "TC کاربر هدف")]
+        [Display(Name = "کاربر هدف")]
         public Guid? TargetUserTC { get; set; }
 
         [Display(Name = "عنوان اعلان")]

@@ -10,8 +10,8 @@ namespace DataLayer.Entity
 {
     public class Tbl_RolePermission:Tbl_BaseEntity
     {
-        [Display(Name = "TC دسترسی")]
-        [Required(ErrorMessage = "TC دسترسی الزامی است")]
+        [Display(Name = "دسترسی")]
+        [Required(ErrorMessage = "انتخاب دسترسی الزامی است")]
         public Guid PermissionTC { get; set; }
     }
 }

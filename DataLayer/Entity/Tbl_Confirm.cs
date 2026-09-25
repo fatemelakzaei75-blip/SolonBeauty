@@ -1,4 +1,4 @@
-﻿using DataLayer.Entity.BaseEntity;
+using DataLayer.Entity.BaseEntity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -11,8 +11,8 @@ namespace DataLayer.Entity
    
         public class Tbl_Confirm : Tbl_BaseEntity
         {
-            [Display(Name = "TC موبایل")]
-            [Required(ErrorMessage = "TC موبایل الزامی است")]
+            [Display(Name = "موبایل تایید")]
+            [Required(ErrorMessage = "موبایل الزامی است")]
             public Guid Tc_Mobile { get; set; }
             [Display(Name = "IP کاربر")]
             [Required(ErrorMessage = "IP کاربر الزامی است")]

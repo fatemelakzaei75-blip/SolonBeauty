@@ -7,7 +7,7 @@ namespace DataLayer.Entity
     /// <summary>تراکنش درگاه پرداخت زرین‌پال با رعایت Idempotency (بند ۹ و ۱۰)</summary>
     public class Tbl_PaymentTransaction : Tbl_BaseEntity
     {
-        [Display(Name = "TC رزرو")]
+        [Display(Name = "شماره رزرو")]
         public Guid ReservationTC { get; set; }
 
         [Display(Name = "کد پیگیری سیستمی")]

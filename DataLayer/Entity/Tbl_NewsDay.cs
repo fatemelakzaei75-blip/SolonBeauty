@@ -39,7 +39,7 @@ namespace DataLayer.Entity
         [Display(Name = "زمان پایان")]
         public TimeSpan TimeEnd { get; set; } = new TimeSpan(23, 59, 59);
 
-        [Display(Name = "TC پرسنل")]
+        [Display(Name = "پرسنل")]
         public Guid TC_Personal { get; set; }
     }
 }
