@@ -1,0 +1,53 @@
+@page "/panel/customer/favorites"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Customer")]
+@using Microsoft.AspNetCore.Authorization
+@using BlazorAppSolon.Data
+@inject FavoriteService Favorites
+
+<PageTitle>علاقه مندی ها | Hadis Beauty</PageTitle>
+<h2 class="panel-title">❤️ نمونه کارهای مورد علاقه من</h2>
+
+<div class="panel-card">
+    @if (_loading)
+    {
+        <p style="opacity:.7">در حال دریافت...</p>
+    }
+    else if (_items.Count == 0)
+    {
+        <p style="opacity:.75">هنوز نمونه کاری را پسند نکرده اید.</p>
+        <a class="btn-solon" href="services">مشاهده نمونه کارها در صفحات خدمات</a>
+    }
+    else
+    {
+        <div class="work-grid">
+            @foreach (var item in _items)
+            {
+                <PortfolioCard Item="item" OnOpen="i => _selected = i" />
+            }
+        </div>
+    }
+</div>
+
+<PortfolioDetail Item="_selected" OnClose="OnDetailClosed" />
+
+@code {
+    private List<PortfolioItem> _items = new();
+    private PortfolioItem? _selected;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _items = await Favorites.FavoriteItemsAsync();
+        _loading = false;
+    }
+
+    private async Task OnDetailClosed()
+    {
+        _selected = null;
+        await LoadAsync();
+    }
+}

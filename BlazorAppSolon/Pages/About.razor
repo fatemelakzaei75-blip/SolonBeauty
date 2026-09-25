@@ -1,0 +1,109 @@
+@page "/about"
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@inject NavigationManager Nav
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+<PageBurn Title="درباره سالن زیبایی حدیث" />
+
+<!-- Hero درباره ما (بند ۴ سند) -->
+<section class="section about-hero-section">
+    <LeafDeco Position="leaf-tr" />
+    <div class="container">
+        <BreadcrumbNav Items="_seo.Breadcrumbs" />
+
+        <div class="about-hero-grid" style="margin-top:1.5rem;">
+            <div class="about-hero-text">
+                <span class="section-tag">داستان ما</span>
+                <h2 class="serif">@(_settings?.SalonName ?? "سالن زیبایی حدیث")</h2>
+                <h3 class="about-tagline">@(_settings?.HeroSubtitle ?? "تجربه‌ای آرام، لوکس و حرفه‌ای از خدمات زیبایی")</h3>
+                <p class="about-main-p">
+                    @(_settings?.IntroText ?? "سالن زیبایی حدیث با بهره‌گیری از کادری مجرب و به‌روزترین تکنیک‌های بین‌المللی، ارائه‌دهنده تخصصی‌ترین خدمات زیبایی، مراقبت و سلامت پوست و مو در محیطی کاملاً آرام و اختصاصی است.")
+                </p>
+                <p class="about-sub-p">
+                    @(_settings?.AboutText ?? "ما در سالن زیبایی حدیث باور داریم که زیبایی طبیعی هر فرد شایسته درخشش است. با تکیه بر متریال درجه یک اروپایی، رعایت سخت‌گیرانه‌ترین استانداردهای بهداشتی و مشاوره تخصصی قبل از هر خدمت، همراه مطمئن زیبایی شما هستیم.")
+                </p>
+            </div>
+            <div class="about-hero-img-wrap">
+                <div class="about-img-frame">
+                    <img src="img/hero.jpg" alt="سالن زیبایی حدیث" />
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- بخش اطلاعات تماس، نقشه و ساعات کاری (بند ۴ سند) -->
+<section class="section light about-details-section">
+    <LeafDeco Position="leaf-bl" />
+    <div class="container">
+        <div class="about-info-cards-grid">
+            <div class="about-info-card">
+                <div class="card-icon">⏱</div>
+                <h4>ساعات کاری سالن</h4>
+                <p>@(_settings?.WorkingHoursDisplay ?? "شنبه تا پنج‌شنبه: ۹:۰۰ الی ۲۱:۰۰ (جمعه‌ها با هماهنگی قبلی)")</p>
+                <div class="card-highlight">پذیرش فقط با رزرو قبلی</div>
+            </div>
+
+            <div class="about-info-card">
+                <div class="card-icon">📞</div>
+                <h4>اطلاعات تماس</h4>
+                <p>تلفن سالن: <strong dir="ltr">@(_settings?.PhoneLandline ?? "۰۲۱-۱۲۳۴۵۶۷۸")</strong></p>
+                <p>تلفن همراه: <strong dir="ltr">@(_settings?.PhoneMobile ?? "۰۹۱۲۰-۰۰۰۰۰۱")</strong></p>
+                <p>ایمیل: <strong>@(_settings?.Email ?? "info@hadisbeauty.salon")</strong></p>
+            </div>
+
+            <div class="about-info-card">
+                <div class="card-icon">📍</div>
+                <h4>آدرس و موقعیت</h4>
+                <p>@(_settings?.Address ?? "تهران، زعفرانیه، خیابان مقدس اردبیلی، پلاک ۲۴، ساختمان تجاری حدیث، طبقه ۳")</p>
+                <div class="card-highlight">دارای پارکینگ اختصاصی مشتریان</div>
+            </div>
+        </div>
+
+        <!-- نقشه موقعیت مکانی (بند ۴ سند) -->
+        <div class="about-map-container">
+            <h3 class="section-title">موقعیت مکانی روی نقشه</h3>
+            <div class="map-interactive-box">
+                <div class="map-placeholder">
+                    <span class="map-pin">📍</span>
+                    <div class="map-details">
+                        <h4>سالن زیبایی حدیث — زعفرانیه</h4>
+                        <p>@(_settings?.Address ?? "خیابان مقدس اردبیلی، پلاک ۲۴")</p>
+                        <a href="https://maps.google.com" target="_blank" rel="noopener" class="btn-solon red sm">
+                            مسیریابی در گوگل مپ / نشان / بلد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private Tbl_SalonSetting? _settings;
+    private SeoMetadata _seo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _seo = Seo.GetGeneralPageSeo(
+            "درباره ما و تاریخچه سالن زیبایی حدیث",
+            "آشنایی با تاریخچه، ارزش‌ها، استانداردهای بهداشتی، کادر متخصص و فضای آرامش‌بخش سالن زیبایی حدیث زعفرانیه.",
+            "about",
+            Nav.BaseUri);
+
+        try
+        {
+            var list = await Store.AllAsync<Tbl_SalonSetting>();
+            _settings = list.FirstOrDefault();
+            if (_settings is not null)
+            {
+                var orgSchema = Seo.BuildLocalBusinessSchema(_settings, Nav.BaseUri);
+                _seo.JsonLd = $"[{_seo.JsonLd},{orgSchema}]";
+            }
+        }
+        catch { }
+    }
+}

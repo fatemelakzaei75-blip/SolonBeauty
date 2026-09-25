@@ -1,0 +1,81 @@
+@using BlazorAppSolon.Data
+@inject FavoriteService Favorites
+
+@* پنجره جزئیات نمونه کار: تصویر قبل/بعد، مشخصات، علاقه مندی و رزرو *@
+
+@if (Item is not null)
+{
+    <div class="modal-backdrop" @onclick="Close"></div>
+    <div class="modal-box work-modal">
+        <button class="modal-close" @onclick="Close">✕</button>
+
+        <div class="work-modal-grid">
+            <div>
+                <img class="work-modal-img" src="@_shown" alt="جزئیات و نمونه کار @Item.Title سالن زیبایی حدیث" width="450" height="450" />
+                @if (Item.BeforeImage is not null)
+                {
+                    <div class="ba-switch">
+                        <button class="mini @(_showBefore ? "" : "primary")" @onclick="() => _showBefore = false">بعد</button>
+                        <button class="mini @(_showBefore ? "primary" : "")" @onclick="() => _showBefore = true">قبل</button>
+                    </div>
+                }
+            </div>
+
+            <div>
+                <span class="work-chip">@Item.ServiceName</span>
+                <h3 style="margin-top:.6rem">@Item.Title</h3>
+                <p style="opacity:.8">@Item.Description</p>
+
+                <ul class="work-specs">
+                    <li><span>متخصص</span><b>@Item.Personal</b></li>
+                    <li><span>مدت زمان</span><b>@Item.DurationMinutes دقیقه</b></li>
+                    <li><span>هزینه</span><b>@Item.Price.ToString("#,0") تومان</b></li>
+                    <li><span>پسندها</span><b>@(Item.Likes + (_isFav ? 1 : 0))</b></li>
+                </ul>
+
+                <div class="work-tags">
+                    @foreach (var t in Item.Tags) { <span>#@t</span> }
+                </div>
+
+                <div class="work-actions" style="margin-top:1rem">
+                    <button class="fav-btn @(_isFav ? "on" : "")" @onclick="Toggle">
+                        @(_isFav ? "❤️ حذف از علاقه مندی" : "🤍 افزودن به علاقه مندی")
+                    </button>
+                    <a class="btn-solon red" href="@($"reserve?service={Item.ServiceSlug}&work={Item.Tc}")">رزرو این خدمت</a>
+                </div>
+
+                @if (_needLogin)
+                {
+                    <small class="need-login">برای ذخیره علاقه مندی ابتدا <a href="login">وارد شوید</a>.</small>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public PortfolioItem? Item { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool _isFav, _needLogin, _showBefore;
+
+    private string _shown => _showBefore && Item?.BeforeImage is not null ? Item.BeforeImage! : Item?.Image ?? "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _showBefore = false; _needLogin = false;
+        if (Item is null) return;
+        await Favorites.LoadAsync();
+        _isFav = Favorites.IsFavorite(Item.Tc);
+    }
+
+    private async Task Toggle()
+    {
+        if (Item is null) return;
+        var ok = await Favorites.ToggleAsync(Item.Tc);
+        _needLogin = !ok;
+        if (ok) _isFav = Favorites.IsFavorite(Item.Tc);
+    }
+
+    private Task Close() => OnClose.InvokeAsync();
+}

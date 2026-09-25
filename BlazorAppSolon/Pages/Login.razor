@@ -1,0 +1,299 @@
+@page "/login"
+@layout BlazorAppSolon.Layout.MainLayout
+@using BlazorAppSolon.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>ورود به پنل کاربری | سالن زیبایی حدیث</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+<section class="section light login-section-wrap">
+    <LeafDeco Position="leaf-tr" />
+    <LeafDeco Position="leaf-bl" />
+    <div class="container" style="max-width:520px;">
+        <div class="login-card-modern">
+            <h2 class="login-title">ورود به پنل کاربری سالن حدیث</h2>
+            <p class="login-desc">
+                برای مدیریت نوبت‌ها، مشاهده سوابق و خدمات، وارد حساب کاربری خود شوید.
+            </p>
+
+            <!-- تب‌های دو روش ورود (بند ۱۳ سند نیازمندی‌ها) -->
+            <div class="login-method-tabs">
+                <button type="button" class="method-tab @(_activeMethod == 1 ? "active" : "")" @onclick="@(() => SwitchMethod(1))">
+                    📱 پیامک و کد تأیید (OTP)
+                </button>
+                <button type="button" class="method-tab @(_activeMethod == 2 ? "active" : "")" @onclick="@(() => SwitchMethod(2))">
+                    🔑 رمز عبور
+                </button>
+            </div>
+
+            @* ---------- روش اول: ورود با کد تأیید پیامکی (بند ۱۳) ---------- *@
+            @if (_activeMethod == 1)
+            {
+                <div class="login-form-block">
+                    <div class="form-field">
+                        <label>شماره موبایل</label>
+                        <input class="panel-input" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
+                    </div>
+
+                    @if (_codeSent)
+                    {
+                        <div class="form-field">
+                            <label>کد تأیید پیامک شده</label>
+                            <input class="panel-input" dir="ltr" placeholder="کد ۵ رقمی (کد تستی: 12345)" @bind="_code" />
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(_message))
+                    {
+                        <div class="panel-alert @(_isError ? "error" : "ok")">@_message</div>
+                    }
+
+                    <div class="login-actions-row">
+                        @if (!_codeSent)
+                        {
+                            <button type="button" class="btn-solon red lg full-width" @onclick="SendCode" disabled="@_busy">
+                                @(_busy ? "در حال ارسال..." : "ارسال کد تأیید پیامکی")
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn-solon red lg full-width" @onclick="SubmitOtpLogin" disabled="@_busy">
+                                @(_busy ? "در حال ورود..." : "ورود به حساب کاربری")
+                            </button>
+                            <button type="button" class="btn-solon ghost sm" @onclick="@(() => _codeSent = false)">
+                                ویرایش شماره موبایل
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* ---------- روش دوم: ورود با رمز عبور (بند ۱۳) ---------- *@
+            @if (_activeMethod == 2)
+            {
+                <div class="login-form-block">
+                    <div class="form-field">
+                        <label>شماره موبایل</label>
+                        <input class="panel-input" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>رمز عبور</label>
+                        <input type="password" class="panel-input" dir="ltr" placeholder="رمز عبور خود را وارد کنید" @bind="_password" />
+                        <div class="field-hint">رمز عبور پیش‌فرض محیط آزمایشی: <code>123456</code></div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(_message))
+                    {
+                        <div class="panel-alert @(_isError ? "error" : "ok")">@_message</div>
+                    }
+
+                    <div class="login-actions-row">
+                        <button type="button" class="btn-solon red lg full-width" @onclick="SubmitPasswordLogin" disabled="@_busy">
+                            @(_busy ? "در حال بررسی..." : "ورود با رمز عبور")
+                        </button>
+                        <button type="button" class="btn-text" @onclick="@(() => _showForgotModal = true)">
+                            فراموشی رمز عبور؟ (بازیابی با پیامک)
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- بخش ورود سریع محیط توسعه -->
+            <div class="demo-box-modern">
+                <span class="demo-badge">حساب‌های آزمایشی جهت بررسی پنل‌ها:</span>
+                <div class="quick-login-grid">
+                    <button type="button" class="quick-btn-chip" @onclick='() => QuickLogin("09120000003")'>
+                        👤 مشتری (نگار رضایی)
+                    </button>
+                    <button type="button" class="quick-btn-chip" @onclick='() => QuickLogin("09120000002")'>
+                        👩‍🎨 پرسنل (سارا محمدی)
+                    </button>
+                    <button type="button" class="quick-btn-chip" @onclick='() => QuickLogin("09120000001")'>
+                        👑 مدیر سالن (ادمین)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== مودال بازیابی رمز عبور با OTP پیامکی (بند ۱۳ سند) ==================== *@
+@if (_showForgotModal)
+{
+    <div class="search-overlay" @onclick="@(() => _showForgotModal = false)">
+        <div class="search-modal" @onclick:stopPropagation style="max-width:480px">
+            <div class="staff-modal-header">
+                <h3>بازیابی رمز عبور با کد پیامکی (OTP)</h3>
+                <button class="search-close-btn" @onclick="@(() => _showForgotModal = false)">✕</button>
+            </div>
+            <div class="staff-modal-body">
+                <p style="font-size:.88rem;opacity:.85;margin-bottom:1rem">
+                    شماره موبایل خود را وارد کنید، کد پیامک‌شده را ثبت و رمز عبور جدید را تعیین فرمایید:
+                </p>
+
+                <div class="form-grid">
+                    <div class="form-field" style="grid-column:1/-1">
+                        <label>شماره موبایل</label>
+                        <input class="panel-input" dir="ltr" @bind="_forgotMobile" placeholder="09xxxxxxxxx" />
+                    </div>
+                    <div class="form-field" style="grid-column:1/-1">
+                        <label>کد تأیید پیامک شده (کد تستی: 12345)</label>
+                        <input class="panel-input" dir="ltr" @bind="_forgotCode" placeholder="12345" />
+                    </div>
+                    <div class="form-field" style="grid-column:1/-1">
+                        <label>رمز عبور جدید</label>
+                        <input type="password" class="panel-input" dir="ltr" @bind="_forgotNewPass" placeholder="حداقل ۶ کاراکتر" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_forgotMessage))
+                {
+                    <div class="panel-alert @(_forgotSuccess ? "ok" : "error")" style="margin-top:1rem">
+                        @_forgotMessage
+                    </div>
+                }
+
+                <div class="staff-modal-footer" style="margin-top:1.5rem">
+                    <button class="btn-solon red" @onclick="SubmitPasswordReset" disabled="@_busy">
+                        ذخیره رمز جدید و بازگشت
+                    </button>
+                    <button class="btn-solon ghost" @onclick="@(() => _showForgotModal = false)">انصراف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private int _activeMethod = 1; // 1: OTP, 2: Password
+    private string _mobile = "";
+    private string _code = "";
+    private string _password = "";
+    private bool _codeSent = false;
+    private bool _busy = false;
+    private bool _isError = false;
+    private string? _message;
+
+    // فراموشی رمز
+    private bool _showForgotModal = false;
+    private string _forgotMobile = "";
+    private string _forgotCode = "";
+    private string _forgotNewPass = "";
+    private string? _forgotMessage;
+    private bool _forgotSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true) GoToPanel(state.User);
+    }
+
+    private void SwitchMethod(int m)
+    {
+        _activeMethod = m;
+        _message = null;
+        _codeSent = false;
+    }
+
+    private async Task SendCode()
+    {
+        _isError = false;
+        _mobile = DigitHelper.Normalize(_mobile);
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(_mobile, @"^09\d{9}$"))
+        {
+            _isError = true;
+            _message = "شماره موبایل معتبر نیست (نمونه: 09120000003)";
+            return;
+        }
+
+        _busy = true;
+        var (_, msg) = await Auth.SendCodeAsync(_mobile);
+        _message = msg;
+        _codeSent = true;
+        _busy = false;
+    }
+
+    private async Task SubmitOtpLogin()
+    {
+        _busy = true; _isError = false;
+        var req = new LoginRequest
+        {
+            MobileNumber = DigitHelper.Normalize(_mobile),
+            Code = DigitHelper.Normalize(_code)
+        };
+        var (ok, msg, user) = await Auth.LoginAsync(req);
+        _busy = false;
+        _isError = !ok;
+        _message = ok ? msg : $"{msg} (کد نمونه تستی: 12345)";
+
+        if (ok && user is not null)
+            Nav.NavigateTo(AppRoles.PanelUrl(user.Roles.FirstOrDefault() ?? AppRoles.Customer));
+    }
+
+    private async Task SubmitPasswordLogin()
+    {
+        _busy = true; _isError = false;
+        _mobile = DigitHelper.Normalize(_mobile);
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(_mobile, @"^09\d{9}$") || string.IsNullOrWhiteSpace(_password))
+        {
+            _isError = true;
+            _message = "شماره موبایل و رمز عبور را وارد فرمایید.";
+            _busy = false;
+            return;
+        }
+
+        var (ok, msg, user) = await Auth.LoginWithPasswordAsync(_mobile, _password);
+        _busy = false;
+        _isError = !ok;
+        _message = msg;
+
+        if (ok && user is not null)
+            Nav.NavigateTo(AppRoles.PanelUrl(user.Roles.FirstOrDefault() ?? AppRoles.Customer));
+    }
+
+    private async Task QuickLogin(string mobile)
+    {
+        _mobile = mobile;
+        _code = AuthService.DevCode;
+        _password = "123456";
+        _codeSent = true;
+        await SubmitOtpLogin();
+    }
+
+    private async Task SubmitPasswordReset()
+    {
+        _forgotMessage = null;
+        if (string.IsNullOrWhiteSpace(_forgotMobile) || string.IsNullOrWhiteSpace(_forgotCode) || string.IsNullOrWhiteSpace(_forgotNewPass))
+        {
+            _forgotSuccess = false;
+            _forgotMessage = "تمام فیلدها را تکمیل فرمایید.";
+            return;
+        }
+
+        _busy = true;
+        var (ok, msg) = await Auth.ResetPasswordAsync(_forgotMobile, _forgotCode, _forgotNewPass);
+        _busy = false;
+        _forgotSuccess = ok;
+        _forgotMessage = msg;
+        if (ok)
+        {
+            _mobile = _forgotMobile;
+            _activeMethod = 2;
+        }
+    }
+
+    private void GoToPanel(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var role = user.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? AppRoles.Customer;
+        Nav.NavigateTo(AppRoles.PanelUrl(role));
+    }
+}

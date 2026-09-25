@@ -1,0 +1,137 @@
+@page "/panel/customer/appointments"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Customer")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@inject ReservationClient Reservations
+
+<PageTitle>نوبت های من | Hadis Beauty</PageTitle>
+<h2 class="panel-title">🗓 نوبت های من</h2>
+
+<div class="panel-card">
+    <div class="panel-card-head">
+        <h3>رزرو نوبت جدید</h3>
+        <span class="source-chip">@(Reservations.IsOnline ? "ذخیره در دیتابیس" : "حالت آفلاین")</span>
+    </div>
+
+    <div class="form-grid">
+        <div class="form-field">
+            <label>خدمت</label>
+            <select class="panel-input" @bind="_service">
+                @foreach (var s in _services)
+                {
+                    <option value="@s.ServiceName">@s.ServiceName — @s.Price.ToString("#,0") تومان</option>
+                }
+            </select>
+        </div>
+        <div class="form-field">
+            <label>تاریخ</label>
+            <input type="date" class="panel-input" @bind="_date" />
+        </div>
+        <div class="form-field">
+            <label>ساعت</label>
+            <input type="time" class="panel-input" @bind="_time" />
+        </div>
+        <div class="form-field">
+            <label>یادداشت (اختیاری)</label>
+            <input class="panel-input" @bind="_note" />
+        </div>
+    </div>
+
+    <button class="btn-solon red" style="margin-top:1rem" @onclick="Reserve" disabled="@_busy">
+        @(_busy ? "در حال ثبت..." : "ثبت رزرو")
+    </button>
+
+    @if (_msg is not null) { <div class="panel-alert">@_msg</div> }
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-head"><h3>لیست نوبت ها</h3></div>
+    <table class="panel-table">
+        <thead>
+            <tr><th>کد رهگیری (TC)</th><th>خدمت</th><th>تاریخ (شمسی)</th><th>ساعت</th><th>هزینه نهایی</th><th>وضعیت</th><th>عملیات</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var a in _items)
+            {
+                <tr>
+                    <td><code>@(string.IsNullOrWhiteSpace(a.TrackingCode) ? a.Tc.ToString()[..8] : a.TrackingCode)</code></td>
+                    <td><strong>@a.ServiceName</strong></td>
+                    <td>@PersianDateHelper.ToShamsi(a.ReserveDate)</td>
+                    <td>@a.ReserveTime.ToString(@"hh\:mm")</td>
+                    <td>@((a.PayableAmount > 0 ? a.PayableAmount : a.Price).ToString("#,0")) تومان</td>
+                    <td><span class="badge @ReservationClient.StatusCss(a.Status)">@ReservationClient.StatusLabel(a.Status)</span></td>
+                    <td class="row-actions">
+                        @if (a.Status is ReservationStatus.Pending or ReservationStatus.PendingPayment or ReservationStatus.Confirmed)
+                        {
+                            <button class="mini danger" @onclick="() => Cancel(a)">لغو نوبت</button>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (_items.Count == 0)
+            {
+                <tr><td colspan="7" style="text-align:center;opacity:.6">
+                    @(_loading ? "در حال دریافت..." : "هنوز نوبتی ثبت نکرده اید")
+                </td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<Tbl_SalonSerice> _services = new();
+    private List<Tbl_Reservation> _items = new();
+
+    private string _service = "";
+    private DateTime _date = DateTime.Today.AddDays(1);
+    private DateTime _time = DateTime.Today.AddHours(11);
+    private string _note = "";
+    private string? _msg;
+    private bool _busy, _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _services = await Store.AllAsync<Tbl_SalonSerice>();
+        _service = _services.FirstOrDefault()?.ServiceName ?? "";
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _items = await Reservations.MineAsync();
+        _loading = false;
+    }
+
+    private async Task Reserve()
+    {
+        _busy = true;
+        var svc = _services.FirstOrDefault(s => s.ServiceName == _service);
+
+        var (_, msg, _) = await Reservations.CreateAsync(new Tbl_Reservation
+        {
+            ServiceName = _service,
+            ServiceTC = svc?.Tc ?? Guid.Empty,
+            ReserveDate = _date.Date,
+            ReserveTime = _time.TimeOfDay,
+            Price = svc?.Price ?? 0,
+            Deposit = Math.Round((svc?.Price ?? 0) * 0.2m),
+            DurationMinutes = 60,
+            CustomerNote = string.IsNullOrWhiteSpace(_note) ? null : _note
+        });
+
+        _busy = false;
+        _msg = msg;
+        await LoadAsync();
+    }
+
+    private async Task Cancel(Tbl_Reservation item)
+    {
+        await Reservations.CancelAsync(item.Tc);
+        _msg = "نوبت لغو شد.";
+        await LoadAsync();
+    }
+}

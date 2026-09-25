@@ -1,0 +1,9 @@
+# Robots.txt for Hadis Beauty Salon
+User-agent: *
+Allow: /
+Disallow: /panel/
+Disallow: /login
+Disallow: /cart
+
+# Sitemap
+Sitemap: https://hadisbeauty.salon/sitemap.xml

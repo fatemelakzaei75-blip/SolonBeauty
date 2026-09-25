@@ -1,0 +1,100 @@
+@page "/panel/personnel/schedule"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Personnel")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@inject ReservationClient Reservations
+
+<PageTitle>برنامه و نوبت ها | Hadis Beauty</PageTitle>
+<h2 class="panel-title">🗓 برنامه کاری و نوبت ها</h2>
+
+<div class="stat-grid">
+    <div class="stat"><span>⏳</span><b>@_items.Count(r => r.Status == ReservationStatus.Pending)</b><small>در انتظار تأیید</small></div>
+    <div class="stat"><span>✅</span><b>@_items.Count(r => r.Status == ReservationStatus.Confirmed)</b><small>تأیید شده</small></div>
+    <div class="stat"><span>📅</span><b>@_items.Count(r => r.ReserveDate.Date == DateTime.Today)</b><small>نوبت امروز</small></div>
+    <div class="stat"><span>💰</span><b>@_items.Where(r => r.Status != ReservationStatus.Canceled).Sum(r => r.Price).ToString("#,0")</b><small>مجموع (تومان)</small></div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-head">
+        <h3>نوبت های ثبت شده</h3>
+        <span class="source-chip">@(Reservations.IsOnline ? "متصل به دیتابیس" : "حالت آفلاین")</span>
+    </div>
+
+    <table class="panel-table">
+        <thead>
+            <tr><th>کد پیگیری</th><th>مشتری</th><th>موبایل</th><th>خدمت</th><th>تاریخ (شمسی)</th><th>ساعت</th><th>یادداشت</th><th>وضعیت</th><th>عملیات</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var a in _items)
+            {
+                <tr>
+                    <td><code>@(string.IsNullOrWhiteSpace(a.TrackingCode) ? a.Tc.ToString()[..8] : a.TrackingCode)</code></td>
+                    <td><strong>@a.CustomerName</strong></td>
+                    <td dir="ltr">@a.MobileNumber</td>
+                    <td>@a.ServiceName</td>
+                    <td>@PersianDateHelper.ToShamsi(a.ReserveDate)</td>
+                    <td>@a.ReserveTime.ToString(@"hh\:mm")</td>
+                    <td style="max-width:180px">@(string.IsNullOrWhiteSpace(a.CustomerNote) ? "-" : a.CustomerNote)</td>
+                    <td><span class="badge @ReservationClient.StatusCss(a.Status)">@ReservationClient.StatusLabel(a.Status)</span></td>
+                    <td class="row-actions">
+                        @if (a.Status == ReservationStatus.Pending || a.Status == ReservationStatus.PendingPayment)
+                        {
+                            <button class="mini ok" @onclick="() => SetStatus(a, ReservationStatus.Confirmed)">تأیید نوبت</button>
+                            <button class="mini danger" @onclick="() => SetStatus(a, ReservationStatus.Canceled)">رد</button>
+                        }
+                        else if (a.Status == ReservationStatus.Confirmed)
+                        {
+                            <button class="mini ok" @onclick="() => SetStatus(a, ReservationStatus.Done)">انجام شد</button>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (_items.Count == 0)
+            {
+                <tr><td colspan="9" style="text-align:center;opacity:.6">
+                    @(_loading ? "در حال دریافت..." : "نوبتی ثبت نشده است")
+                </td></tr>
+            }
+        </tbody>
+    </table>
+    @if (_msg is not null) { <div class="panel-alert">@_msg</div> }
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-head"><h3>خبر روز / اطلاعیه ها</h3></div>
+    @foreach (var n in _news)
+    {
+        <p>📣 @n.TextNews — از @n.TimeStart.ToString(@"hh\:mm") تا @n.TimeEnd.ToString(@"hh\:mm")</p>
+    }
+</div>
+
+@code {
+    private List<Tbl_Reservation> _items = new();
+    private List<Tbl_NewsDay> _news = new();
+    private bool _loading = true;
+    private string? _msg;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _news = await Store.AllAsync<Tbl_NewsDay>();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _items = await Reservations.MineAsync();
+        _loading = false;
+    }
+
+    private async Task SetStatus(Tbl_Reservation item, ReservationStatus status)
+    {
+        await Reservations.ChangeStatusAsync(item.Tc, status,
+            status == ReservationStatus.Canceled ? "رد شده توسط پرسنل" : null);
+        _msg = $"وضعیت نوبت «{item.CustomerName}» به «{ReservationClient.StatusLabel(status)}» تغییر کرد.";
+        await LoadAsync();
+    }
+}

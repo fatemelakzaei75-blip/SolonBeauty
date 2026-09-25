@@ -1,0 +1,715 @@
+@page "/reserve"
+@using BlazorAppSolon.Data
+@using DataCore.Helpers
+@using DataLayer.Entity
+@inject NavigationManager Nav
+@inject ReservationClient Reservations
+@inject IDataStore Store
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+<PageBurn Title="سامانه رزرو آنلاین نوبت" />
+
+<section class="section light reserve-page-section">
+    <LeafDeco Position="leaf-bl" />
+    <LeafDeco Position="leaf-tr" />
+    <div class="container" style="max-width:920px">
+        <BreadcrumbNav Items="_seo.Breadcrumbs" />
+
+        <!-- نوار مراحل پیشرفت فرآیند رزرو طبق بند ۸ و ۱۲ سند -->
+        <div class="booking-steps-bar">
+            <div class="step-item @(_step >= 1 ? "active" : "") @(_step > 1 ? "done" : "")">
+                <span class="step-num">۱</span>
+                <span class="step-label">انتخاب خدمت و پرسنل</span>
+            </div>
+            <div class="step-line @(_step > 1 ? "active" : "")"></div>
+            <div class="step-item @(_step >= 2 ? "active" : "") @(_step > 2 ? "done" : "")">
+                <span class="step-num">۲</span>
+                <span class="step-label">زمان‌بندی و تاریخ شمسی</span>
+            </div>
+            <div class="step-line @(_step > 2 ? "active" : "")"></div>
+            <div class="step-item @(_step >= 3 ? "active" : "") @(_step > 3 ? "done" : "")">
+                <span class="step-num">۳</span>
+                <span class="step-label">تأیید شرایط و تخفیف</span>
+            </div>
+            <div class="step-line @(_step > 3 ? "active" : "")"></div>
+            <div class="step-item @(_step >= 4 ? "active" : "")">
+                <span class="step-num">۴</span>
+                <span class="step-label">پرداخت و ثبت نهایی</span>
+            </div>
+        </div>
+
+        @* ==================== مرحله ۱ : انتخاب خدمت و پرسنل ==================== *@
+        @if (_step == 1)
+        {
+            <div class="panel-card reserve-card">
+                <div class="panel-card-head">
+                    <h3>۱. انتخاب خدمت و پرسنل متخصص</h3>
+                    <p>لاین مورد نظر و هنرمند زیبایی خود را انتخاب فرمایید:</p>
+                </div>
+
+                @if (_selectedWork is not null)
+                {
+                    <div class="selected-work-preview">
+                        <img src="@_selectedWork.Image" alt="@_selectedWork.Title" />
+                        <div>
+                            <span class="work-chip">نمونه کار انتخابی</span>
+                            <h4>@_selectedWork.Title</h4>
+                            <p>@_selectedWork.Description</p>
+                            <p class="work-sub">⏱ @_selectedWork.DurationMinutes دقیقه • 💰 @_selectedWork.Price.ToString("#,0") تومان</p>
+                        </div>
+                    </div>
+                }
+
+                <div class="form-grid">
+                    <div class="form-field" style="grid-column:1/-1">
+                        <label>انتخاب لاین یا خدمت سالن <span class="req">*</span></label>
+                        <select class="panel-input" @bind="_selectedServiceSlug" @bind:after="OnServiceChanged">
+                            @foreach (var s in PortfolioCatalog.Services)
+                            {
+                                <option value="@s.Slug">@s.Title (شروع از @s.FromPrice.ToString("#,0") تومان)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-field" style="grid-column:1/-1">
+                        <label>انتخاب پرسنل مجری خدمت <span class="req">*</span></label>
+                        <div class="staff-picker-cards">
+                            @foreach (var staff in GetStaffForSelectedService())
+                            {
+                                var isSel = (_selectedStaffTc == staff.Tc);
+                                <div class="staff-choice-card @(isSel ? "selected" : "")" @onclick="@(() => SelectStaff(staff))">
+                                    <img src="@(string.IsNullOrWhiteSpace(staff.Avatar) ? "img/hero.jpg" : staff.Avatar)" alt="@staff.FullName" />
+                                    <div class="staff-choice-info">
+                                        <div class="staff-choice-name">@staff.FullName</div>
+                                        <div class="staff-choice-specialty">@staff.Specialty</div>
+                                        <div class="staff-choice-hours">⏱ @staff.WorkingHours</div>
+                                    </div>
+                                    <div class="staff-radio-check">@(isSel ? "●" : "○")</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label>نام و نام خانوادگی مراجع <span class="req">*</span></label>
+                        <input class="panel-input" @bind="_customerName" placeholder="مثال: نگار رضایی" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>شماره موبایل جهت هماهنگی و پیامک <span class="req">*</span></label>
+                        <input class="panel-input" dir="ltr" @bind="_mobileNumber" placeholder="09xxxxxxxxx" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_stepError))
+                {
+                    <div class="panel-alert error" style="margin-top:1rem">@_stepError</div>
+                }
+
+                <div class="reserve-btn-row">
+                    <button class="btn-solon red lg" @onclick="GoToStep2">
+                        مرحله بعد: انتخاب تاریخ و ساعت ←
+                    </button>
+                    <a class="btn-solon ghost" href="services">بازگشت به خدمات</a>
+                </div>
+            </div>
+        }
+
+        @* ==================== مرحله ۲ : زمان‌بندی و تقویم شمسی و ساعت آزاد ==================== *@
+        @if (_step == 2)
+        {
+            <div class="panel-card reserve-card">
+                <div class="panel-card-head">
+                    <h3>۲. انتخاب تاریخ شمسی و ساعت آزاد نوبت</h3>
+                    <p>تاریخ و بازه زمانی دلخواه خود را تعیین کنید:</p>
+                </div>
+
+                <div class="staff-summary-pill">
+                    <img src="@(string.IsNullOrWhiteSpace(_selectedStaff?.Avatar) ? "img/hero.jpg" : _selectedStaff.Avatar)" alt="پرسنل" />
+                    <div>
+                        <strong>خدمت:</strong> @_selectedServiceName &nbsp;|&nbsp;
+                        <strong>پرسنل:</strong> @_selectedStaffName (@_selectedStaff?.Specialty)
+                    </div>
+                </div>
+
+                <div class="datetime-selection-grid">
+                    <!-- انتخاب تاریخ با تقویم شمسی (بند ۷ و ۸ سند) -->
+                    <div class="date-picker-box">
+                        <label class="section-label">انتخاب تاریخ مراجعه (تقویم شمسی):</label>
+                        <PersianDatePicker @bind-Value="_selectedDate" DisablePast="true" />
+                        <div class="calendar-hint">روزهای گذشته غیرفعال هستند.</div>
+                    </div>
+
+                    <!-- اسلات‌های زمانی آزاد (بند ۸ و ۱۱ سند) -->
+                    <div class="slots-box">
+                        <label class="section-label">انتخاب ساعت آزاد نوبت:</label>
+                        <div class="slots-grid">
+                            @foreach (var slot in _timeSlots)
+                            {
+                                var isSel = (_selectedTime == slot.Time);
+                                <button type="button"
+                                        class="time-slot-btn @(isSel ? "selected" : "") @(slot.IsBooked ? "booked" : "")"
+                                        disabled="@slot.IsBooked"
+                                        @onclick="@(() => _selectedTime = slot.Time)">
+                                    <span class="slot-time">@slot.Time.ToString(@"hh\:mm")</span>
+                                    <span class="slot-status">@(slot.IsBooked ? "تکمیل شده" : "آزاد")</span>
+                                </button>
+                            }
+                        </div>
+
+                        <!-- دکمه لیست انتظار در صورت پر بودن نوبت‌ها (بند ۱۱ سند) -->
+                        <div class="waiting-list-callout">
+                            <span>ساعت مناسبی پیدا نکردید یا وقت‌ها پر است؟</span>
+                            <button type="button" class="btn-solon ghost sm" @onclick="@(() => _showWaitingModal = true)">
+                                ⏳ مرا در لیست انتظار قرار بده
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-field" style="margin-top:1.5rem">
+                    <label>توضیحات یا نکات بهداشتی و حساسیت پوستی (اختیاری):</label>
+                    <textarea class="panel-input" rows="2" @bind="_note" placeholder="مثلاً: حساسیت به مواد خاص، تمایل به فرم خاص و..."></textarea>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_stepError))
+                {
+                    <div class="panel-alert error" style="margin-top:1rem">@_stepError</div>
+                }
+
+                <div class="reserve-btn-row">
+                    <button class="btn-solon red lg" @onclick="GoToStep3">
+                        مرحله بعد: تخفیف و شرایط قیمت متغیر ←
+                    </button>
+                    <button class="btn-solon ghost" @onclick="@(() => _step = 1)">بازگشت به مرحله قبل</button>
+                </div>
+            </div>
+        }
+
+        @* ==================== مرحله ۳ : کد تخفیف و تأیید شرط قیمت متغیر ==================== *@
+        @if (_step == 3)
+        {
+            <div class="panel-card reserve-card">
+                <div class="panel-card-head">
+                    <h3>۳. کد تخفیف و شرایط قیمت متغیر</h3>
+                    <p>اطلاعات مالی نوبت و قوانین خدمات را بررسی و تأیید فرمایید:</p>
+                </div>
+
+                <!-- نمایش قیمت تقریبی (بند ۸ سند) -->
+                <div class="price-breakdown-card">
+                    <div class="price-row">
+                        <span>هزینه پایه و تقریبی خدمت:</span>
+                        <span class="price-num">@_basePrice.ToString("#,0") تومان</span>
+                    </div>
+
+                    @if (_discountAmount > 0)
+                    {
+                        <div class="price-row discount">
+                            <span>تخفیف اعمال شده (@_discountCode):</span>
+                            <span class="price-num">- @_discountAmount.ToString("#,0") تومان</span>
+                        </div>
+                    }
+
+                    <div class="price-row final">
+                        <span>مبلغ قابل پرداخت:</span>
+                        <span class="price-num total">@_payableAmount.ToString("#,0") تومان</span>
+                    </div>
+                </div>
+
+                <!-- بخش کد تخفیف (بند ۸ و ۹ سند) -->
+                <div class="discount-input-group">
+                    <label>کد تخفیف دارید؟</label>
+                    <div class="discount-controls">
+                        <input class="panel-input" placeholder="مثال: HADIS20" @bind="_discountCodeInput" />
+                        <button class="btn-solon" @onclick="ApplyDiscount" disabled="@_discountBusy">
+                            @(_discountBusy ? "بررسی..." : "اعمال کد تخفیف")
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(_discountMessage))
+                    {
+                        <div class="discount-feedback @(_discountValid ? "valid" : "invalid")">@_discountMessage</div>
+                    }
+                </div>
+
+                <!-- پیام حتمی و شرط قیمت متغیر (بند ۸ سند نیازمندی‌ها) -->
+                <div class="variable-price-notice-box">
+                    <div class="notice-header">
+                        <span class="notice-icon">⚠️</span>
+                        <strong>اطلاعیه مهم در خصوص قیمت متغیر خدمات</strong>
+                    </div>
+                    <p class="notice-body">
+                        هزینه نهایی خدمت ممکن است بر اساس شرایط، قد و حجم مو، میزان آسیب‌دیدگی، نوع ژل یا متریال مصرفی و میزان خدمات ارائه شده کمتر یا بیشتر از مبلغ نمایش داده شده باشد.
+                    </p>
+                    <div class="terms-agree-check">
+                        <input type="checkbox" id="varPriceCheck" @bind="_variablePriceAgreed" />
+                        <label for="varPriceCheck">
+                            <strong>«شرایط قیمت متغیر را مطالعه کرده‌ام و می‌پذیرم.»</strong>
+                            <span class="req">* (تأیید این بند برای ادامه الزامی است)</span>
+                        </label>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_stepError))
+                {
+                    <div class="panel-alert error" style="margin-top:1rem">@_stepError</div>
+                }
+
+                <div class="reserve-btn-row">
+                    <!-- تا زمانی که تیک نخورده پرداخت فعال نشود (بند ۸ سند) -->
+                    <button class="btn-solon red lg" @onclick="OpenConfirmModal" disabled="@(!_variablePriceAgreed)">
+                        پیش‌نمایش و تأیید نهایی رزرو ←
+                    </button>
+                    <button class="btn-solon ghost" @onclick="@(() => _step = 2)">بازگشت</button>
+                </div>
+            </div>
+        }
+
+        @* ==================== مرحله ۴ : صفحه درگاه پرداخت و نتیجه ==================== *@
+        @if (_step == 4)
+        {
+            <div class="panel-card reserve-card">
+                @if (_isPaying)
+                {
+                    <!-- شبیه‌ساز امن درگاه زرین‌پال (بند ۹ و ۱۰ سند) -->
+                    <div class="gateway-simulation-box">
+                        <div class="gateway-brand">
+                            <span class="zarin-logo">🟡 زرین‌پال</span>
+                            <span>درگاه پرداخت اینترنتی امن شاپرک</span>
+                        </div>
+                        <div class="gateway-details">
+                            <div class="gw-row"><span>پذیرنده:</span><strong>سالن تخصصی زیبایی حدیث</strong></div>
+                            <div class="gw-row"><span>کد پیگیری سیستمی (TC):</span><strong>@_createdReservation?.TrackingCode</strong></div>
+                            <div class="gw-row"><span>مبلغ تراکنش:</span><strong class="gw-amount">@_payableAmount.ToString("#,0") تومان</strong></div>
+                            <div class="gw-row"><span>کد اتوریتی درگاه:</span><code>@_authority</code></div>
+                        </div>
+
+                        <div class="gateway-actions">
+                            <button class="btn-solon red lg full-width" @onclick="@(() => FinishPayment(true))" disabled="@_busy">
+                                @(_busy ? "در حال وریفای سمت سرور..." : "تأیید پرداخت و بازگشت به سایت")
+                            </button>
+                            <button class="btn-solon ghost lg full-width" @onclick="@(() => FinishPayment(false))" disabled="@_busy">
+                                انصراف و لغو پرداخت
+                            </button>
+                        </div>
+                    </div>
+                }
+                else if (_paymentDone)
+                {
+                    <!-- نتیجه موفق رزرو و پرداخت قطعی (بند ۹ و ۲۰ سند) -->
+                    <div class="reservation-success-card">
+                        <div class="success-icon-wrap">✓</div>
+                        <h2>نوبت شما با موفقیت قطعی و ثبت شد!</h2>
+                        <p class="success-sub">پیامک تأیید رزرو حاوی جزئیات نوبت برای شما ارسال گردید.</p>
+
+                        <div class="ticket-receipt">
+                            <div class="ticket-header">
+                                <span>رسید رسمی نوبت سالن حدیث</span>
+                                <span class="ticket-code">@_createdReservation?.TrackingCode</span>
+                            </div>
+                            <div class="ticket-grid">
+                                <div><label>نام مراجع:</label><strong>@_createdReservation?.CustomerName</strong></div>
+                                <div><label>خدمت:</label><strong>@_createdReservation?.ServiceName</strong></div>
+                                <div><label>پرسنل منتخب:</label><strong>@_createdReservation?.PersonalName</strong></div>
+                                <div><label>تاریخ شمسی:</label><strong>@PersianDateHelper.ToShamsiLong(_createdReservation?.ReserveDate ?? DateTime.Today)</strong></div>
+                                <div><label>ساعت نوبت:</label><strong>@_createdReservation?.ReserveTime.ToString(@"hh\:mm")</strong></div>
+                                <div><label>مبلغ پرداخت‌شده:</label><strong>@_payableAmount.ToString("#,0") تومان</strong></div>
+                                <div><label>شماره پیگیری پرداخت:</label><code>@_refId</code></div>
+                                <div><label>وضعیت نوبت:</label><span class="badge-ok">تأیید قطعی</span></div>
+                            </div>
+                        </div>
+
+                        <div class="reserve-btn-row" style="margin-top:2rem">
+                            <a class="btn-solon red lg" href="">بازگشت به صفحه اصلی</a>
+                            <a class="btn-solon ghost" href="panel">مشاهده نوبت‌ها در پنل کاربری</a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="panel-alert error">
+                        <h4>پرداخت ناموفق بود یا لغو گردید.</h4>
+                        <p>کد پیگیری شما: @_createdReservation?.TrackingCode</p>
+                        <button class="btn-solon red sm" @onclick="@(() => _isPaying = true)">تلاش مجدد جهت پرداخت</button>
+                    </div>
+                }
+            </div>
+        }
+
+    </div>
+</section>
+
+@* ==================== مودال تأیید قبل از ثبت نهایی رزرو (بند ۱۲ سند نیازمندی‌ها) ==================== *@
+@if (_showConfirmModal)
+{
+    <div class="search-overlay" @onclick="@(() => _showConfirmModal = false)">
+        <div class="search-modal booking-confirm-modal" @onclick:stopPropagation>
+            <div class="confirm-modal-head">
+                <span class="confirm-icon">📋</span>
+                <h3>آیا از اطلاعات رزرو اطمینان دارید؟</h3>
+                <p>لطفاً مشخصات نوبت خود را پیش از انتقال به درگاه پرداخت بررسی نمایید:</p>
+            </div>
+
+            <div class="confirm-details-list">
+                <div class="confirm-row">
+                    <span>نام و نام خانوادگی:</span>
+                    <strong>@_customerName</strong>
+                </div>
+                <div class="confirm-row">
+                    <span>شماره موبایل:</span>
+                    <strong dir="ltr">@_mobileNumber</strong>
+                </div>
+                <div class="confirm-row">
+                    <span>خدمت درخواستی:</span>
+                    <strong>@_selectedServiceName</strong>
+                </div>
+                <div class="confirm-row">
+                    <span>پرسنل انتخابی:</span>
+                    <strong>@_selectedStaffName</strong>
+                </div>
+                <div class="confirm-row">
+                    <span>تاریخ نوبت (شمسی):</span>
+                    <strong>@PersianDateHelper.ToShamsiLong(_selectedDate)</strong>
+                </div>
+                <div class="confirm-row">
+                    <span>ساعت نوبت:</span>
+                    <strong>@_selectedTime.ToString(@"hh\:mm")</strong>
+                </div>
+                <div class="confirm-row">
+                    <span>مبلغ پایه:</span>
+                    <strong>@_basePrice.ToString("#,0") تومان</strong>
+                </div>
+                @if (_discountAmount > 0)
+                {
+                    <div class="confirm-row discount">
+                        <span>تخفیف:</span>
+                        <strong>- @_discountAmount.ToString("#,0") تومان</strong>
+                    </div>
+                }
+                <div class="confirm-row total">
+                    <span>مبلغ قابل پرداخت نهایی:</span>
+                    <strong class="highlight">@_payableAmount.ToString("#,0") تومان</strong>
+                </div>
+            </div>
+
+            <div class="confirm-modal-actions">
+                <!-- دکمه تأیید و ادامه پرداخت (بند ۱۲ سند) -->
+                <button class="btn-solon red lg" @onclick="ProceedToPayment" disabled="@_busy">
+                    @(_busy ? "در حال انتقال به درگاه..." : "تأیید و ادامه پرداخت →")
+                </button>
+                <!-- دکمه بازگشت و ویرایش (بند ۱۲ سند) -->
+                <button class="btn-solon ghost lg" @onclick="@(() => _showConfirmModal = false)">
+                    بازگشت و ویرایش
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ==================== مودال ثبت در لیست انتظار (بند ۱۱ سند) ==================== *@
+@if (_showWaitingModal)
+{
+    <div class="search-overlay" @onclick="@(() => _showWaitingModal = false)">
+        <div class="search-modal" @onclick:stopPropagation style="max-width:540px">
+            <div class="staff-modal-header">
+                <h3>⏳ قرارگیری در لیست انتظار سالن</h3>
+                <button class="search-close-btn" @onclick="@(() => _showWaitingModal = false)">✕</button>
+            </div>
+            <div class="staff-modal-body">
+                <p style="font-size:.9rem;opacity:.85;margin-bottom:1rem">
+                    در صورتی که هر یک از نوبت‌های تاریخ @PersianDateHelper.ToShamsiLong(_selectedDate) خالی شود، بلافاصله پیامکی با مهلت رزرو برای شما ارسال خواهد شد:
+                </p>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>نام متقاضی:</label>
+                        <input class="panel-input" @bind="_customerName" />
+                    </div>
+                    <div class="form-field">
+                        <label>شماره موبایل جهت پیامک:</label>
+                        <input class="panel-input" dir="ltr" @bind="_mobileNumber" />
+                    </div>
+                    <div class="form-field" style="grid-column:1/-1">
+                        <label>ساعت ترجیحی:</label>
+                        <input type="time" class="panel-input" @bind="_preferredWaitTime" />
+                    </div>
+                </div>
+
+                @if (_waitingSuccess)
+                {
+                    <div class="panel-alert ok" style="margin-top:1rem">
+                        درخواست شما در لیست انتظار ثبت شد. به محض لغو یا باز شدن نوبت، پیامک دریافت خواهید کرد.
+                    </div>
+                }
+
+                <div class="staff-modal-footer" style="margin-top:1.5rem">
+                    <button class="btn-solon red" @onclick="SubmitWaitingList" disabled="@_waitingBusy">
+                        @(_waitingBusy ? "در حال ثبت..." : "ثبت نام در لیست انتظار")
+                    </button>
+                    <button class="btn-solon ghost" @onclick="@(() => _showWaitingModal = false)">انصراف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private int _step = 1;
+    private string? _stepError;
+    private bool _busy = false;
+
+    // مرحله ۱
+    private string _selectedServiceSlug = "nail";
+    private string _selectedServiceName = "کاشت ناخن";
+    private Guid _selectedStaffTc;
+    private string _selectedStaffName = "سارا محمدی";
+    private Tbl_Personal? _selectedStaff;
+    private string _customerName = "";
+    private string _mobileNumber = "";
+    private PortfolioItem? _selectedWork;
+    private List<Tbl_Personal> _allStaff = new();
+
+    // مرحله ۲
+    private DateTime _selectedDate = DateTime.Today.AddDays(1);
+    private TimeSpan _selectedTime = new TimeSpan(11, 0, 0);
+    private string _note = "";
+    private record SlotItem(TimeSpan Time, bool IsBooked);
+    private List<SlotItem> _timeSlots = new();
+    private bool _showWaitingModal = false;
+    private DateTime _preferredWaitTime = DateTime.Today.AddHours(16);
+    private bool _waitingBusy = false;
+    private bool _waitingSuccess = false;
+
+    // مرحله ۳
+    private decimal _basePrice = 1_900_000;
+    private string _discountCodeInput = "";
+    private string _discountCode = "";
+    private decimal _discountAmount = 0;
+    private decimal _payableAmount = 1_900_000;
+    private bool _discountBusy = false;
+    private bool _discountValid = false;
+    private string? _discountMessage;
+    private bool _variablePriceAgreed = false;
+    private bool _showConfirmModal = false;
+
+    // مرحله ۴
+    private bool _isPaying = false;
+    private bool _paymentDone = false;
+    private string _authority = "";
+    private string _refId = "";
+    private Tbl_Reservation? _createdReservation;
+    private SeoMetadata _seo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _seo = Seo.GetGeneralPageSeo(
+            "رزرو آنلاین و هوشمند نوبت سالن زیبایی حدیث",
+            "سامانه رزرواسیون آنلاین نوبت سالن زیبایی حدیث با امکان انتخاب متخصص، لاین، تاریخ و ساعت دلخواه با پرداخت امن بیعانه.",
+            "reserve",
+            Nav.BaseUri);
+        // اطمینان از کنونیکال بودن آدرس و حذف پارامترهای تکراری مثل service و work در موتورهای جستجو
+        _seo.CanonicalUrl = $"{Nav.BaseUri.TrimEnd('/')}/reserve";
+
+        _allStaff = await Store.AllAsync<Tbl_Personal>();
+
+        var query = Nav.ToAbsoluteUri(Nav.Uri).Query.TrimStart('?');
+        var q = query.Split('&', StringSplitOptions.RemoveEmptyEntries)
+                     .Select(p => p.Split('=', 2))
+                     .Where(p => p.Length == 2)
+                     .ToDictionary(p => p[0], p => Uri.UnescapeDataString(p[1]));
+
+        if (q.TryGetValue("service", out var s) && PortfolioCatalog.ServiceBySlug(s) is not null)
+            _selectedServiceSlug = s;
+
+        if (q.TryGetValue("work", out var w) && Guid.TryParse(w, out var tc))
+        {
+            _selectedWork = PortfolioCatalog.ByTc(tc);
+            if (_selectedWork is not null)
+            {
+                _selectedServiceSlug = _selectedWork.ServiceSlug;
+                _basePrice = _selectedWork.Price;
+                _payableAmount = _basePrice;
+            }
+        }
+
+        OnServiceChanged();
+        GenerateSlots();
+    }
+
+    private void OnServiceChanged()
+    {
+        var svc = PortfolioCatalog.ServiceBySlug(_selectedServiceSlug);
+        if (svc is not null)
+        {
+            _selectedServiceName = svc.Title;
+            if (_selectedWork is null)
+            {
+                _basePrice = svc.FromPrice;
+                _payableAmount = _basePrice;
+            }
+        }
+
+        var availableStaff = GetStaffForSelectedService().ToList();
+        if (availableStaff.Any())
+        {
+            SelectStaff(availableStaff.First());
+        }
+    }
+
+    private IEnumerable<Tbl_Personal> GetStaffForSelectedService()
+    {
+        var slug = _selectedServiceSlug;
+        return _allStaff.Where(s =>
+            (slug == "nail" && s.Line.Contains("ناخن")) ||
+            (slug == "hair" && s.Line.Contains("مو")) ||
+            (slug == "bride" && (s.Line.Contains("عروس") || s.Line.Contains("میکاپ"))) ||
+            (slug == "skin" && (s.Line.Contains("پوست") || s.Line.Contains("فیشال"))) ||
+            (slug == "lash" && (s.Line.Contains("مژه") || s.Line.Contains("ابرو")))
+        );
+    }
+
+    private void SelectStaff(Tbl_Personal s)
+    {
+        _selectedStaff = s;
+        _selectedStaffTc = s.Tc;
+        _selectedStaffName = s.FullName;
+    }
+
+    private void GenerateSlots()
+    {
+        _timeSlots.Clear();
+        var baseHours = new[] { 9, 10, 11, 13, 14, 16, 17, 19, 20 };
+        var rnd = new Random(13);
+        foreach (var h in baseHours)
+        {
+            // شبیه‌سازی پر بودن نوبت ۱۸ و برخی ساعات دیگر (بند ۱۱ سند)
+            bool booked = (h == 18 || h == 13 && rnd.Next(2) == 0);
+            _timeSlots.Add(new SlotItem(new TimeSpan(h, 0, 0), booked));
+            _timeSlots.Add(new SlotItem(new TimeSpan(h, 30, 0), booked));
+        }
+    }
+
+    private void GoToStep2()
+    {
+        _stepError = null;
+        _mobileNumber = DigitHelper.Normalize(_mobileNumber);
+        if (string.IsNullOrWhiteSpace(_customerName) || string.IsNullOrWhiteSpace(_mobileNumber))
+        {
+            _stepError = "لطفاً نام مراجع و شماره موبایل را وارد فرمایید.";
+            return;
+        }
+        if (!System.Text.RegularExpressions.Regex.IsMatch(_mobileNumber, @"^09\d{9}$"))
+        {
+            _stepError = "شماره موبایل وارد شده معتبر نیست (نمونه: ۰۹۱۲۰۰۰۰۰۰۱).";
+            return;
+        }
+        _step = 2;
+    }
+
+    private void GoToStep3()
+    {
+        _stepError = null;
+        _step = 3;
+    }
+
+    private async Task ApplyDiscount()
+    {
+        if (string.IsNullOrWhiteSpace(_discountCodeInput))
+        {
+            _discountMessage = "کد تخفیف را وارد فرمایید.";
+            _discountValid = false;
+            return;
+        }
+
+        _discountBusy = true;
+        var (ok, disc, finalAmt, msg) = await Reservations.ValidateDiscountAsync(_discountCodeInput.Trim(), _basePrice);
+        _discountBusy = false;
+        _discountValid = ok;
+        _discountMessage = msg;
+        if (ok)
+        {
+            _discountCode = _discountCodeInput.Trim().ToUpper();
+            _discountAmount = disc;
+            _payableAmount = finalAmt;
+        }
+    }
+
+    private void OpenConfirmModal()
+    {
+        if (!_variablePriceAgreed)
+        {
+            _stepError = "پذیرش شرایط قیمت متغیر برای ادامه الزامی است.";
+            return;
+        }
+        _stepError = null;
+        _showConfirmModal = true;
+    }
+
+    private async Task ProceedToPayment()
+    {
+        _showConfirmModal = false;
+        _busy = true;
+
+        var rsv = new Tbl_Reservation
+        {
+            CustomerName = _customerName.Trim(),
+            MobileNumber = _mobileNumber.Trim(),
+            ServiceName = _selectedServiceName,
+            PersonalTC = _selectedStaffTc,
+            PersonalName = _selectedStaffName,
+            PortfolioTC = _selectedWork?.Tc,
+            ReserveDate = _selectedDate.Date,
+            ReserveTime = _selectedTime,
+            DurationMinutes = _selectedWork?.DurationMinutes ?? 60,
+            Price = _basePrice,
+            DiscountCode = _discountCode,
+            DiscountAmount = _discountAmount,
+            PayableAmount = _payableAmount,
+            VariablePriceAgreed = true,
+            PaymentStatus = PaymentStatus.RedirectedToGateway,
+            CustomerNote = string.IsNullOrWhiteSpace(_note) ? null : _note.Trim()
+        };
+
+        var (ok, msg, saved) = await Reservations.CreateAsync(rsv);
+        _createdReservation = saved ?? rsv;
+        _authority = $"ZP-{Guid.NewGuid():N}";
+        _busy = false;
+        _step = 4;
+        _isPaying = true;
+    }
+
+    private async Task FinishPayment(bool simulateSuccess)
+    {
+        _busy = true;
+        if (_createdReservation is not null)
+        {
+            var (ok, msg, refId) = await Reservations.VerifyPaymentAsync(_createdReservation.Tc, _authority, simulateSuccess);
+            _paymentDone = ok;
+            _refId = refId ?? $"REF-{DateTime.Now:yyMMddHHmm}";
+        }
+        _busy = false;
+        _isPaying = false;
+    }
+
+    private async Task SubmitWaitingList()
+    {
+        if (string.IsNullOrWhiteSpace(_customerName) || string.IsNullOrWhiteSpace(_mobileNumber))
+            return;
+
+        _waitingBusy = true;
+        var entry = new Tbl_WaitingList
+        {
+            CustomerName = _customerName.Trim(),
+            MobileNumber = DigitHelper.Normalize(_mobileNumber),
+            ServiceName = _selectedServiceName,
+            PersonalName = _selectedStaffName,
+            DesiredDate = _selectedDate.Date,
+            DesiredTime = _preferredWaitTime.TimeOfDay,
+            Note = "درخواست رزرو در ساعات تکمیل‌شده"
+        };
+        await Reservations.AddToWaitingListAsync(entry);
+        _waitingBusy = false;
+        _waitingSuccess = true;
+    }
+}

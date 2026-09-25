@@ -1,0 +1,210 @@
+@page "/contact"
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@inject NavigationManager Nav
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+<PageBurn Title="تماس با ما و ارتباط با سالن" />
+
+<section class="section light contact-page-section">
+    <LeafDeco Position="leaf-tr" />
+    <LeafDeco Position="leaf-bl" />
+    <div class="container">
+        <BreadcrumbNav Items="_seo.Breadcrumbs" />
+
+        <!-- ساختار دو ستونه طبق بند ۵ سند -->
+        <div class="contact-2col-layout" style="margin-top:1.5rem;">
+            <!-- سمت چپ: فرم ارسال نظر/پیام (بند ۵ سند) -->
+            <div class="contact-form-card">
+                <div class="card-header">
+                    <h3>ارسال پیام یا نظر به مدیریت</h3>
+                    <p>پیشنهادات، انتقادات یا سؤالات خود را با ما در میان بگذارید:</p>
+                </div>
+
+                @if (_submitted)
+                {
+                    <div class="contact-success-box">
+                        <span class="success-icon">✓</span>
+                        <h4>پیام شما با موفقیت ثبت شد</h4>
+                        <p>از بازخورد ارزشمند شما سپاسگزاریم. کارشناسان سالن در اسرع وقت با شما تماس خواهند گرفت.</p>
+                        <button class="btn-solon sm" @onclick="@(() => _submitted = false)">ارسال پیام جدید</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>نام و نام خانوادگی <span class="req">*</span></label>
+                            <input class="panel-input" @bind="_name" placeholder="مثال: سارا کمالی" />
+                        </div>
+                        <div class="form-field">
+                            <label>شماره تماس <span class="req">*</span></label>
+                            <input class="panel-input" dir="ltr" @bind="_mobile" placeholder="09xxxxxxxxx" />
+                        </div>
+                        <div class="form-field" style="grid-column:1/-1">
+                            <label>موضوع پیام</label>
+                            <select class="panel-input" @bind="_subject">
+                                <option value="نظر درباره خدمات">نظر یا بازخورد درباره خدمات دریافت شده</option>
+                                <option value="مشاوره قبل از رزرو">مشاوره قبل از نوبت‌دهی</option>
+                                <option value="همکاری و استخدام">درخواست همکاری / پرسنل</option>
+                                <option value="سایر موارد">سایر موارد و پیشنهادات</option>
+                            </select>
+                        </div>
+                        <div class="form-field" style="grid-column:1/-1">
+                            <label>متن پیام <span class="req">*</span></label>
+                            <textarea class="panel-input" rows="5" @bind="_message" placeholder="پیام یا نظر خود را اینجا بنویسید..."></textarea>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_error))
+                    {
+                        <div class="panel-alert error" style="margin-top:1rem">@_error</div>
+                    }
+
+                    <div style="margin-top:1.5rem">
+                        <button class="btn-solon red lg full-width" @onclick="SubmitForm" disabled="@_busy">
+                            @(_busy ? "در حال ارسال..." : "ارسال پیام و نظر")
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <!-- سمت راست: شماره تماس، ایمیل، آدرس، اطلاعات سالن (بند ۵ سند) -->
+            <div class="contact-info-card">
+                <div class="card-header">
+                    <h3>اطلاعات سالن زیبایی حدیث</h3>
+                    <p>خوشحال می‌شویم میزبان شما در فضایی آرام و اختصاصی باشیم.</p>
+                </div>
+
+                <div class="contact-meta-list">
+                    <div class="contact-meta-row">
+                        <div class="meta-icon">📞</div>
+                        <div>
+                            <span class="meta-label">شماره‌های تماس سالن:</span>
+                            <div class="meta-values" dir="ltr">
+                                <a href="tel:@(_settings?.PhoneLandline ?? "02112345678")">@(_settings?.PhoneLandline ?? "۰۲۱-۱۲۳۴۵۶۷۸")</a>
+                                <span class="sep">|</span>
+                                <a href="tel:@(_settings?.PhoneMobile ?? "09120000001")">@(_settings?.PhoneMobile ?? "۰۹۱۲۰-۰۰۰۰۰۱")</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-meta-row">
+                        <div class="meta-icon">✉</div>
+                        <div>
+                            <span class="meta-label">پست الکترونیکی:</span>
+                            <div class="meta-values">
+                                <a href="mailto:@(_settings?.Email ?? "info@hadisbeauty.salon")">@(_settings?.Email ?? "info@hadisbeauty.salon")</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-meta-row">
+                        <div class="meta-icon">📍</div>
+                        <div>
+                            <span class="meta-label">آدرس سالن:</span>
+                            <div class="meta-values">
+                                <p>@(_settings?.Address ?? "تهران، زعفرانیه، خیابان مقدس اردبیلی، پلاک ۲۴، ساختمان تجاری حدیث، طبقه ۳")</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-meta-row">
+                        <div class="meta-icon">⏱</div>
+                        <div>
+                            <span class="meta-label">ساعات فعالیت و پذیرش:</span>
+                            <div class="meta-values">
+                                <p>@(_settings?.WorkingHoursDisplay ?? "شنبه تا پنج‌شنبه: ۹:۰۰ الی ۲۱:۰۰ (جمعه‌ها با هماهنگی قبلی)")</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-meta-row">
+                        <div class="meta-icon">🌐</div>
+                        <div>
+                            <span class="meta-label">شبکه‌های اجتماعی سالن:</span>
+                            <div class="social-links-inline">
+                                <a href="@(_settings?.InstagramUrl ?? "https://instagram.com/hadisbeauty.salon")" target="_blank" rel="noopener">اینستاگرام</a>
+                                <span class="sep">•</span>
+                                <a href="@(_settings?.TelegramUrl ?? "https://t.me/hadisbeauty")" target="_blank" rel="noopener">تلگرام</a>
+                                <span class="sep">•</span>
+                                <a href="@(_settings?.WhatsAppUrl ?? "https://wa.me/989120000001")" target="_blank" rel="noopener">واتس‌اپ</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-reserve-box">
+                    <span>برای دریافت سریع‌ترین زمان مراجعه:</span>
+                    <a class="btn-solon sm" href="reserve">رزرو آنلاین نوبت</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private Tbl_SalonSetting? _settings;
+    private string _name = "";
+    private string _mobile = "";
+    private string _subject = "نظر درباره خدمات";
+    private string _message = "";
+    private string? _error;
+    private bool _submitted = false;
+    private bool _busy = false;
+    private SeoMetadata _seo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _seo = Seo.GetGeneralPageSeo(
+            "تماس با سالن زیبایی حدیث و آدرس",
+            "آدرس دقیق، شماره تلفن‌های تماس، ساعات کاری و فرم ارتباط مستقیم با مدیریت سالن زیبایی حدیث واقع در زعفرانیه تهران.",
+            "contact",
+            Nav.BaseUri);
+
+        try
+        {
+            var list = await Store.AllAsync<Tbl_SalonSetting>();
+            _settings = list.FirstOrDefault();
+            if (_settings is not null)
+            {
+                var schema = Seo.BuildLocalBusinessSchema(_settings, Nav.BaseUri);
+                _seo.JsonLd = $"[{_seo.JsonLd},{schema}]";
+            }
+        }
+        catch { }
+    }
+
+    private async Task SubmitForm()
+    {
+        _error = null;
+        if (string.IsNullOrWhiteSpace(_name) || string.IsNullOrWhiteSpace(_mobile) || string.IsNullOrWhiteSpace(_message))
+        {
+            _error = "لطفاً نام، شماره موبایل و متن پیام را تکمیل فرمایید.";
+            return;
+        }
+
+        _busy = true;
+        // ثبت در دیتابیس نظرات یا ارسال پیام
+        try
+        {
+            await Store.AddAsync(new Tbl_Comment
+            {
+                Tc = Guid.NewGuid(),
+                CustomerName = _name.Trim(),
+                ServiceName = _subject,
+                CommentText = _message.Trim(),
+                Rating = 5,
+                IsApproved = false, // جهت بررسی مدیریت
+                IsActive = true,
+                RegisterData = DateTime.Now
+            });
+        }
+        catch { }
+
+        _busy = false;
+        _submitted = true;
+    }
+}

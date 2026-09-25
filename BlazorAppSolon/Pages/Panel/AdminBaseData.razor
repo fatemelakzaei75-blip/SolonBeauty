@@ -1,0 +1,41 @@
+@page "/panel/admin/base-data"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Admin")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+
+<PageTitle>مدیریت اطلاعات پایه سالن | Hadis Beauty</PageTitle>
+
+<div class="admin-base-data-wrap">
+    <div class="admin-dash-header">
+        <div>
+            <h2 class="panel-title">🗂 مدیریت جامع اطلاعات پایه سامانه (بند ۱۹ سند)</h2>
+            <p class="panel-subtitle">تفکیک کامل جداول پایه‌ای، تعاریف سیستم، دسترسی‌ها و ساختار خدمات</p>
+        </div>
+        <a class="btn-solon ghost sm" href="panel/admin">← بازگشت به داشبورد اصلی</a>
+    </div>
+
+    @foreach (var group in EntityRegistry.Grouped())
+    {
+        <div class="panel-card" style="margin-bottom:1.5rem">
+            <div class="panel-card-head">
+                <h3>گروه: @group.Key</h3>
+            </div>
+            <div class="entity-cards-grid">
+                @foreach (var e in group)
+                {
+                    <a class="entity-feature-card" href="@($"panel/admin/data/{e.Key}")">
+                        <span class="entity-icon">@e.Icon</span>
+                        <div class="entity-card-content">
+                            <h4>@e.Title</h4>
+                            <p>مدیریت، ثبت رکورد جدید و ویرایش اقلام</p>
+                            <span class="entity-go-link">ورود به بخش ←</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,77 @@
+@page "/blog"
+@using BlazorAppSolon.Data
+@inject NavigationManager Nav
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+<PageBurn Title="وبلاگ سالن حدیث" />
+
+<section class="section light">
+    <LeafDeco Position="leaf-tr" />
+    <div class="container">
+        <BreadcrumbNav Items="_seo.Breadcrumbs" />
+
+        <p style="text-align:center;max-width:720px;margin:1.5rem auto 2.2rem;opacity:.8;">
+            راهنماهای کاربردی متخصصان سالن حدیث درباره مراقبت از مو، پوست، ناخن و آمادگی برای روز مراسم.
+        </p>
+
+        <div class="filter-bar">
+            <button class="chip @(_cat == "" ? "on" : "")" @onclick='() => _cat = ""'>همه</button>
+            @foreach (var c in BlogCatalog.Categories)
+            {
+                <button class="chip @(_cat == c ? "on" : "")" @onclick="() => _cat = c">@c</button>
+            }
+        </div>
+
+        @if (Featured is not null && string.IsNullOrEmpty(_cat))
+        {
+            <a class="blog-featured" href="@($"blog/{Featured.Slug}")">
+                <img src="@Featured.Image" alt="@Featured.Title" />
+                <div>
+                    <span class="work-chip">@Featured.Category</span>
+                    <h3>@Featured.Title</h3>
+                    <p>@Featured.Summary</p>
+                    <small>@Featured.Author • @PersianDateHelper.ToShamsi(Featured.Date) • @Featured.ReadMinutes دقیقه مطالعه</small>
+                </div>
+            </a>
+        }
+
+        <div class="blog-grid">
+            @foreach (var post in Posts)
+            {
+                <a class="blog-card" href="@($"blog/{post.Slug}")">
+                    <img src="@post.Image" alt="@post.Title" loading="lazy" />
+                    <div>
+                        <span class="work-chip">@post.Category</span>
+                        <h3>@post.Title</h3>
+                        <p>@post.Summary</p>
+                        <small>@post.Author • @PersianDateHelper.ToShamsi(post.Date) • @post.ReadMinutes دقیقه</small>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private string _cat = "";
+    private SeoMetadata _seo = new();
+
+    protected override void OnInitialized()
+    {
+        _seo = Seo.GetGeneralPageSeo(
+            "وبلاگ و مقالات تخصصی زیبایی",
+            "جدیدترین مقالات آموزشی، مراقبت‌های بعد از کاشت ناخن، روتین‌های مراقبت از پوست و ترندهای رنگ مو توسط متخصصین سالن زیبایی حدیث.",
+            "blog",
+            Nav.BaseUri);
+    }
+
+    private BlogPost? Featured => BlogCatalog.Posts.OrderByDescending(p => p.Date).FirstOrDefault();
+
+    private IEnumerable<BlogPost> Posts
+        => BlogCatalog.Posts
+            .Where(p => string.IsNullOrEmpty(_cat) || p.Category == _cat)
+            .Where(p => !string.IsNullOrEmpty(_cat) || p.Slug != Featured?.Slug)
+            .OrderByDescending(p => p.Date);
+}

@@ -1,0 +1,315 @@
+@typeparam TEntity where TEntity : DataLayer.Entity.BaseEntity.Tbl_BaseEntity
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using DataLayer.Entity.BaseEntity
+@using DataCore.Helpers
+@using DataLayer.Entity
+@inject BlazorAppSolon.Data.IDataStore Store
+
+<div class="panel-card">
+    <div class="panel-card-head">
+        <h3>@Title <span class="source-chip">@(Store.IsOnline ? "متصل به سرویس" : "داده نمونه (آفلاین)")</span></h3>
+        <div style="display:flex;gap:.6rem;align-items:center;">
+            <input class="panel-input" style="width:220px" placeholder="جستجو..." @bind="_search" @bind:event="oninput" />
+            <button class="btn-solon" @onclick="StartCreate">+ رکورد جدید</button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_message))
+    {
+        <div class="panel-alert">@_message</div>
+    }
+
+    <div style="overflow-x:auto;">
+        <table class="panel-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    @foreach (var p in Columns)
+                    {
+                        <th>@Label(p)</th>
+                    }
+                    <th>وضعیت</th>
+                    <th>تاریخ ثبت (شمسی)</th>
+                    <th style="width:120px">عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ var rows = Filtered(); var i = 1; }
+                @foreach (var item in rows)
+                {
+                    <tr>
+                        <td>@(i++)</td>
+                        @foreach (var p in Columns)
+                        {
+                            <td>
+                                @if (IsImageField(p.Name) && p.GetValue(item) is string img && !string.IsNullOrWhiteSpace(img))
+                                {
+                                    <img class="cell-thumb" src="@img" alt="" />
+                                }
+                                else
+                                {
+                                    @DisplayValue(p, p.GetValue(item))
+                                }
+                            </td>
+                        }
+                        <td>
+                            <span class="badge @(item.IsActive ? "ok" : "off")">@(item.IsActive ? "فعال" : "غیرفعال")</span>
+                        </td>
+                        <td>@PersianDateHelper.ToShamsi(item.RegisterData)</td>
+                        <td class="row-actions">
+                            <button class="mini" @onclick="() => StartEdit(item)">ویرایش</button>
+                            <button class="mini danger" @onclick="async () => await Remove(item)">حذف</button>
+                        </td>
+                    </tr>
+                }
+                @if (rows.Count == 0)
+                {
+                    <tr><td colspan="@(Columns.Count + 4)" style="text-align:center;opacity:.6">
+                        @(_loading ? "در حال دریافت اطلاعات..." : "رکوردی ثبت نشده است")
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (_editing is not null)
+{
+    <div class="modal-backdrop" @onclick="Cancel"></div>
+    <div class="modal-box">
+        <h3>@(_isNew ? "ثبت رکورد جدید" : "ویرایش رکورد") — @Title</h3>
+        <div class="form-grid">
+            @foreach (var p in EditableProps)
+            {
+                <div class="form-field">
+                    <label>@Label(p)</label>
+                    @RenderInput(p)
+                </div>
+            }
+            <div class="form-field">
+                <label>وضعیت</label>
+                <label class="switch">
+                    <input type="checkbox" checked="@_editing.IsActive"
+                           @onchange="e => _editing.IsActive = (bool)(e.Value ?? false)" />
+                    <span>فعال باشد</span>
+                </label>
+            </div>
+        </div>
+        <div style="display:flex;gap:.6rem;justify-content:flex-start;margin-top:1.2rem;">
+            <button class="btn-solon" @onclick="async () => await Save()">ذخیره</button>
+            <button class="btn-solon ghost" @onclick="Cancel">انصراف</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string ImageSection { get; set; } = "portfolio";
+
+    private string _search = "";
+    private string? _message;
+    private TEntity? _editing;
+    private bool _isNew;
+
+    // بند ۲۰: حذف فیلدهای فنی TC از ورودی دستی کاربر
+    private static readonly string[] Hidden = { "ID", "Tc", "IsActive", "IsDelete", "RegisterData" };
+
+    private static List<PropertyInfo> AllProps => typeof(TEntity)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(p => p.CanWrite && !Hidden.Contains(p.Name))
+        .ToList();
+
+    private List<PropertyInfo> EditableProps => AllProps;
+    private List<PropertyInfo> Columns => AllProps.Take(5).ToList();
+
+    private static readonly string[] ImageKeywords = { "pic", "image", "logo", "photo", "sample", "avatar" };
+
+    private static bool IsImageField(string name)
+        => ImageKeywords.Any(k => name.Contains(k, StringComparison.OrdinalIgnoreCase));
+
+    private static string Label(PropertyInfo p)
+        => p.GetCustomAttribute<DisplayAttribute>()?.Name ?? p.Name;
+
+    // نگاشت شناسه‌ها به نام‌ها طبق بند ۲۰ سند
+    private Dictionary<Guid, string> _nameLookup = new();
+
+    private string DisplayValue(PropertyInfo p, object? value)
+    {
+        if (value is null) return "-";
+        if (value is bool b) return b ? "بله" : "خیر";
+        if (value is DateTime dt) return PersianDateHelper.ToShamsi(dt, false);
+        if (value is decimal m) return m.ToString("#,0") + " تومان";
+        if (value is Guid g)
+        {
+            if (g == Guid.Empty) return "-";
+            if (_nameLookup.TryGetValue(g, out var name)) return name;
+            return g.ToString()[..8] + "…";
+        }
+        return value.ToString() ?? "-";
+    }
+
+    private List<TEntity> _items = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupsAsync();
+        await LoadAsync();
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        try
+        {
+            var cats = await Store.AllAsync<Tbl_Category>();
+            foreach (var c in cats) _nameLookup[c.Tc] = c.CategoryName;
+
+            var services = await Store.AllAsync<Tbl_SalonSerice>();
+            foreach (var s in services) _nameLookup[s.Tc] = s.ServiceName;
+
+            var staff = await Store.AllAsync<Tbl_Personal>();
+            foreach (var st in staff) _nameLookup[st.Tc] = st.FullName;
+
+            var customers = await Store.AllAsync<Tbl_Customer>();
+            foreach (var cu in customers) _nameLookup[cu.Tc] = cu.FullName;
+        }
+        catch { }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _items = await Store.AllAsync<TEntity>();
+        _loading = false;
+    }
+
+    private List<TEntity> Filtered()
+    {
+        var list = _items;
+        if (string.IsNullOrWhiteSpace(_search)) return list;
+        return list.Where(x => AllProps.Any(p =>
+            (p.GetValue(x)?.ToString() ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase))).ToList();
+    }
+
+    private void StartCreate()
+    {
+        _editing = (TEntity)Activator.CreateInstance(typeof(TEntity))!;
+        _editing.Tc = Guid.NewGuid();
+        _editing.IsActive = true;
+        _editing.RegisterData = DateTime.Now;
+
+        // تولید خودکار مقادیر سیستمی برای عدم نیاز به ورود دستی TC
+        var tcProp = typeof(TEntity).GetProperty("TrackingCode");
+        if (tcProp != null && tcProp.CanWrite)
+        {
+            tcProp.SetValue(_editing, $"TC-{DateTime.Now:yyMMdd}-{Random.Shared.Next(1000, 9999)}");
+        }
+
+        _isNew = true;
+        _message = null;
+    }
+
+    private void StartEdit(TEntity item)
+    {
+        var clone = (TEntity)Activator.CreateInstance(typeof(TEntity))!;
+        foreach (var p in typeof(TEntity).GetProperties().Where(p => p.CanWrite))
+            p.SetValue(clone, p.GetValue(item));
+        _editing = clone;
+        _isNew = false;
+        _message = null;
+    }
+
+    private async Task Save()
+    {
+        if (_editing is null) return;
+        var ok = _isNew ? await Store.AddAsync(_editing) : await Store.UpdateAsync(_editing);
+        _message = ok
+            ? (_isNew ? "رکورد جدید با موفقیت ثبت شد" : "تغییرات ذخیره شد")
+            : "ذخیره سازی ناموفق بود";
+        _editing = null;
+        await LoadAsync();
+    }
+
+    private async Task Remove(TEntity item)
+    {
+        await Store.DeleteAsync<TEntity>(item.Tc);
+        _message = "رکورد حذف شد";
+        await LoadAsync();
+    }
+
+    private void Cancel() { _editing = null; }
+
+    private RenderFragment RenderInput(PropertyInfo p) => builder =>
+    {
+        var type = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType;
+        var value = p.GetValue(_editing);
+
+        if (type == typeof(string) && IsImageField(p.Name))
+        {
+            builder.OpenComponent<BlazorAppSolon.Components.Panel.ImageUpload>(0);
+            builder.AddAttribute(1, "Value", (string?)value);
+            builder.AddAttribute(2, "Section", ImageSection);
+            builder.AddAttribute(3, "ValueChanged",
+                EventCallback.Factory.Create<string?>(this, v => p.SetValue(_editing, v)));
+            builder.CloseComponent();
+            return;
+        }
+
+        if (type == typeof(bool))
+        {
+            builder.OpenElement(0, "input");
+            builder.AddAttribute(1, "type", "checkbox");
+            builder.AddAttribute(2, "checked", (bool?)value ?? false);
+            builder.AddAttribute(3, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+                e => p.SetValue(_editing, (bool)(e.Value ?? false))));
+            builder.CloseElement();
+            return;
+        }
+
+        var inputType = type == typeof(DateTime) ? "date"
+            : (type == typeof(int) || type == typeof(decimal) || type == typeof(double)) ? "number"
+            : type == typeof(TimeSpan) ? "time"
+            : "text";
+
+        var text = value switch
+        {
+            DateTime d => d.ToString("yyyy-MM-dd"),
+            TimeSpan t => t.ToString(@"hh\:mm"),
+            null => "",
+            _ => value.ToString() ?? ""
+        };
+
+        builder.OpenElement(0, "input");
+        builder.AddAttribute(1, "class", "panel-input");
+        builder.AddAttribute(2, "type", inputType);
+        builder.AddAttribute(3, "value", text);
+        builder.AddAttribute(4, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this,
+            e => SetValue(p, type, e.Value?.ToString())));
+        builder.CloseElement();
+    };
+
+    private void SetValue(PropertyInfo p, Type type, string? raw)
+    {
+        try
+        {
+            object? converted =
+                string.IsNullOrWhiteSpace(raw) && Nullable.GetUnderlyingType(p.PropertyType) is not null ? null
+                : type == typeof(string) ? raw ?? ""
+                : type == typeof(int) ? int.Parse(raw!)
+                : type == typeof(decimal) ? decimal.Parse(raw!)
+                : type == typeof(double) ? double.Parse(raw!)
+                : type == typeof(Guid) ? (string.IsNullOrWhiteSpace(raw) ? Guid.Empty : Guid.Parse(raw))
+                : type == typeof(DateTime) ? DateTime.Parse(raw!)
+                : type == typeof(TimeSpan) ? TimeSpan.Parse(raw!)
+                : raw;
+
+            p.SetValue(_editing, converted);
+            _message = null;
+        }
+        catch
+        {
+            _message = $"مقدار وارد شده برای «{Label(p)}» معتبر نیست";
+        }
+    }
+}

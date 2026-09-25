@@ -1,0 +1,134 @@
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+
+<header class="solon-header">
+    <!-- نوار بالایی: تماس، ایمیل و شبکه‌های اجتماعی -->
+    <div class="topbar">
+        <div class="container">
+            <!-- سمت راست: شبکه‌های اجتماعی -->
+            <div class="topbar-socials">
+                <a href="@_instagram" target="_blank" rel="noopener" title="اینستاگرام">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <rect x="3" y="3" width="18" height="18" rx="5" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
+                    </svg>
+                    <span>@@hadisbeauty.salon</span>
+                </a>
+                <a href="@_telegram" target="_blank" rel="noopener" title="تلگرام">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.37.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- وسط: اطلاعات ساعت کاری و تماس سریع -->
+            <div class="topbar-info">
+                <span>ساعات کاری: ۰۹:۰۰ الی ۲۱:۰۰</span>
+                <span class="dot-separator">•</span>
+                <a href="tel:+982112345678" dir="ltr">+98 21 1234 5678</a>
+            </div>
+
+            <!-- سمت چپ: لینک مستقیم ورود به پنل کاربری -->
+            <div class="topbar-auth">
+                <AuthorizeView>
+                    <Authorized>
+                        <a href="@AppRoles.PanelUrl(context.User.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? "")" class="topbar-panel-link">
+                            👤 پنل کاربری (@context.User.Identity?.Name)
+                        </a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="login" class="topbar-panel-link">
+                            👤 ورود / ثبت نام
+                        </a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </div>
+
+    <!-- نوار اصلی ناوبری (بدون هیچ لوگویی طبق بند ۱ سند نیازمندی‌ها) -->
+    <div class="main-navbar">
+        <div class="container navbar-container">
+            <!-- سمت راست: منوی صفحات اصلی با منوی بازشوی دسته‌بندی خدمات -->
+            <nav class="nav-links">
+                <NavLink href="" Match="NavLinkMatch.All" class="nav-item">صفحه اصلی</NavLink>
+
+                <!-- دسته‌بندی خدمات در هدر و ورود مستقیم به خدمات همان دسته (بند ۱ سند) -->
+                <div class="nav-dropdown" @onmouseenter="@(() => _showCatMenu = true)" @onmouseleave="@(() => _showCatMenu = false)">
+                    <NavLink href="services" class="nav-item nav-dropdown-toggle">
+                        خدمات ما <span class="arrow-down">▾</span>
+                    </NavLink>
+                    @if (_showCatMenu)
+                    {
+                        <div class="nav-dropdown-menu">
+                            @foreach (var cat in PortfolioCatalog.Services)
+                            {
+                                <a href="@($"services/{cat.Slug}")" class="dropdown-item" @onclick="@(() => _showCatMenu = false)">
+                                    <span class="dropdown-bullet">◆</span>
+                                    <span>@cat.Title</span>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <NavLink href="blog" class="nav-item">وبلاگ و مقالات</NavLink>
+                <NavLink href="gallery" class="nav-item">تصاویر سالن</NavLink>
+                <NavLink href="about" class="nav-item">درباره ما</NavLink>
+                <NavLink href="contact" class="nav-item">تماس با ما</NavLink>
+                <NavLink href="terms" class="nav-item">قوانین و مقررات</NavLink>
+            </nav>
+
+            <!-- سمت چپ: جستجو، سبد خرید، رزرو وقت و پنل کاربری (بند ۱ سند) -->
+            <div class="navbar-actions">
+                <!-- دکمه جستجوی حرفه‌ای در تمام صفحات (بند ۱ سند) -->
+                <button class="nav-action-btn search-trigger" @onclick="@(() => _searchOpen = true)" title="جستجو در تمام صفحات">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span class="search-label">جستجو...</span>
+                </button>
+
+                <!-- آیکون سبد خرید (بند ۱ سند) -->
+                <a class="nav-action-btn cart-btn" href="cart" title="سبد خرید">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M4 6h16l-1.4 10.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 6z" />
+                        <path d="M9 6a3 3 0 0 1 6 0" />
+                    </svg>
+                </a>
+
+                <!-- دکمه رزرو وقت (بند ۱ سند) -->
+                <a class="btn-solon red book-btn" href="reserve">
+                    <span>رزرو وقت</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- مودال جستجوی حرفه‌ای (بند ۱ سند) -->
+<SearchModal @bind-IsOpen="_searchOpen" />
+
+@code {
+    private bool _showCatMenu = false;
+    private bool _searchOpen = false;
+    private string _instagram = "https://instagram.com/hadisbeauty.salon";
+    private string _telegram = "https://t.me/hadisbeauty";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var settings = await Store.AllAsync<Tbl_SalonSetting>();
+            var s = settings.FirstOrDefault();
+            if (s is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(s.InstagramUrl)) _instagram = s.InstagramUrl;
+                if (!string.IsNullOrWhiteSpace(s.TelegramUrl)) _telegram = s.TelegramUrl;
+            }
+        }
+        catch { }
+    }
+}

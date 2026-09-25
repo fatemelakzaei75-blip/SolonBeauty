@@ -1,0 +1,48 @@
+@page "/panel/customer"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Customer")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+
+<PageTitle>پنل مشتری | Hadis Beauty</PageTitle>
+<h2 class="panel-title">خوش آمدید 🌸</h2>
+
+<div class="stat-grid">
+    <div class="stat"><span>🗓</span><b>2</b><small>نوبت فعال</small></div>
+    <div class="stat"><span>✅</span><b>7</b><small>خدمات دریافت شده</small></div>
+    <div class="stat"><span>❤️</span><b>@_nTbl_Like</b><small>علاقه مندی</small></div>
+    <div class="stat"><span>🎁</span><b>1,250</b><small>امتیاز باشگاه</small></div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-head"><h3>خبر روز سالن</h3></div>
+    @foreach (var n in _allTbl_NewsDay)
+    {
+        <p>📣 @n.TextNews <small style="opacity:.6">(تا @PersianDateHelper.ToShamsi(n.DateEnd))</small></p>
+    }
+</div>
+
+<div class="panel-card">
+    <div class="panel-card-head"><h3>رزرو نوبت جدید</h3></div>
+    <div class="entity-links">
+        @foreach (var s in _allTbl_SalonSerice.Where(s => s.Main))
+        {
+            <a class="entity-link" href="panel/customer/appointments"><span class="ico">💅</span><span>@s.ServiceName</span></a>
+        }
+    </div>
+</div>
+
+@code {
+    private int _nTbl_Like;
+    private List<Tbl_NewsDay> _allTbl_NewsDay = new();
+    private List<Tbl_SalonSerice> _allTbl_SalonSerice = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _nTbl_Like = await Store.CountAsync<Tbl_Like>();
+        _allTbl_NewsDay = await Store.AllAsync<Tbl_NewsDay>();
+        _allTbl_SalonSerice = await Store.AllAsync<Tbl_SalonSerice>();
+    }
+}

@@ -1,0 +1,50 @@
+@page "/panel/admin/data/{Key}"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Admin")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@using BlazorAppSolon.Components.Panel
+
+<PageTitle>@(Descriptor?.Title ?? "اطلاعات پایه") | پنل مدیریت</PageTitle>
+
+@if (Descriptor is null)
+{
+    <div class="panel-card"><p>موجودیت مورد نظر یافت نشد.</p></div>
+}
+else
+{
+    <h2 class="panel-title">@Descriptor.Icon @Descriptor.Title</h2>
+
+    @switch (Descriptor.Key)
+    {
+        case "salon":              <EntityCrud TEntity="Tbl_Salon"             Title="@Descriptor.Title" /> break;
+        case "category":           <EntityCrud TEntity="Tbl_Category"          Title="@Descriptor.Title" /> break;
+        case "salon-service":      <EntityCrud TEntity="Tbl_SalonSerice"       Title="@Descriptor.Title" /> break;
+        case "social":             <EntityCrud TEntity="Tbl_Social"            Title="@Descriptor.Title" /> break;
+        case "news-day":           <EntityCrud TEntity="Tbl_NewsDay"           Title="@Descriptor.Title" /> break;
+        case "reservation":        <EntityCrud TEntity="Tbl_Reservation"       Title="@Descriptor.Title" /> break;
+        case "personal":           <EntityCrud TEntity="Tbl_Personal"          Title="@Descriptor.Title" /> break;
+        case "customer":           <EntityCrud TEntity="Tbl_Customer"          Title="@Descriptor.Title" /> break;
+        case "mobile":             <EntityCrud TEntity="Tbl_Mobile"            Title="@Descriptor.Title" /> break;
+        case "confirm":            <EntityCrud TEntity="Tbl_Confirm"           Title="@Descriptor.Title" /> break;
+        case "role":               <EntityCrud TEntity="Tbl_Roles"             Title="@Descriptor.Title" /> break;
+        case "permission":         <EntityCrud TEntity="Tbl_Permission"        Title="@Descriptor.Title" /> break;
+        case "role-permission":    <EntityCrud TEntity="Tbl_RolePermission"    Title="@Descriptor.Title" /> break;
+        case "user-role":          <EntityCrud TEntity="Tbl_UserRole"          Title="@Descriptor.Title" /> break;
+        case "category-portfolio": <EntityCrud TEntity="Tbl_CategoryPortfolio" Title="@Descriptor.Title" /> break;
+        case "portfolio":          <EntityCrud TEntity="Tbl_Portfoilo"         Title="@Descriptor.Title" /> break;
+        case "like":               <EntityCrud TEntity="Tbl_Like"              Title="@Descriptor.Title" /> break;
+        case "discount":           <EntityCrud TEntity="Tbl_Discount"          Title="@Descriptor.Title" /> break;
+        case "waiting-list":       <EntityCrud TEntity="Tbl_WaitingList"       Title="@Descriptor.Title" /> break;
+        case "notification":       <EntityCrud TEntity="Tbl_Notification"      Title="@Descriptor.Title" /> break;
+        case "comment":            <EntityCrud TEntity="Tbl_Comment"           Title="@Descriptor.Title" /> break;
+        case "faq":                <EntityCrud TEntity="Tbl_FAQ"               Title="@Descriptor.Title" /> break;
+        case "salon-setting":      <EntityCrud TEntity="Tbl_SalonSetting"      Title="@Descriptor.Title" /> break;
+    }
+}
+
+@code {
+    [Parameter] public string Key { get; set; } = "";
+    private EntityDescriptor? Descriptor => EntityRegistry.ByKey(Key);
+}

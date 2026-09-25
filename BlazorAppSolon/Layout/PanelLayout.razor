@@ -1,0 +1,100 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorAppSolon.Auth
+@using BlazorAppSolon.Data
+@using DataLayer.Entity
+@inject AuthService Auth
+@inject IDataStore Store
+@inject NavigationManager Nav
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+<div class="panel-shell">
+    <aside class="panel-side">
+        <a class="panel-logo" href="">
+            <span class="monogram">HB</span>
+            <small>HADIS BEAUTY</small>
+        </a>
+
+        <AuthorizeView Roles="Admin">
+            <nav class="panel-nav">
+                <div class="nav-group">مدیریت کلان سالن</div>
+                <NavLink href="panel/admin" Match="NavLinkMatch.All">📊 داشبورد و شاخص‌ها</NavLink>
+                <NavLink href="panel/admin/base-data">🗂 اطلاعات پایه (بند ۱۹)</NavLink>
+
+                <div class="nav-group">نوبت‌دهی و مراجعین</div>
+                <NavLink href="panel/admin/data/reservation">🗓 مدیریت نوبت‌ها</NavLink>
+                <NavLink href="panel/admin/data/waiting-list">⏳ لیست انتظار</NavLink>
+                <NavLink href="panel/admin/data/customer">👥 پرونده مشتریان</NavLink>
+
+                <div class="nav-group">تیم و خدمات</div>
+                <NavLink href="panel/admin/data/personal">👩‍🎨 پرسنل سالن</NavLink>
+                <NavLink href="panel/admin/data/salon-service">💅 خدمات و تعرفه‌ها</NavLink>
+                <NavLink href="panel/admin/data/portfolio">🖼 گالری نمونه‌کارها</NavLink>
+
+                <div class="nav-group">تنظیمات و تعاملات</div>
+                <NavLink href="panel/admin/data/salon-setting">⚙️ تنظیمات سالن و تم</NavLink>
+                <NavLink href="panel/admin/data/discount">🏷️ کدهای تخفیف</NavLink>
+                <NavLink href="panel/admin/data/news-day">📣 اخبار و وبلاگ</NavLink>
+                <NavLink href="panel/admin/data/notification">🔔 اعلانات سیستم</NavLink>
+            </nav>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Personnel">
+            <nav class="panel-nav">
+                <div class="nav-group">کارتابل پرسنل</div>
+                <NavLink href="panel/personnel" Match="NavLinkMatch.All">📊 داشبورد کاری</NavLink>
+                <NavLink href="panel/personnel/schedule">🗓 کارتابل و نوبت‌ها</NavLink>
+                <NavLink href="panel/personnel/portfolio">🖼 نمونه کارهای من</NavLink>
+                <NavLink href="panel/personnel/profile">👤 مشخصات و ساعت کاری</NavLink>
+            </nav>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Customer">
+            <nav class="panel-nav">
+                <div class="nav-group">حساب کاربری من</div>
+                <NavLink href="panel/customer" Match="NavLinkMatch.All">📊 خلاصه وضعیت</NavLink>
+                <NavLink href="panel/customer/appointments">🗓 نوبت‌های رزرو شده</NavLink>
+                <NavLink href="panel/customer/favorites">❤️ علاقه‌مندی‌ها</NavLink>
+                <NavLink href="panel/customer/profile">👤 اطلاعات حساب</NavLink>
+            </nav>
+        </AuthorizeView>
+
+        <button class="logout" @onclick="Logout">خروج از حساب</button>
+    </aside>
+
+    <section class="panel-main">
+        <header class="panel-top">
+            <AuthorizeView>
+                <Authorized>
+                    <div style="display:flex;align-items:center;gap:.75rem">
+                        <strong>@context.User.Identity?.Name</strong>
+                        <span class="role-chip">
+                            @AppRoles.Persian(context.User.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? "")
+                        </span>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <span class="conn-dot @(Store.IsOnline ? "" : "offline")">
+                    <i></i>@(Store.IsOnline ? "متصل به WebApi" : "داده نمونه (آفلاین)")
+                </span>
+                <a class="btn-solon ghost sm" href="">مشاهده سایت اصلی</a>
+            </div>
+        </header>
+
+        <div class="panel-body">
+            @Body
+        </div>
+    </section>
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("login", true);
+    }
+}

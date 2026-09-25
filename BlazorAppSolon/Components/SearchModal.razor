@@ -1,0 +1,143 @@
+@using BlazorAppSolon.Data
+@inject NavigationManager Nav
+@inject IDataStore Store
+
+@if (IsOpen)
+{
+    <div class="search-overlay" @onclick="Close">
+        <div class="search-modal" @onclick:stopPropagation>
+            <div class="search-modal-header">
+                <div class="search-input-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text"
+                           class="search-input"
+                           placeholder="جستجوی خدمت، پرسنل، مقاله یا نمونه کار..."
+                           @bind="_query"
+                           @bind:event="oninput"
+                           autofocus />
+                </div>
+                <button class="search-close-btn" @onclick="Close" title="بستن">✕</button>
+            </div>
+
+            <div class="search-modal-body">
+                @if (string.IsNullOrWhiteSpace(_query))
+                {
+                    <div class="search-quick-links">
+                        <div class="quick-title">پیشنهادات پربازدید:</div>
+                        <div class="quick-chips">
+                            <button @onclick="@(() => SelectTag("ناخن"))">کاشت ناخن</button>
+                            <button @onclick="@(() => SelectTag("رنگ"))">بالیاژ و رنگ مو</button>
+                            <button @onclick="@(() => SelectTag("عروس"))">میکاپ عروس</button>
+                            <button @onclick="@(() => SelectTag("فیشال"))">فیشال پوست</button>
+                            <button @onclick="@(() => SelectTag("سارا"))">سارا محمدی</button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    var results = GetResults();
+                    @if (!results.Any())
+                    {
+                        <div class="search-empty">موردی متناسب با عبارت «@_query» یافت نشد.</div>
+                    }
+                    else
+                    {
+                        <div class="search-results-list">
+                            @foreach (var res in results)
+                            {
+                                <div class="search-result-item" @onclick="@(() => NavigateTo(res.Url))">
+                                    <span class="search-badge @res.BadgeClass">@res.Type</span>
+                                    <div class="search-item-info">
+                                        <div class="search-item-title">@res.Title</div>
+                                        <div class="search-item-sub">@res.Subtitle</div>
+                                    </div>
+                                    <span class="search-item-arrow">←</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+
+    private string _query = "";
+    private List<Tbl_Personal> _staff = new();
+    private List<Tbl_SalonSerice> _services = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _staff = await Store.AllAsync<Tbl_Personal>();
+        _services = await Store.AllAsync<Tbl_SalonSerice>();
+    }
+
+    private void SelectTag(string tag) => _query = tag;
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        _query = "";
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task NavigateTo(string url)
+    {
+        await Close();
+        Nav.NavigateTo(url);
+    }
+
+    private record SearchResult(string Type, string BadgeClass, string Title, string Subtitle, string Url);
+
+    private List<SearchResult> GetResults()
+    {
+        var q = _query.Trim();
+        var list = new List<SearchResult>();
+
+        // جستجو در خدمات
+        foreach (var s in PortfolioCatalog.Services)
+        {
+            if (s.Title.Contains(q, StringComparison.OrdinalIgnoreCase) || s.Intro.Contains(q, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new SearchResult("لاین خدمت", "badge-service", s.Title, $"شروع از {s.FromPrice:#,0} تومان", $"services/{s.Slug}"));
+            }
+        }
+
+        // جستجو در پرسنل
+        foreach (var p in _staff)
+        {
+            var name = $"{p.FirstName} {p.LastName}".Trim();
+            if (name.Contains(q, StringComparison.OrdinalIgnoreCase) || p.Specialty.Contains(q, StringComparison.OrdinalIgnoreCase) || p.Line.Contains(q, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new SearchResult("پرسنل", "badge-staff", name, $"{p.Specialty} — لاین {p.Line}", "reserve"));
+            }
+        }
+
+        // جستجو در نمونه کارها
+        foreach (var w in PortfolioCatalog.All())
+        {
+            if (w.Title.Contains(q, StringComparison.OrdinalIgnoreCase) || w.Description.Contains(q, StringComparison.OrdinalIgnoreCase) || w.Personal.Contains(q, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new SearchResult("نمونه‌کار", "badge-work", w.Title, $"{w.Personal} • {w.Price:#,0} تومان", $"reserve?work={w.Tc}"));
+            }
+        }
+
+        // جستجو در وبلاگ
+        foreach (var b in BlogCatalog.Posts)
+        {
+            if (b.Title.Contains(q, StringComparison.OrdinalIgnoreCase) || b.Summary.Contains(q, StringComparison.OrdinalIgnoreCase))
+            {
+                list.Add(new SearchResult("مقاله", "badge-blog", b.Title, b.Author, $"blog/{b.Slug}"));
+            }
+        }
+
+        return list;
+    }
+}

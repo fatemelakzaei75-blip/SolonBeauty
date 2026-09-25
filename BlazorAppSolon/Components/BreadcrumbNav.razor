@@ -1,0 +1,34 @@
+@using DataCore.Models.Seo
+
+@if (Items is not null && Items.Any())
+{
+    <nav class="breadcrumb-container" aria-label="مسیر راهنما">
+        <ol class="breadcrumb-list" itemscope itemtype="https://schema.org/BreadcrumbList">
+            @for (int i = 0; i < Items.Count; i++)
+            {
+                var item = Items[i];
+                var isLast = (i == Items.Count - 1);
+
+                <li class="breadcrumb-item @(isLast ? "active" : "")" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    @if (!isLast)
+                    {
+                        <a href="@item.Url" itemprop="item">
+                            <span itemprop="name">@item.Title</span>
+                        </a>
+                        <span class="breadcrumb-separator" aria-hidden="true">‹</span>
+                    }
+                    else
+                    {
+                        <span itemprop="name" aria-current="page">@item.Title</span>
+                    }
+                    <meta itemprop="position" content="@(i + 1)" />
+                </li>
+            }
+        </ol>
+    </nav>
+}
+
+@code {
+    [Parameter]
+    public List<BreadcrumbItem>? Items { get; set; }
+}

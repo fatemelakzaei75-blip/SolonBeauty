@@ -1,0 +1,153 @@
+@page "/panel/personnel/profile"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Personnel")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@using BlazorAppSolon.Components.Panel
+@inject IDataStore Store
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>پروفایل پرسنل | Hadis Beauty</PageTitle>
+
+<div class="panel-dash-header">
+    <h2 class="panel-title">👤 پرونده و تنظیمات پرسنل (بند ۱۶ سند)</h2>
+</div>
+
+<!-- بج وضعیت تأیید مدیریت سالن (بند ۱۶ سند) -->
+@if (_staff is not null)
+{
+    @if (_staff.IsApproved)
+    {
+        <div class="panel-alert ok" style="margin-bottom:1.2rem">
+            ✓ <strong>وضعیت حساب: تأیید شده توسط مدیریت سالن</strong> — شما مجاز به دریافت و ثبت نوبت در لاین تخصصی خود هستید.
+        </div>
+    }
+    else
+    {
+        <div class="panel-alert error" style="margin-bottom:1.2rem">
+            ⚠️ <strong>وضعیت حساب: در انتظار تأیید مدیریت سالن</strong> — تا زمان تأیید توسط ادمین، اجازه ارائه خدمت فعال نمی‌باشد.
+        </div>
+    }
+}
+
+<div class="panel-card">
+    <div class="panel-card-head">
+        <h3>مشخصات فردی، تخصصی و ساعات کاری</h3>
+    </div>
+
+    @if (_saved)
+    {
+        <div class="panel-alert ok">اطلاعات شما با موفقیت ذخیره شد.</div>
+    }
+
+    <div class="form-grid">
+        <div class="form-field">
+            <label>نام</label>
+            <input class="panel-input" @bind="_firstName" />
+        </div>
+        <div class="form-field">
+            <label>نام خانوادگی</label>
+            <input class="panel-input" @bind="_lastName" />
+        </div>
+        <div class="form-field">
+            <label>کد پرسنلی سیستمی (TC)</label>
+            <input class="panel-input" readonly value="@(_staff?.PersonalCode ?? "EMP-002")" />
+        </div>
+        <div class="form-field">
+            <label>شماره موبایل</label>
+            <input class="panel-input" dir="ltr" @bind="_mobile" />
+        </div>
+        <div class="form-field">
+            <label>لاین تخصصی سالن</label>
+            <select class="panel-input" @bind="_line">
+                <option value="ناخن">لاین ناخن</option>
+                <option value="مو">لاین مو و رنگ</option>
+                <option value="عروس و میکاپ">لاین عروس و میکاپ</option>
+                <option value="پوست و فیشال">لاین پوست و فیشال</option>
+                <option value="مژه و ابرو">لاین مژه و ابرو</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label>عنوان تخصص</label>
+            <input class="panel-input" @bind="_specialty" placeholder="مثال: متخصص کاشت ژل و مانیکور روسی" />
+        </div>
+        <div class="form-field">
+            <label>سابقه کار (سال)</label>
+            <input type="number" class="panel-input" @bind="_exp" />
+        </div>
+        <div class="form-field">
+            <label>روزهای کاری فعال</label>
+            <input class="panel-input" @bind="_workingDays" placeholder="مثلاً: شنبه تا چهارشنبه" />
+        </div>
+        <div class="form-field">
+            <label>ساعات کاری فعال</label>
+            <input class="panel-input" @bind="_workingHours" placeholder="مثلاً: ۰۹:۰۰ الی ۱۸:۰۰" />
+        </div>
+        <div class="form-field" style="grid-column:1/-1">
+            <label>تصویر پروفایل پرسنل</label>
+            <ImageUpload @bind-Value="_avatar" Section="personnel" />
+        </div>
+        <div class="form-field" style="grid-column:1/-1">
+            <label>بیوگرافی، دوره‌های آموزشی و مدارک</label>
+            <textarea class="panel-input" rows="3" @bind="_bio" placeholder="درباره سوابق و مدارک بین‌المللی خود بنویسید..."></textarea>
+        </div>
+    </div>
+
+    <div style="margin-top:1.5rem">
+        <button class="btn-solon red" @onclick="SaveProfile">ذخیره اطلاعات پروفایل</button>
+    </div>
+</div>
+
+@code {
+    private Tbl_Personal? _staff;
+    private string _firstName = "سارا";
+    private string _lastName = "محمدی";
+    private string _mobile = "09120000002";
+    private string _line = "ناخن";
+    private string _specialty = "متخصص کاشت و طراحی ناخن";
+    private int _exp = 6;
+    private string _workingDays = "شنبه تا چهارشنبه";
+    private string _workingHours = "۰۹:۰۰ الی ۱۸:۰۰";
+    private string _bio = "دارای مدرک بین‌المللی مانیکور روسی و ۶ سال سابقه کار تخصصی.";
+    private string? _avatar = "img/gallery-1.jpg";
+    private bool _saved = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var staffList = await Store.AllAsync<Tbl_Personal>();
+        _staff = staffList.FirstOrDefault();
+        if (_staff is not null)
+        {
+            _firstName = string.IsNullOrWhiteSpace(_staff.FirstName) ? "سارا" : _staff.FirstName;
+            _lastName = string.IsNullOrWhiteSpace(_staff.LastName) ? "محمدی" : _staff.LastName;
+            _mobile = string.IsNullOrWhiteSpace(_staff.Mobile) ? "09120000002" : _staff.Mobile;
+            _line = string.IsNullOrWhiteSpace(_staff.Line) ? "ناخن" : _staff.Line;
+            _specialty = string.IsNullOrWhiteSpace(_staff.Specialty) ? "متخصص کاشت و طراحی ناخن" : _staff.Specialty;
+            _exp = _staff.ExperienceYears;
+            _workingDays = string.IsNullOrWhiteSpace(_staff.WorkingDays) ? "شنبه تا چهارشنبه" : _staff.WorkingDays;
+            _workingHours = string.IsNullOrWhiteSpace(_staff.WorkingHours) ? "۰۹:۰۰ الی ۱۸:۰۰" : _staff.WorkingHours;
+            _bio = _staff.Bio ?? "";
+            _avatar = _staff.Avatar;
+        }
+    }
+
+    private async Task SaveProfile()
+    {
+        if (_staff is not null)
+        {
+            _staff.FirstName = _firstName;
+            _staff.LastName = _lastName;
+            _staff.Mobile = _mobile;
+            _staff.Line = _line;
+            _staff.Specialty = _specialty;
+            _staff.ExperienceYears = _exp;
+            _staff.WorkingDays = _workingDays;
+            _staff.WorkingHours = _workingHours;
+            _staff.Bio = _bio;
+            _staff.Avatar = _avatar;
+            await Store.UpdateAsync(_staff);
+        }
+        _saved = true;
+    }
+}

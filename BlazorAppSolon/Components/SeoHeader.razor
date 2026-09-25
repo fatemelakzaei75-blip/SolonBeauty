@@ -1,0 +1,62 @@
+@using DataCore.Models.Seo
+
+@if (Model is not null)
+{
+    <PageTitle>@Model.Title</PageTitle>
+
+    <HeadContent>
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <meta name="description" content="@Model.Description" />
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Keywords))
+        {
+            <meta name="keywords" content="@Model.Keywords" />
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Robots))
+        {
+            <meta name="robots" content="@Model.Robots" />
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.CanonicalUrl))
+        {
+            <link rel="canonical" href="@Model.CanonicalUrl" />
+        }
+
+        <!-- Open Graph Meta Tags -->
+        <meta property="og:title" content="@(string.IsNullOrWhiteSpace(Model.OgTitle) ? Model.Title : Model.OgTitle)" />
+        <meta property="og:description" content="@(string.IsNullOrWhiteSpace(Model.OgDescription) ? Model.Description : Model.OgDescription)" />
+        @if (!string.IsNullOrWhiteSpace(Model.OgUrl))
+        {
+            <meta property="og:url" content="@Model.OgUrl" />
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.OgImage))
+        {
+            <meta property="og:image" content="@Model.OgImage" />
+        }
+        <meta property="og:type" content="@Model.OgType" />
+        <meta property="og:site_name" content="@Model.SiteName" />
+        <meta property="og:locale" content="@Model.Locale" />
+
+        <!-- Twitter Card Meta Tags -->
+        <meta name="twitter:card" content="@Model.TwitterCard" />
+        <meta name="twitter:title" content="@(string.IsNullOrWhiteSpace(Model.OgTitle) ? Model.Title : Model.OgTitle)" />
+        <meta name="twitter:description" content="@(string.IsNullOrWhiteSpace(Model.OgDescription) ? Model.Description : Model.OgDescription)" />
+        @if (!string.IsNullOrWhiteSpace(Model.OgImage))
+        {
+            <meta name="twitter:image" content="@Model.OgImage" />
+        }
+
+        <!-- Schema.org Structured Data (JSON-LD) -->
+        @if (!string.IsNullOrWhiteSpace(Model.JsonLd))
+        {
+            <script type="application/ld+json">
+                @((MarkupString)Model.JsonLd)
+            </script>
+        }
+    </HeadContent>
+}
+
+@code {
+    [Parameter]
+    public SeoMetadata? Model { get; set; }
+}

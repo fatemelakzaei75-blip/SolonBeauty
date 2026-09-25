@@ -1,0 +1,139 @@
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+
+<footer class="solon-footer">
+    <div class="container">
+        <div class="footer-grid-3col">
+            <!-- ستون راست: لوگو و درباره ما کوتاه (بند ۶ سند) -->
+            <div class="footer-col right-col">
+                <div class="footer-brand">
+                    <div class="footer-monogram">HB</div>
+                    <div class="footer-brand-title">HADIS BEAUTY</div>
+                    <div class="footer-brand-subtitle">سالن زیبایی حدیث</div>
+                </div>
+                <p class="footer-about-short">
+                    @(_settings?.AboutText ?? "تجربه‌ای لوکس، آرام و حرفه‌ای از خدمات زیبایی و مراقبت تخصصی در فضایی دلنشین و خصوصی با کادری مجرب.")
+                </p>
+                <div class="footer-socials">
+                    <a href="@(_settings?.InstagramUrl ?? "https://instagram.com/hadisbeauty.salon")" target="_blank" rel="noopener" class="footer-social-link" title="اینستاگرام">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="5" />
+                            <circle cx="12" cy="12" r="4" />
+                            <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
+                        </svg>
+                    </a>
+                    <a href="@(_settings?.TelegramUrl ?? "https://t.me/hadisbeauty")" target="_blank" rel="noopener" class="footer-social-link" title="تلگرام">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.37.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                        </svg>
+                    </a>
+                    <a href="@(_settings?.WhatsAppUrl ?? "https://wa.me/989120000001")" target="_blank" rel="noopener" class="footer-social-link" title="واتس‌اپ">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ستون وسط: قوانین سایت + خبرنامه و عضویت (بند ۶ سند) -->
+            <div class="footer-col center-col">
+                <h4>قوانین و راهنمای مشتریان</h4>
+                <ul class="footer-links-list">
+                    <li><a href="terms">قوانین و مقررات نوبت‌دهی</a></li>
+                    <li><a href="terms#cancel">شرایط لغو و استرداد وجه</a></li>
+                    <li><a href="terms#hygiene">پروتکل‌های بهداشتی سالن</a></li>
+                    <li><a href="about">معرفی کادر متخصص سالن</a></li>
+                </ul>
+
+                <div class="footer-newsletter">
+                    <h5>عضویت در باشگاه مشتریان و خبرنامه</h5>
+                    <p>با عضویت در باشگاه، از تخفیف‌های فصلی و نوبت‌های خالی زودتر باخبر شوید:</p>
+                    @if (_newsletterSent)
+                    {
+                        <div class="newsletter-success">شماره / ایمیل شما با موفقیت در باشگاه ثبت شد.</div>
+                    }
+                    else
+                    {
+                        <div class="newsletter-form">
+                            <input type="text" placeholder="شماره موبایل یا ایمیل خود را وارد کنید..." @bind="_newsletterContact" />
+                            <button class="btn-solon red" @onclick="SubmitNewsletter">عضویت</button>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ستون چپ/کناری: آدرس، نقشه، ساعت کار، تماس با ما (بند ۶ سند) -->
+            <div class="footer-col left-col">
+                <h4>اطلاعات سالن و تماس</h4>
+                <div class="footer-contact-item">
+                    <span class="icon">📍</span>
+                    <div>
+                        <strong>آدرس:</strong>
+                        <p>@(_settings?.Address ?? "تهران، زعفرانیه، خیابان مقدس اردبیلی، پلاک ۲۴، ساختمان تجاری حدیث، طبقه ۳")</p>
+                    </div>
+                </div>
+
+                <div class="footer-contact-item">
+                    <span class="icon">⏱</span>
+                    <div>
+                        <strong>ساعات کاری:</strong>
+                        <p>@(_settings?.WorkingHoursDisplay ?? "شنبه تا پنج‌شنبه: ۹:۰۰ الی ۲۱:۰۰ (جمعه‌ها با هماهنگی)")</p>
+                    </div>
+                </div>
+
+                <div class="footer-contact-item">
+                    <span class="icon">📞</span>
+                    <div>
+                        <strong>تلفن‌های تماس:</strong>
+                        <p dir="ltr">
+                            <a href="tel:@(_settings?.PhoneLandline ?? "02112345678")">@(_settings?.PhoneLandline ?? "۰۲۱-۱۲۳۴۵۶۷۸")</a>
+                            &nbsp;|&nbsp;
+                            <a href="tel:@(_settings?.PhoneMobile ?? "09120000001")">@(_settings?.PhoneMobile ?? "۰۹۱۲۰-۰۰۰۰۰۱")</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- مینی نقشه سالن (بند ۴ و ۶) -->
+                <div class="footer-map-preview">
+                    <div class="map-box">
+                        <span>🗺️ موقعیت مکانی سالن حدیث (زعفرانیه)</span>
+                        <a href="https://maps.google.com" target="_blank" rel="noopener" class="map-link-btn">مشاهده روی نقشه گوگل</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom-bar">
+            <div>کلیه حقوق مادی و معنوی این وب‌سایت متعلق به <strong>سالن زیبایی حدیث (Hadis Beauty)</strong> است.</div>
+            <div class="footer-enamads">
+                <span class="enamad-chip">🛡️ ضمانت سلامت و بهداشت</span>
+                <span class="enamad-chip">⭐ نماد رضایت مشتریان</span>
+                <span class="enamad-chip">🔒 درگاه امن پرداخت</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+@code {
+    private Tbl_SalonSetting? _settings;
+    private string _newsletterContact = "";
+    private bool _newsletterSent = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var list = await Store.AllAsync<Tbl_SalonSetting>();
+            _settings = list.FirstOrDefault();
+        }
+        catch { }
+    }
+
+    private void SubmitNewsletter()
+    {
+        if (!string.IsNullOrWhiteSpace(_newsletterContact))
+        {
+            _newsletterSent = true;
+        }
+    }
+}

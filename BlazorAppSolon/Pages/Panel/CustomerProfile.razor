@@ -1,0 +1,26 @@
+@page "/panel/customer/profile"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Customer")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>پروفایل من | Hadis Beauty</PageTitle>
+<h2 class="panel-title">👤 پروفایل من</h2>
+
+<div class="panel-card">
+    <AuthorizeView>
+        <Authorized>
+            <div class="form-grid">
+                <div class="form-field"><label>نام و نام خانوادگی</label><input class="panel-input" value="@context.User.Identity?.Name" /></div>
+                <div class="form-field"><label>شماره موبایل</label><input class="panel-input" dir="ltr" readonly
+                    value="@context.User.Claims.FirstOrDefault(c => c.Type.Contains("mobilephone"))?.Value" /></div>
+                <div class="form-field"><label>کد معرف</label><input class="panel-input" value="HB2451" /></div>
+                <div class="form-field"><label>تاریخ تولد</label><input type="date" class="panel-input" /></div>
+            </div>
+            <button class="btn-solon" style="margin-top:1rem">ذخیره تغییرات</button>
+        </Authorized>
+    </AuthorizeView>
+</div>

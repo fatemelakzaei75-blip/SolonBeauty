@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Components.Authorization
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <div class="section light">
+                            <div class="container" style="text-align:center">
+                                <h2>دسترسی غیرمجاز</h2>
+                                <p>شما اجازه دسترسی به این بخش را ندارید.</p>
+                                <a class="btn-solon" href="">بازگشت به سایت</a>
+                            </div>
+                        </div>
+                    }
+                </NotAuthorized>
+                <Authorizing>
+                    <div class="section light"><div class="container" style="text-align:center">در حال بررسی دسترسی...</div></div>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>صفحه یافت نشد | سالن زیبایی حدیث</PageTitle>
+            <HeadContent>
+                <meta name="robots" content="noindex, nofollow" />
+            </HeadContent>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="section light">
+                    <div class="container" style="text-align:center; padding: 4rem 1rem;">
+                        <h2>صفحه مورد نظر یافت نشد (خطای ۴۰۴)</h2>
+                        <p style="margin: 1rem 0; color:#666;">متأسفانه صفحه‌ای که به دنبال آن بودید پیدا نشد یا حذف شده است.</p>
+                        <a class="btn-solon red" href="">بازگشت به صفحه اصلی</a>
+                    </div>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

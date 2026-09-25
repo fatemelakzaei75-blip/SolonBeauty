@@ -1,0 +1,65 @@
+@using BlazorAppSolon.Data
+@using Microsoft.AspNetCore.Components.Forms
+@inject UploadService Uploader
+
+@* آپلود تصویر با پیش نمایش — تصویر روی ریشه API با نام هش SHA-256 ذخیره می شود *@
+
+<div class="upload-box">
+    <label class="upload-drop">
+        <InputFile OnChange="OnChange" accept="image/*" />
+        <span>📁 انتخاب تصویر (jpg، png، webp — حداکثر ۵ مگابایت)</span>
+    </label>
+
+    @if (_busy)
+    {
+        <div class="panel-alert">در حال آپلود...</div>
+    }
+    else if (_message is not null)
+    {
+        <div class="panel-alert @(_isError ? "error" : "")">@_message</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Value))
+    {
+        <div class="upload-preview">
+            <img src="@Value" alt="پیش نمایش" />
+            <div>
+                <small class="hash-chip">@(_hash is null ? Value : $"hash: {_hash[..12]}…")</small>
+                <button class="mini danger" @onclick="Clear">حذف تصویر</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string Section { get; set; } = "portfolio";
+
+    private bool _busy, _isError;
+    private string? _message, _hash;
+
+    private async Task OnChange(InputFileChangeEventArgs e)
+    {
+        _busy = true; _message = null; _isError = false;
+
+        var result = await Uploader.UploadAsync(e.File, Section);
+
+        _busy = false;
+        _isError = !result.Ok;
+        _message = result.Message;
+
+        if (result.Ok && result.Url is not null)
+        {
+            _hash = result.Hash;
+            Value = result.Url;
+            await ValueChanged.InvokeAsync(Value);
+        }
+    }
+
+    private async Task Clear()
+    {
+        Value = null; _hash = null; _message = null;
+        await ValueChanged.InvokeAsync(null);
+    }
+}

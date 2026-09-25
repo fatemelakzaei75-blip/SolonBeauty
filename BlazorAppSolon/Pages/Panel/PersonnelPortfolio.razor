@@ -1,0 +1,13 @@
+@page "/panel/personnel/portfolio"
+@layout BlazorAppSolon.Layout.PanelLayout
+@attribute [Authorize(Roles = "Personnel")]
+@using Microsoft.AspNetCore.Authorization
+@using DataLayer.Entity
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@using BlazorAppSolon.Components.Panel
+
+<PageTitle>نمونه کارهای من | Hadis Beauty</PageTitle>
+<h2 class="panel-title">🖼 نمونه کارهای من</h2>
+
+<EntityCrud TEntity="Tbl_Portfoilo" Title="نمونه کارها" />

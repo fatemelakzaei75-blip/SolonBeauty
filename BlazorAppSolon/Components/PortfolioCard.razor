@@ -1,0 +1,53 @@
+@using BlazorAppSolon.Data
+@inject FavoriteService Favorites
+@inject NavigationManager Nav
+
+@* کارت نمونه کار: تصویر، عنوان، دکمه علاقه مندی و مشاهده جزئیات *@
+
+<div class="work-card">
+    <div class="work-thumb" @onclick="() => OnOpen.InvokeAsync(Item)">
+        <img src="@Item.Image" alt="نمونه کار @Item.Title سالن زیبایی حدیث" width="340" height="340" loading="lazy" />
+        <span class="work-price">از @Item.Price.ToString("#,0") تومان</span>
+    </div>
+
+    <div class="work-body">
+        <h4 @onclick="() => OnOpen.InvokeAsync(Item)">@Item.Title</h4>
+        <div class="work-meta">
+            <span>👩‍🎨 @Item.Personal</span>
+            <span>⏱ @Item.DurationMinutes دقیقه</span>
+        </div>
+
+        <div class="work-actions">
+            <button class="fav-btn @(_isFav ? "on" : "")" title="افزودن به علاقه مندی ها" @onclick="Toggle">
+                @(_isFav ? "❤️" : "🤍") <span>@(_isFav ? "مورد علاقه" : "پسندیدم")</span>
+            </button>
+            <button class="mini" @onclick="() => OnOpen.InvokeAsync(Item)">جزئیات</button>
+            <a class="mini primary" href="@($"reserve?service={Item.ServiceSlug}&work={Item.Tc}")">رزرو</a>
+        </div>
+
+        @if (_needLogin)
+        {
+            <small class="need-login">برای ذخیره علاقه مندی ابتدا <a href="login">وارد شوید</a>.</small>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public PortfolioItem Item { get; set; } = default!;
+    [Parameter] public EventCallback<PortfolioItem> OnOpen { get; set; }
+
+    private bool _isFav, _needLogin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Favorites.LoadAsync();
+        _isFav = Favorites.IsFavorite(Item.Tc);
+    }
+
+    private async Task Toggle()
+    {
+        var ok = await Favorites.ToggleAsync(Item.Tc);
+        _needLogin = !ok;
+        if (ok) _isFav = Favorites.IsFavorite(Item.Tc);
+    }
+}

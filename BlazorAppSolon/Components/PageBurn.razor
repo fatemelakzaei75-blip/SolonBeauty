@@ -1,0 +1,14 @@
+@* برن تیره بالای صفحات داخلی + breadcrumb — بند ۹ و ۱۰ *@
+
+<section class="page-burn">
+    <div class="container">
+        <h1>@Title</h1>
+        <div class="breadcrumb-solon">
+            <a href="">خانه</a><span>/</span><span>@Title</span>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+}

@@ -1,0 +1,128 @@
+@page "/services"
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@inject NavigationManager Nav
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+<PageBurn Title="خدمات تخصصی سالن" />
+
+<section class="section light">
+    <LeafDeco Position="leaf-tr" />
+    <div class="container">
+        <BreadcrumbNav Items="_seo.Breadcrumbs" />
+        @if (_isSingleLineMode)
+        {
+            <!-- ساختار سالن تک‌خدمتی: نمایش مستقیم خدمات و اطلاعات همان خدمت (بند ۳ سند) -->
+            <div class="single-service-structure">
+                <div class="single-service-hero">
+                    @{
+                        var activeSvc = PortfolioCatalog.ServiceBySlug(_activeLineSlug) ?? PortfolioCatalog.Services[0];
+                    }
+                    <h2>لاین تخصصی سالن: @activeSvc.Title</h2>
+                    <p class="single-service-intro">@activeSvc.Intro</p>
+                    <div class="single-service-banner" style="background-image:url('@activeSvc.HeroImage')">
+                        <div class="banner-glass">
+                            <span>تعرفه پایه از: @activeSvc.FromPrice.ToString("#,0") تومان</span>
+                            <a class="btn-solon red" href="@($"reserve?service={activeSvc.Slug}")">رزرو وقت در این لاین</a>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-title" style="margin-top:2.5rem">نمونه‌کارهای ثبت‌شده این خدمت</h3>
+                <div class="single-line-works-grid">
+                    @foreach (var work in PortfolioCatalog.ByService(_activeLineSlug))
+                    {
+                        <div class="work-showcase-card">
+                            <div class="work-showcase-img">
+                                <img src="@work.Image" alt="@work.Title" />
+                                <span class="work-price-chip">@work.Price.ToString("#,0") تومان</span>
+                            </div>
+                            <div class="work-showcase-content">
+                                <h4>@work.Title</h4>
+                                <p>@work.Description</p>
+                                <div class="work-meta">
+                                    <span>👩‍🎨 @work.Personal</span>
+                                    <span>⏱ @work.DurationMinutes دقیقه</span>
+                                </div>
+                                <a class="btn-solon full-width" href="@($"reserve?work={work.Tc}")">رزرو این خدمت</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- ساختار سالن چندخدمتی: دسته‌بندی/لاین -> خدمات همان دسته (بند ۳ سند) -->
+            <div class="multi-service-structure">
+                <div class="services-filter-tabs">
+                    <button class="filter-tab @(_activeFilter == "all" ? "active" : "")" @onclick="@(() => _activeFilter = "all")">همه لاین‌ها</button>
+                    @foreach (var cat in PortfolioCatalog.Services)
+                    {
+                        <button class="filter-tab @(_activeFilter == cat.Slug ? "active" : "")" @onclick="@(() => _activeFilter = cat.Slug)">
+                            @cat.Title
+                        </button>
+                    }
+                </div>
+
+                <div class="service-pages">
+                    @foreach (var s in GetFilteredServices())
+                    {
+                        <div class="service-page-card modern">
+                            <img src="@s.HeroImage" alt="@s.Title" loading="lazy" />
+                            <div class="service-page-card-body">
+                                <h3>@s.Title</h3>
+                                <p>@s.Intro</p>
+                                <div class="service-meta-row">
+                                    <span class="from-price">شروع از @s.FromPrice.ToString("#,0") تومان</span>
+                                    <span class="work-count">@PortfolioCatalog.ByService(s.Slug).Count نمونه‌کار</span>
+                                </div>
+                                <div class="service-card-btn-group">
+                                    <a class="btn-solon red sm" href="@($"reserve?service={s.Slug}")">رزرو وقت</a>
+                                    <a class="btn-solon ghost sm" href="@($"services/{s.Slug}")">مشاهده جزئیات لاین</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private bool _isSingleLineMode = false;
+    private string _activeLineSlug = "nail";
+    private string _activeFilter = "all";
+    private SeoMetadata _seo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _seo = Seo.GetGeneralPageSeo(
+            "خدمات تخصصی سالن زیبایی حدیث",
+            "معرفی و لیست کامل لاین‌های تخصصی آرایشی و زیبایی سالن حدیث شامل ناخن، رنگ و مو، میکاپ، فیشال و مژه.",
+            "services",
+            Nav.BaseUri);
+
+        try
+        {
+            var settings = await Store.AllAsync<Tbl_SalonSetting>();
+            var s = settings.FirstOrDefault();
+            if (s is not null)
+            {
+                _isSingleLineMode = s.IsSingleLineMode;
+                if (!string.IsNullOrWhiteSpace(s.ActiveLineSlug))
+                    _activeLineSlug = s.ActiveLineSlug;
+            }
+        }
+        catch { }
+    }
+
+    private IEnumerable<ServicePage> GetFilteredServices()
+    {
+        if (_activeFilter == "all") return PortfolioCatalog.Services;
+        return PortfolioCatalog.Services.Where(s => s.Slug == _activeFilter);
+    }
+}

@@ -1,0 +1,398 @@
+@page "/"
+@using BlazorAppSolon.Data
+@inject IDataStore Store
+@inject NavigationManager Nav
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+@* ==================== بند ۲ : بخش Hero حرفه‌ای ==================== *@
+<section class="hero-advanced">
+    <LeafDeco Position="leaf-tr" />
+    <LeafDeco Position="leaf-bl" />
+    <div class="container">
+        <div class="hero-2col">
+            <!-- ستون چپ: اسلایدر تصاویر سالن (بند ۲ سند) -->
+            <div class="hero-slider-wrap">
+                <div class="hero-slider-arch">
+                    <img src="@_heroImages[_currentSlide]" alt="فضای داخلی سالن تخصصی زیبایی حدیث زعفرانیه" class="hero-slide-img active" width="540" height="680" />
+                    
+                    <!-- کنترل‌های اسلایدر -->
+                    <div class="slider-controls">
+                        <button class="slider-btn prev" @onclick="PrevSlide" title="تصویر قبلی">❮</button>
+                        <div class="slider-dots">
+                            @for (int i = 0; i < _heroImages.Length; i++)
+                            {
+                                var idx = i;
+                                <span class="dot @(idx == _currentSlide ? "active" : "")" @onclick="@(() => _currentSlide = idx)"></span>
+                            }
+                        </div>
+                        <button class="slider-btn next" @onclick="NextSlide" title="تصویر بعدی">❯</button>
+                    </div>
+
+                    <div class="hero-badge">
+                        <span class="badge-star">★ 4.9</span>
+                        <span class="badge-text">رضایت مراجعین سالن</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ستون راست: متن معرفی سالن (بند ۲ سند) -->
+            <div class="hero-text-content">
+                <div class="hero-eyebrow">
+                    <span class="eyebrow-line"></span>
+                    <span>@(_settings?.SalonName ?? "سالن زیبایی حدیث")</span>
+                </div>
+                <h1 class="hero-main-title serif">@(_settings?.SalonLatinName ?? "HADIS BEAUTY")</h1>
+                <p class="hero-desc">
+                    @(_settings?.IntroText ?? "تجربه‌ای آرام، لوکس و حرفه‌ای از خدمات زیبایی؛ جایی که هر جزئیات با دقت انتخاب شده تا بهترین نسخه از خودتان را ببینید. از میکاپ عروس تا مراقبت پوست و مو، در فضایی خصوصی و دلنشین در کنار شما هستیم.")
+                </p>
+
+                <!-- کادر سریع رزرو نوبت در هیرو با استایل لوکس (بند ۲ سند) -->
+                <div class="hero-quick-box">
+                    <div class="quick-box-header">
+                        <span class="quick-icon">🗓️</span>
+                        <span>رزرو آنلاین نوبت بدون معطلی</span>
+                    </div>
+                    <div class="quick-box-body">
+                        <div class="quick-select-wrap">
+                            <label>خدمت موردنظر:</label>
+                            <select class="quick-select" @bind="_selectedServiceQuick">
+                                @foreach (var s in PortfolioCatalog.Services)
+                                {
+                                    <option value="@s.Slug">@s.Title</option>
+                                }
+                            </select>
+                        </div>
+                        <a class="btn-solon red quick-btn" href="@($"reserve?service={_selectedServiceQuick}")">
+                            شروع رزرو نوبت ←
+                        </a>
+                    </div>
+                </div>
+
+                <div class="hero-cta-group">
+                    <a class="btn-solon lg" href="services">مشاهده کلیه خدمات</a>
+                    <a class="btn-solon ghost lg" href="gallery">گالری تصاویر سالن</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== بند ۲ : بخش هوشمند «آشنایی با خدمات سالن» ==================== *@
+<section class="section light smart-services-section">
+    <LeafDeco Position="leaf-bl" />
+    <div class="container">
+        @if (_isSingleLineMode)
+        {
+            <!-- در حالت سالن تک‌لاینه: نمایش مستقیم نمونه‌کارهای همان لاین (بند ۲ سند) -->
+            <div class="section-heading-wrap">
+                <span class="section-tag">لاین اختصاصی</span>
+                <h2 class="section-title">نمونه‌کارهای تخصصی سالن (تک‌لاینه)</h2>
+                <p class="section-subtitle">تمرکز تمام‌عیار بر کیفیت برتر و متدهای روز بین‌المللی</p>
+            </div>
+
+            <div class="single-line-works-grid">
+                @foreach (var work in PortfolioCatalog.ByService(_activeLineSlug).Take(6))
+                {
+                        <div class="work-showcase-card">
+                            <div class="work-showcase-img">
+                                <img src="@work.Image" alt="نمونه کار @work.Title سالن زیبایی حدیث" width="360" height="260" loading="lazy" />
+                                <span class="work-price-chip">@work.Price.ToString("#,0") تومان</span>
+                            </div>
+                        <div class="work-showcase-content">
+                            <h4>@work.Title</h4>
+                            <p>@work.Description</p>
+                            <div class="work-meta">
+                                <span>👩‍🎨 @work.Personal</span>
+                                <span>⏱ @work.DurationMinutes دقیقه</span>
+                            </div>
+                            <a class="btn-solon full-width" href="@($"reserve?work={work.Tc}")">رزرو این نمونه کار</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- در حالت سالن چندلاینه: نمایش دسته‌بندی و لاین‌های خدمات (بند ۲ سند) -->
+            <div class="section-heading-wrap">
+                <span class="section-tag">تخصص‌های ما</span>
+                <h2 class="section-title">آشنایی با لاین‌ها و خدمات سالن حدیث</h2>
+                <p class="section-subtitle">برای اطلاعات کامل، مشاهده نمونه‌کارها و رزرو، لاین موردنظر را انتخاب فرمایید</p>
+            </div>
+
+            <div class="services-modern-grid">
+                @foreach (var s in PortfolioCatalog.Services)
+                {
+                    <a class="service-modern-card" href="@($"services/{s.Slug}")">
+                        <div class="service-card-cover" style="background-image:url('@s.HeroImage');">
+                            <div class="service-card-overlay"></div>
+                            <div class="service-card-badge">شروع از @s.FromPrice.ToString("#,0") تومان</div>
+                        </div>
+                        <div class="service-card-info">
+                            <h3>@s.Title</h3>
+                            <p>@s.Intro</p>
+                            <span class="service-explore-link">مشاهده خدمات و رزرو ←</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@* ==================== بند ۲ : کادر بهبودیافته رزرو نوبت با Border Radius و ظاهر لوکس ==================== *@
+<section class="section appointment-banner-section">
+    <div class="container">
+        <div class="lux-appointment-card">
+            <div class="lux-card-inner">
+                <div class="lux-badge">⚡ نوبت‌دهی آنلاین و هوشمند</div>
+                <h2 class="serif">آماده درخشش هستید؟</h2>
+                <p>
+                    وقت ارزشمند شما اولویت ماست. بدون نیاز به تماس تلفنی و معطلی، نوبت خود را در ۲ دقیقه با کادر تخصصی ما رزرو کنید.
+                </p>
+                <div class="lux-card-features">
+                    <div class="feature-item">✔ تضمین رعایت بالاترین پروتکل‌های بهداشتی</div>
+                    <div class="feature-item">✔ مواد اولیه ۱۰۰٪ اورجینال اروپایی</div>
+                    <div class="feature-item">✔ امکان انتخاب پرسنل و بازه زمانی دلخواه</div>
+                </div>
+                <div class="lux-card-actions">
+                    <a class="btn-solon red lg lux-btn" href="reserve">
+                        <span>هم‌اکنون نوبت خود را رزرو کنید</span>
+                    </a>
+                    <a class="btn-solon ghost lg" href="contact">مشاوره قبل از خدمت</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ==================== بند ۲ و ۱۶ : بخش معرفی پرسنل ==================== *@
+<section class="section light personnel-section">
+    <div class="container">
+        <div class="section-heading-wrap">
+            <span class="section-tag">هنرمندان زیبایی</span>
+            <h2 class="section-title">معرفی پرسنل متخصص سالن حدیث</h2>
+            <p class="section-subtitle">کادری آموزش‌دیده، باتجربه و دارای مدارک بین‌المللی در لاین‌های تخصصی</p>
+        </div>
+
+        <div class="personnel-grid">
+            @foreach (var staff in _staffList)
+            {
+                <div class="personnel-card">
+                    <div class="personnel-avatar-wrap">
+                        <img src="@(string.IsNullOrWhiteSpace(staff.Avatar) ? "img/hero.jpg" : staff.Avatar)" alt="متخصص @staff.FullName سالن زیبایی حدیث" class="personnel-avatar" width="120" height="120" loading="lazy" />
+                        <span class="personnel-line-chip">@staff.Line</span>
+                    </div>
+                    <div class="personnel-details">
+                        <h3 class="personnel-name">@staff.FullName</h3>
+                        <div class="personnel-specialty">@staff.Specialty</div>
+                        <p class="personnel-short-bio">
+                            @(string.IsNullOrWhiteSpace(staff.Bio) ? $"{staff.ExperienceYears} سال سابقه کار تخصصی در لاین {staff.Line}" : staff.Bio)
+                        </p>
+                        <div class="personnel-schedule-badge">
+                            <span>⏱ @staff.WorkingHours</span>
+                        </div>
+                        <div class="personnel-actions">
+                            <!-- دکمه معرفی پرسنل (بند ۲ سند) -->
+                            <button class="btn-solon ghost sm" @onclick="@(() => OpenStaffModal(staff))">
+                                ℹ معرفی پرسنل
+                            </button>
+                            <!-- دکمه نمونه‌کارها (بند ۲ سند) -->
+                            <a class="btn-solon sm" href="@($"services/{GetLineSlug(staff.Line)}")">
+                                🖼 نمونه‌کارها
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@* ==================== بند ۲ : بخش نظرات مشتریان ==================== *@
+<section class="section testimonials-section">
+    <div class="container">
+        <div class="section-heading-wrap">
+            <span class="section-tag">صدای مشتریان</span>
+            <h2 class="section-title">تجربه مراجعین سالن زیبایی حدیث</h2>
+            <p class="section-subtitle">نظرات واقعی بانوانی که زیبایی و مراقبت خود را به ما سپردند</p>
+        </div>
+
+        <div class="testimonials-grid">
+            @foreach (var comment in _comments)
+            {
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">
+                        @for (int i = 0; i < comment.Rating; i++)
+                        {
+                            <span>★</span>
+                        }
+                    </div>
+                    <p class="testimonial-text">«@comment.CommentText»</p>
+                    <div class="testimonial-user">
+                        <div class="user-avatar-circle">@comment.CustomerName.FirstOrDefault()</div>
+                        <div>
+                            <div class="user-name">@comment.CustomerName</div>
+                            <div class="user-service">خدمت: @comment.ServiceName</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@* ==================== بند ۲ : FAQ حرفه‌ای و سکشن‌بندی‌شده ==================== *@
+<section class="section light faq-section">
+    <div class="container" style="max-width:920px">
+        <div class="section-heading-wrap">
+            <span class="section-tag">پاسخ به ابهامات</span>
+            <h2 class="section-title">پرسش‌های متداول شما</h2>
+            <p class="section-subtitle">پاسخ سریع به متداول‌ترین سؤالات درباره نوبت‌دهی، متریال مصرفی و بهداشت</p>
+        </div>
+
+        <!-- تب‌های سکشن‌بندی‌شده (بند ۲ سند) -->
+        <div class="faq-category-tabs">
+            @foreach (var cat in _faqCategories)
+            {
+                <button class="faq-tab @(_selectedFaqCat == cat ? "active" : "")" @onclick="@(() => _selectedFaqCat = cat)">
+                    @cat
+                </button>
+            }
+        </div>
+
+        <!-- آکاردئون سؤالات -->
+        <div class="faq-accordion">
+            @foreach (var faq in _faqs.Where(f => f.Category == _selectedFaqCat))
+            {
+                var isOpen = _openFaqTcs.Contains(faq.Tc);
+                <div class="faq-item @(isOpen ? "open" : "")" @onclick="@(() => ToggleFaq(faq.Tc))">
+                    <div class="faq-question">
+                        <span>@faq.Question</span>
+                        <span class="faq-toggle-icon">@(isOpen ? "−" : "+")</span>
+                    </div>
+                    @if (isOpen)
+                    {
+                        <div class="faq-answer">
+                            <p>@faq.Answer</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@* ==================== مودال معرفی تفصیلی پرسنل (بند ۲ سند) ==================== *@
+@if (_selectedStaffModal is not null)
+{
+    <div class="search-overlay" @onclick="@(() => _selectedStaffModal = null)">
+        <div class="search-modal staff-detail-modal" @onclick:stopPropagation>
+            <div class="staff-modal-header">
+                <h3>معرفی و بیوگرافی @(_selectedStaffModal.FullName)</h3>
+                <button class="search-close-btn" @onclick="@(() => _selectedStaffModal = null)">✕</button>
+            </div>
+            <div class="staff-modal-body">
+                <div class="staff-modal-top">
+                    <img src="@(string.IsNullOrWhiteSpace(_selectedStaffModal.Avatar) ? "img/hero.jpg" : _selectedStaffModal.Avatar)" alt="پروفایل بیوگرافی @_selectedStaffModal.FullName" width="280" height="280" />
+                    <div>
+                        <h4>@_selectedStaffModal.FullName</h4>
+                        <div class="staff-sub">تخصص: <strong>@_selectedStaffModal.Specialty</strong></div>
+                        <div class="staff-sub">لاین تخصصی: <strong>@_selectedStaffModal.Line</strong></div>
+                        <div class="staff-sub">سابقه کار: <strong>@_selectedStaffModal.ExperienceYears سال فعالیت حرفه‌ای</strong></div>
+                        <div class="staff-sub">روزهای کاری: <strong>@_selectedStaffModal.WorkingDays</strong></div>
+                        <div class="staff-sub">ساعات کاری: <strong>@_selectedStaffModal.WorkingHours</strong></div>
+                    </div>
+                </div>
+                <div class="staff-modal-bio">
+                    <h5>درباره سوابق و مدارک:</h5>
+                    <p>@(_selectedStaffModal.Bio ?? "پرسنل رسمی و موردتأیید مدیریت سالن حدیث با دوره‌های تخصصی بین‌المللی.")</p>
+                </div>
+                <div class="staff-modal-footer">
+                    <a class="btn-solon red" href="reserve">رزرو نوبت با @_selectedStaffModal.FullName</a>
+                    <button class="btn-solon ghost" @onclick="@(() => _selectedStaffModal = null)">بستن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private Tbl_SalonSetting? _settings;
+    private bool _isSingleLineMode = false;
+    private string _activeLineSlug = "nail";
+    private string _selectedServiceQuick = "nail";
+    private int _currentSlide = 0;
+    private string[] _heroImages = { "img/hero.jpg", "img/gallery-1.jpg", "img/gallery-2.jpg", "img/gallery-3.jpg" };
+
+    private List<Tbl_Personal> _staffList = new();
+    private List<Tbl_Comment> _comments = new();
+    private List<Tbl_FAQ> _faqs = new();
+    private string[] _faqCategories = { "نوبت‌دهی و رزرو", "خدمات و مواد مصرفی", "بهداشت و استانداردهای سالن" };
+    private string _selectedFaqCat = "نوبت‌دهی و رزرو";
+    private HashSet<Guid> _openFaqTcs = new();
+
+    private Tbl_Personal? _selectedStaffModal;
+    private SeoMetadata _seo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var settingsList = await Store.AllAsync<Tbl_SalonSetting>();
+            _settings = settingsList.FirstOrDefault();
+            if (_settings is not null)
+            {
+                _isSingleLineMode = _settings.IsSingleLineMode;
+                _activeLineSlug = string.IsNullOrWhiteSpace(_settings.ActiveLineSlug) ? "nail" : _settings.ActiveLineSlug;
+                if (!string.IsNullOrWhiteSpace(_settings.HeroSliderImages))
+                {
+                    _heroImages = _settings.HeroSliderImages.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                }
+            }
+
+            _staffList = (await Store.AllAsync<Tbl_Personal>()).Where(p => p.IsApproved).ToList();
+            _comments = (await Store.AllAsync<Tbl_Comment>()).Where(c => c.IsApproved).ToList();
+            _faqs = (await Store.AllAsync<Tbl_FAQ>()).Where(f => f.IsPublished).ToList();
+
+            _seo = Seo.GetHomeSeo(_settings, Nav.BaseUri);
+            if (_faqs.Any())
+            {
+                var faqTuples = _faqs.Select(f => (f.Question, f.Answer));
+                var faqSchema = Seo.BuildFaqSchema(faqTuples);
+                if (!string.IsNullOrEmpty(_seo.JsonLd))
+                {
+                    _seo.JsonLd = $"[{_seo.JsonLd},{faqSchema}]";
+                }
+            }
+
+            // باز کردن اولین سؤال به صورت پیش‌فرض
+            var firstFaq = _faqs.FirstOrDefault(f => f.Category == _selectedFaqCat);
+            if (firstFaq is not null) _openFaqTcs.Add(firstFaq.Tc);
+        }
+        catch { }
+    }
+
+    private void NextSlide() => _currentSlide = (_currentSlide + 1) % _heroImages.Length;
+    private void PrevSlide() => _currentSlide = (_currentSlide - 1 + _heroImages.Length) % _heroImages.Length;
+
+    private void ToggleFaq(Guid tc)
+    {
+        if (_openFaqTcs.Contains(tc)) _openFaqTcs.Remove(tc);
+        else _openFaqTcs.Add(tc);
+    }
+
+    private void OpenStaffModal(Tbl_Personal p) => _selectedStaffModal = p;
+
+    private string GetLineSlug(string line) => line switch
+    {
+        "مو" => "hair",
+        "ناخن" => "nail",
+        "عروس و میکاپ" or "عروس" or "میکاپ" => "bride",
+        "پوست و فیشال" or "پوست" or "فیشال" => "skin",
+        "مژه و ابرو" or "مژه" => "lash",
+        _ => "nail"
+    };
+}

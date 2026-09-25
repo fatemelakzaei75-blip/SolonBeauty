@@ -1,0 +1,37 @@
+@page "/terms"
+@inject NavigationManager Nav
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+<PageBurn Title="قوانین و مقررات" />
+
+<section class="section light">
+    <div class="container" style="max-width:820px;">
+        <BreadcrumbNav Items="_seo.Breadcrumbs" />
+
+        <div style="margin-top:1.5rem; line-height: 2; opacity:.9;">
+            <h2 style="font-size:1.3rem; margin-bottom:1rem; color:#333;">شرایط و ضوابط نوبت‌دهی و خدمات سالن زیبایی حدیث</h2>
+            <ul style="padding-right:1.2rem;">
+                <li>رزرو نوبت صرفاً پس از پرداخت بیعانه آنلاین قطعی و در سامانه سالن ثبت می‌شود.</li>
+                <li>امکان لغو نوبت تا ۲۴ ساعت قبل از زمان تعیین‌شده وجود دارد و بیعانه عودت داده می‌شود.</li>
+                <li>لطفاً حداقل ۱۰ دقیقه پیش از زمان مقرر نوبت در سالن حضور به هم رسانید.</li>
+                <li>رعایت کلیه پروتکل‌های بهداشتی و سلامت فردی برای کلیه مراجعان گرامی الزامی است.</li>
+                <li>در صورت تاخیر بیش از ۱۵ دقیقه، ممکن است ارائه خدمت به دلیل فشردگی نوبت‌ها به زمان دیگری موکول گردد.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+@code {
+    private SeoMetadata _seo = new();
+
+    protected override void OnInitialized()
+    {
+        _seo = Seo.GetGeneralPageSeo(
+            "قوانین و مقررات سالن زیبایی حدیث",
+            "شرایط و ضوابط رزرو آنلاین، پرداخت بیعانه، لغو نوبت و استانداردهای بهداشتی مراجعین سالن زیبایی حدیث.",
+            "terms",
+            Nav.BaseUri);
+    }
+}

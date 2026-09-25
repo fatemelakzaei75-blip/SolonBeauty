@@ -1,0 +1,21 @@
+@* المان خط نگاره (Line-art) گل و برگ — واترمارک تزئینی پس زمینه *@
+
+<svg class="leaf-deco @Position" viewBox="0 0 200 200" fill="none"
+     stroke="#E4D9CC" stroke-width="1.2" aria-hidden="true">
+    <path d="M100 190C100 130 70 90 30 70" />
+    <path d="M100 150c-18 4-34-6-42-22 18-6 34 4 42 22z" />
+    <path d="M100 110c-16 2-30-8-36-24 17-4 31 7 36 24z" />
+    <path d="M100 190c0-60 30-100 70-120" />
+    <path d="M100 150c18 4 34-6 42-22-18-6-34 4-42 22z" />
+    <path d="M100 110c16 2 30-8 36-24-17-4-31 7-36 24z" />
+    <circle cx="100" cy="46" r="12" />
+    <path d="M100 34c8-10 22-8 26 2-4 10-18 12-26-2z" />
+    <path d="M100 34c-8-10-22-8-26 2 4 10 18 12 26-2z" />
+    <path d="M100 58c8 10 22 8 26-2-4-10-18-12-26 2z" />
+    <path d="M100 58c-8 10-22 8-26-2 4-10 18-12 26 2z" />
+</svg>
+
+@code {
+    /// <summary>leaf-tr (بالا راست) یا leaf-bl (پایین چپ)</summary>
+    [Parameter] public string Position { get; set; } = "leaf-tr";
+}

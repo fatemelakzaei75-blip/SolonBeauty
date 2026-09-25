@@ -1,0 +1,87 @@
+@page "/services/{Slug}"
+@using BlazorAppSolon.Data
+@inject NavigationManager Nav
+@inject DataCore.Interfaces.ISeoService Seo
+
+<SeoHeader Model="_seo" />
+
+@if (_page is null)
+{
+    <PageBurn Title="خدمت یافت نشد" />
+    <section class="section light">
+        <div class="container" style="text-align:center">
+            <p>این خدمت هنوز صفحه اختصاصی ندارد.</p>
+            <a class="btn-solon" href="services">مشاهده همه خدمات</a>
+        </div>
+    </section>
+}
+else
+{
+    <PageBurn Title="@_page.Title" />
+
+    <section class="section light">
+        <LeafDeco Position="leaf-tr" />
+        <div class="container">
+            <!-- نوار راهنمای خرده‌نان (Breadcrumbs) با نشانه‌گذاری سئو -->
+            <BreadcrumbNav Items="_seo.Breadcrumbs" />
+
+            <div class="service-intro" style="margin-top:1.5rem;">
+                <div>
+                    <h1 class="serif" style="font-size:1.8rem">@_page.Title</h1>
+                    <p style="opacity:.8; line-height:1.8; margin:1rem 0;">@_page.Intro</p>
+                    <p><b>شروع قیمت:</b> @_page.FromPrice.ToString("#,0") تومان</p>
+                    <a class="btn-solon red lg" href="@($"reserve?service={_page.Slug}")">رزرو نوبت این خدمت</a>
+                </div>
+                <div class="arch" style="max-width:330px">
+                    <img src="@_page.HeroImage" alt="@_page.Title" width="330" height="420" loading="eager" />
+                </div>
+            </div>
+
+            <h2 class="section-title" style="margin-top:3rem">نمونه کارهای تخصصی @_page.Title</h2>
+            <p style="text-align:center;opacity:.7;margin-top:-2rem;margin-bottom:2rem;font-size:.9rem">
+                روی هر نمونه بزنید تا جزئیات کامل (متخصص، مدت زمان، هزینه و تصویر قبل/بعد) را ببینید.
+                با ❤️ آن را در علاقه‌مندی‌های پنل خود ذخیره کنید.
+            </p>
+
+            <div class="work-grid">
+                @foreach (var item in _works)
+                {
+                    <PortfolioCard Item="item" OnOpen="Open" />
+                }
+            </div>
+
+            <div style="text-align:center;margin-top:2.6rem">
+                <a class="btn-solon" href="services">سایر خدمات سالن</a>
+            </div>
+        </div>
+    </section>
+
+    <PortfolioDetail Item="_selected" OnClose="() => _selected = null" />
+}
+
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+
+    private ServicePage? _page;
+    private List<PortfolioItem> _works = new();
+    private PortfolioItem? _selected;
+    private SeoMetadata _seo = new();
+
+    protected override void OnParametersSet()
+    {
+        _page = PortfolioCatalog.ServiceBySlug(Slug);
+        _works = _page is null ? new() : PortfolioCatalog.ByService(Slug);
+        _selected = null;
+
+        if (_page is not null)
+        {
+            _seo = Seo.GetServiceSeo(_page.Slug, _page.Title, _page.Intro, _page.FromPrice, _page.HeroImage, Nav.BaseUri);
+        }
+        else
+        {
+            _seo = Seo.GetNoIndexSeo("خدمت یافت نشد");
+        }
+    }
+
+    private void Open(PortfolioItem item) => _selected = item;
+}
