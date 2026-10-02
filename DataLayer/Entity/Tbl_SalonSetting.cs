@@ -16,6 +16,15 @@ namespace DataLayer.Entity
         [MaxLength(100)]
         public string SalonLatinName { get; set; } = "Hadis Beauty";
 
+        /// <summary>
+        /// آدرس لوگوی سالن برای نمایش در Sidebar پنل.
+        /// در نبود مقدار، مونوگرام متنی سالن نمایش داده می‌شود.
+        /// آپلود از طریق POST /api/upload/image?section=logo انجام می‌شود.
+        /// </summary>
+        [Display(Name = "لوگوی سالن")]
+        [MaxLength(300)]
+        public string? LogoUrl { get; set; }
+
         [Display(Name = "زیرعنوان هیرو")]
         [MaxLength(150)]
         public string HeroSubtitle { get; set; } = "تجربه‌ای آرام، لوکس و حرفه‌ای از خدمات زیبایی";
