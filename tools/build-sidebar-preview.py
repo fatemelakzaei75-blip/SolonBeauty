@@ -111,8 +111,15 @@ def items_html(rail, prefix):
     return "\n".join(out) + logout
 
 
-def capsule(state, prefix, aria):
+def capsule(state, prefix, aria, content=None):
+    """پوسته کامل Sidebar + پنل محتوا.
+
+    content: اگر داده شود، جای محتوای نمایشی پیش‌فرض می‌نشیند. ابزار ساخت
+    پیش‌نمایش داشبورد از همین قلاب استفاده می‌کند تا Sidebar هرگز در دو
+    فایل جدا تکرار نشود."""
     rail = state == "rail"
+    if content is None:
+        content = PANEL_DEMO
     return f'''
 <section class="stage">
   <h2 class="stage-title">{aria}</h2>
@@ -135,7 +142,14 @@ def capsule(state, prefix, aria):
       </div>
     </nav>
     <div class="panel-content">
-      <div class="pv-content">
+{content}
+    </div>
+  </div>
+</section>'''
+
+
+# محتوای نمایشی پیش‌فرض پنل — همان چیزی که پیش‌نمایش Sidebar نشان می‌دهد
+PANEL_DEMO = """      <div class="pv-content">
         <p class="pv-crumb">پنل مدیریت / داشبورد</p>
         <h3 class="pv-h">نوبت‌های امروز</h3>
         <div class="pv-grid">
@@ -145,10 +159,7 @@ def capsule(state, prefix, aria):
         </div>
         <p class="pv-line">این پنل محتوا فقط برای نمایش دقیق محل اتصال قرص فعال است.
         عرض و گردی گوشه‌ها از همان متغیرهای CSS خودِ اپ می‌آید.</p>
-      </div>
-    </div>
-  </div>
-</section>'''
+      </div>"""
 
 
 def build():

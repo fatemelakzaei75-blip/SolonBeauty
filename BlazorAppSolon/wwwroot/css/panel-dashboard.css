@@ -1,0 +1,874 @@
+/* ==========================================================================
+   SolonBeauty — استایل داشبورد مدیریتی پنل
+   --------------------------------------------------------------------------
+   این فایل مکمل panel-sidebar.css است و روی توکن‌های آن سوار می‌شود
+   (--gold-champagne ، --sb-active-bg ، --sb-radius-capsule و ...).
+   اگر جایی جدا از پنل استفاده شود، همه توکن‌ها مقدار جانشین دارند.
+
+   فلسفه طراحی:
+   مدیر سالن تحلیلگر نیست؛ او بین دو مشتری و با دست خیس ۹۰ ثانیه به گوشی
+   نگاه می‌کند. پس هر بخش باید «آرامش» بدهد (همه‌چیز زیر کنترل است) یا
+   «اقتدار» (دارم رشد می‌کنم و می‌دانم چرا). هیچ بخشی نباید فقط «شلوغی
+   اطلاعاتی» باشد.
+
+   رنگ‌ها: طلایی شامپاینی فقط برای نقطه‌های تصمیم (عدد قهرمان، نوار هدف،
+   هشدار). اگر همه‌چیز طلایی شود، هیچ‌چیز طلایی نیست.
+   ========================================================================== */
+
+.dash {
+    /* ---------- توکن‌های اختصاصی داشبورد ---------- */
+    --d-text: #2A2420;
+    --d-muted: rgba(42, 36, 32, 0.58);          /* کنتراست ۵.۲:۱ روی کارت سفید */
+    --d-faint: rgba(42, 36, 32, 0.38);
+    --d-card: #FFFFFF;
+    --d-card-soft: rgba(42, 36, 32, 0.035);
+    --d-border: rgba(42, 36, 32, 0.08);
+    --d-border-strong: rgba(42, 36, 32, 0.14);
+    --d-gold: var(--gold-champagne, #C6A46A);
+    --d-gold-deep: var(--gold-champagne-deep, #A8843F);
+    --d-gold-soft: rgba(198, 164, 106, 0.14);
+    --d-good: #3F6B52;                          /* کنتراست ۶.۱:۱ روی سفید */
+    --d-good-soft: rgba(63, 107, 82, 0.12);
+    --d-warn: #9A6520;                          /* کنتراست ۵.۴:۱ روی سفید */
+    --d-warn-soft: rgba(154, 101, 32, 0.12);
+    --d-bad: #A8445C;                           /* کنتراست ۵.۶:۱ روی سفید */
+    --d-bad-soft: rgba(168, 68, 92, 0.11);
+    --d-radius: 18px;
+    --d-radius-sm: 12px;
+    --d-shadow: 0 1px 2px rgba(42, 36, 32, 0.04), 0 8px 24px rgba(42, 36, 32, 0.05);
+    --d-shadow-lift: 0 2px 6px rgba(42, 36, 32, 0.06), 0 14px 34px rgba(42, 36, 32, 0.09);
+
+    padding: 18px;
+    color: var(--d-text);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+@media (min-width: 768px) { .dash { padding: 24px; gap: 18px; } }
+@media (min-width: 1280px) { .dash { padding: 28px; gap: 20px; } }
+
+/* ---------- سرصفحه ---------- */
+.dash-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.dash-head h1 {
+    margin: 0 0 4px;
+    font-size: 1.28rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.dash-head p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--d-muted);
+}
+
+.dash-head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.dash-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--d-border-strong);
+    border-radius: 999px;
+    background: var(--d-card);
+    color: var(--d-text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 180ms, background 180ms, transform 180ms;
+}
+
+.dash-btn:hover { border-color: var(--d-gold); background: var(--d-gold-soft); }
+.dash-btn:active { transform: scale(0.97); }
+
+.dash-btn--primary {
+    background: var(--d-text);
+    border-color: var(--d-text);
+    color: #F7F2EA;
+}
+.dash-btn--primary:hover { background: #3A322B; border-color: #3A322B; }
+
+.dash-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--d-card), 0 0 0 4px var(--d-gold);
+}
+
+/* ---------- عدد قهرمان + هدف ---------- */
+.dash-hero-row {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+    .dash-hero-row { grid-template-columns: 1.15fr 1fr; }
+}
+
+.dash-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 20px 22px 16px;
+    border-radius: var(--d-radius);
+    background:
+        radial-gradient(120% 150% at 92% -20%, rgba(198, 164, 106, 0.20), transparent 62%),
+        linear-gradient(140deg, #2A221B 0%, #14110F 100%);
+    color: #EDE6DA;
+    box-shadow: var(--d-shadow-lift);
+}
+
+/* ذرات ریز نور — همان زبان بصری Sidebar */
+.dash-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.6;
+    background-image:
+        radial-gradient(1.5px 1.5px at 82% 22%, rgba(198, 164, 106, 0.75), transparent),
+        radial-gradient(1.1px 1.1px at 68% 12%, rgba(237, 230, 218, 0.5), transparent),
+        radial-gradient(1.3px 1.3px at 92% 58%, rgba(237, 230, 218, 0.4), transparent);
+    background-repeat: no-repeat;
+}
+
+.dash-hero > * { position: relative; z-index: 1; }
+
+.dash-hero .dash-label { color: rgba(237, 230, 218, 0.66); }
+
+.dash-hero-num {
+    display: block;
+    margin: 2px 0 6px;
+    font-size: clamp(1.9rem, 6vw, 2.55rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: #F7F2EA;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-hero-num small {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(237, 230, 218, 0.62);
+    margin-inline-start: 4px;
+}
+
+.dash-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.dash-delta--up { background: rgba(126, 190, 148, 0.16); color: #9ED8B2; }
+.dash-delta--down { background: rgba(214, 122, 148, 0.16); color: #F0A7B9; }
+.dash-delta--flat { background: rgba(237, 230, 218, 0.12); color: rgba(237, 230, 218, 0.8); }
+
+.dash-spark {
+    display: block;
+    inline-size: 100%;
+    block-size: 46px;
+    margin-block-start: 10px;
+}
+
+/* ---------- هدف ماه ---------- */
+.dash-goal {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px 22px;
+    border-radius: var(--d-radius);
+    background: var(--d-card);
+    border: 1px solid var(--d-border);
+    box-shadow: var(--d-shadow);
+}
+
+.dash-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--d-muted);
+}
+
+.dash-goal-num {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-goal-num span {
+    font-size: 0.76rem;
+    font-weight: 500;
+    color: var(--d-muted);
+}
+
+.dash-progress {
+    position: relative;
+    block-size: 12px;
+    border-radius: 999px;
+    background: var(--d-card-soft);
+    overflow: hidden;
+}
+
+.dash-progress > i {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--d-gold-deep), var(--d-gold));
+    transition: inline-size 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* خط هدف میانی: «کجای ماه هستیم» در برابر «کجای درآمد هستیم».
+   اگر این خط از نوار جلو بزند، یعنی عقب‌تر از تقویم هستیم. */
+.dash-progress-marker {
+    position: absolute;
+    inset-block: -3px;
+    inline-size: 2px;
+    border-radius: 2px;
+    background: var(--d-text);
+    opacity: 0.45;
+}
+
+.dash-goal-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 0.74rem;
+    color: var(--d-muted);
+}
+
+.dash-goal-foot b { color: var(--d-text); font-weight: 700; }
+
+/* ---------- ردیف کارت‌های کوچک ---------- */
+.dash-kpis {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 900px) { .dash-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.dash-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 15px 16px;
+    border-radius: var(--d-radius-sm);
+    background: var(--d-card);
+    border: 1px solid var(--d-border);
+    box-shadow: var(--d-shadow);
+}
+
+.dash-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.dash-kpi-val {
+    font-size: 1.22rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-kpi-val small {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--d-muted);
+    margin-inline-start: 3px;
+}
+
+.dash-kpi-sub { font-size: 0.7rem; color: var(--d-muted); }
+
+.dash-kpi-icon {
+    display: grid;
+    place-items: center;
+    inline-size: 34px;
+    block-size: 34px;
+    border-radius: 11px;
+    background: var(--d-card-soft);
+    color: var(--d-gold-deep);
+    flex: 0 0 auto;
+}
+
+.dash-kpi-icon--good { background: var(--d-good-soft); color: var(--d-good); }
+.dash-kpi-icon--warn { background: var(--d-warn-soft); color: var(--d-warn); }
+.dash-kpi-icon--bad { background: var(--d-bad-soft); color: var(--d-bad); }
+
+/* ---------- صف اقدام ---------- */
+.dash-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.dash-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+.dash-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 15px;
+    border-radius: 999px;
+    background: var(--d-card);
+    border: 1px solid var(--d-border-strong);
+    color: var(--d-text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 180ms, transform 180ms, box-shadow 180ms;
+}
+
+.dash-chip:hover { border-color: var(--d-gold); box-shadow: var(--d-shadow); }
+.dash-chip:active { transform: scale(0.975); }
+.dash-chip:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--d-card), 0 0 0 4px var(--d-gold);
+}
+
+/* عدد داخل چیپ — تنها جایی که رنگ اعلان برند استفاده می‌شود */
+.dash-chip-count {
+    display: grid;
+    place-items: center;
+    min-inline-size: 22px;
+    block-size: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(198, 164, 106, 0.18);
+    color: var(--d-gold-deep);
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-chip-count--bad {
+    background: var(--d-bad);
+    color: #FFFFFF;                             /* کنتراست ۴.۹۳:۱ */
+}
+
+.dash-chip-count--warn {
+    background: var(--d-warn);
+    color: #FFFFFF;
+}
+
+/* ---------- کارت عمومی ---------- */
+.dash-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: var(--d-radius);
+    background: var(--d-card);
+    border: 1px solid var(--d-border);
+    box-shadow: var(--d-shadow);
+}
+
+.dash-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.dash-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.dash-card-title::before {
+    content: "";
+    inline-size: 5px;
+    block-size: 5px;
+    border-radius: 50%;
+    background: var(--d-gold);
+    flex: 0 0 auto;
+}
+
+.dash-card-link {
+    font-size: 0.72rem;
+    color: var(--d-muted);
+    text-decoration: none;
+    border-block-end: 1px solid transparent;
+    transition: color 160ms, border-color 160ms;
+}
+.dash-card-link:hover { color: var(--d-gold-deep); border-color: var(--d-gold); }
+
+/* ---------- تایم‌لاین امروز ---------- */
+.dash-timeline {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-block-end: 6px;
+    scroll-snap-type: x proximity;
+    /* نوار باریک اسکرول تا ارتفاع کارت را نخورد */
+    scrollbar-width: thin;
+}
+
+.dash-appt {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    inline-size: 178px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 13px 14px;
+    border-radius: var(--d-radius-sm);
+    border: 1px solid var(--d-border);
+    background: var(--d-card-soft);
+    border-inline-start-width: 3px;
+    border-inline-start-style: solid;
+    border-inline-start-color: var(--d-border-strong);
+}
+
+.dash-appt--done { border-inline-start-color: var(--d-good); }
+.dash-appt--now {
+    border-inline-start-color: var(--d-gold);
+    background: var(--d-gold-soft);
+    box-shadow: 0 0 0 1px var(--d-gold) inset;
+}
+.dash-appt--wait { border-inline-start-color: var(--d-warn); }
+.dash-appt--next { border-inline-start-color: rgba(42, 36, 32, 0.22); }
+
+.dash-appt-time {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.dash-appt-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--d-card);
+    border: 1px solid var(--d-border);
+    color: var(--d-muted);
+}
+
+.dash-appt--now .dash-appt-badge {
+    background: var(--d-gold);
+    border-color: var(--d-gold);
+    color: #2A2420;
+}
+
+.dash-appt-name { font-size: 0.8rem; font-weight: 700; }
+.dash-appt-service { font-size: 0.7rem; color: var(--d-muted); }
+
+.dash-appt-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 0.68rem;
+    color: var(--d-muted);
+    padding-block-start: 4px;
+    border-block-start: 1px solid var(--d-border);
+}
+
+/* ---------- گرید بخش‌ها ---------- */
+.dash-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1000px) {
+    .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dash-span-2 { grid-column: 1 / -1; }
+}
+
+/* ---------- نقشه حرارتی ---------- */
+.heat {
+    display: grid;
+    gap: 4px;
+    grid-template-columns: 46px repeat(10, minmax(0, 1fr));
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .heat { grid-template-columns: 56px repeat(10, minmax(0, 1fr)); }
+}
+
+.heat-day {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--d-muted);
+    padding-inline-end: 4px;
+    white-space: nowrap;
+}
+
+.heat-hour {
+    font-size: 0.62rem;
+    color: var(--d-faint);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.heat-cell {
+    block-size: 26px;
+    border-radius: 6px;
+    background: var(--d-card-soft);
+}
+
+/* شدت اشغال: از طلایی بسیار روشن تا طلایی عمیق.
+   متن داخل خانه نمی‌گذاریم؛ در موبایل خوانا نیست و رنگ خودش داده را می‌رساند. */
+.heat-cell[data-load="1"] { background: rgba(198, 164, 106, 0.16); }
+.heat-cell[data-load="2"] { background: rgba(198, 164, 106, 0.32); }
+.heat-cell[data-load="3"] { background: rgba(198, 164, 106, 0.52); }
+.heat-cell[data-load="4"] { background: rgba(198, 164, 106, 0.74); }
+.heat-cell[data-load="5"] { background: rgba(168, 132, 63, 0.92); }
+.heat-cell--closed { background: repeating-linear-gradient(135deg, rgba(42,36,32,.07) 0 3px, transparent 3px 6px); }
+
+.heat-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.68rem;
+    color: var(--d-muted);
+    flex-wrap: wrap;
+}
+
+.heat-legend i {
+    inline-size: 16px;
+    block-size: 12px;
+    border-radius: 4px;
+    display: block;
+}
+
+/* ---------- نمودار میله‌ای افقی (پرسنل) ---------- */
+.bars { display: flex; flex-direction: column; gap: 13px; }
+
+.bar-row { display: flex; flex-direction: column; gap: 6px; }
+
+.bar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.78rem;
+}
+
+.bar-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+
+.bar-avatar {
+    display: grid;
+    place-items: center;
+    inline-size: 26px;
+    block-size: 26px;
+    border-radius: 50%;
+    background: var(--d-gold-soft);
+    color: var(--d-gold-deep);
+    font-size: 0.68rem;
+    font-weight: 800;
+    flex: 0 0 auto;
+}
+
+.bar-val {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.bar-val small { font-weight: 500; color: var(--d-muted); font-size: 0.68rem; }
+
+.bar-track {
+    position: relative;
+    block-size: 8px;
+    border-radius: 999px;
+    background: var(--d-card-soft);
+    overflow: hidden;
+}
+
+.bar-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--d-gold-deep), var(--d-gold));
+    transition: inline-size 800ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* میله اشغال زیر میله درآمد: دو داده روی یک ردیف بدون شلوغی */
+.bar-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.68rem;
+    color: var(--d-muted);
+}
+
+.bar-track--thin { block-size: 5px; }
+.bar-fill--occ { background: rgba(42, 36, 32, 0.34); }
+
+/* ---------- فهرست خدمات پرفروش ---------- */
+.rank { display: flex; flex-direction: column; gap: 10px; }
+
+.rank-row {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.rank-no {
+    display: grid;
+    place-items: center;
+    inline-size: 22px;
+    block-size: 22px;
+    border-radius: 7px;
+    background: var(--d-card-soft);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--d-muted);
+}
+
+.rank-row:first-child .rank-no { background: var(--d-gold); color: #2A2420; }
+
+.rank-body { display: flex; flex-direction: column; gap: 5px; min-inline-size: 0; }
+.rank-name { font-size: 0.78rem; font-weight: 600; }
+
+.rank-track {
+    block-size: 5px;
+    border-radius: 999px;
+    background: var(--d-card-soft);
+    overflow: hidden;
+}
+
+.rank-track > i {
+    display: block;
+    block-size: 100%;
+    border-radius: 999px;
+    background: rgba(198, 164, 106, 0.6);
+}
+
+.rank-val {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--d-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ---------- سلامت مشتریان ---------- */
+.cust-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.cust-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border-radius: var(--d-radius-sm);
+    background: var(--d-card-soft);
+    text-align: center;
+}
+
+.cust-box b { font-size: 1.1rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cust-box span { font-size: 0.66rem; color: var(--d-muted); }
+
+.cust-box--risk { background: var(--d-bad-soft); }
+.cust-box--risk b { color: var(--d-bad); }
+
+/* فهرست مشتریان در خطر — قابل اقدام، نه فقط آماری */
+.risk-list { display: flex; flex-direction: column; gap: 8px; }
+
+.risk-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 11px;
+    border-radius: var(--d-radius-sm);
+    border: 1px dashed var(--d-border-strong);
+    font-size: 0.76rem;
+}
+
+.risk-item b { font-weight: 700; }
+.risk-item span { color: var(--d-muted); font-size: 0.7rem; margin-inline-start: auto; white-space: nowrap; }
+
+.risk-dot {
+    inline-size: 7px; block-size: 7px; border-radius: 50%;
+    background: var(--d-bad); flex: 0 0 auto;
+}
+.risk-dot--warn { background: var(--d-warn); }
+
+/* ---------- دونات روش پرداخت ---------- */
+.donut-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+
+.donut-shell {
+    position: relative;
+    inline-size: 118px;
+    block-size: 118px;
+    flex: 0 0 auto;
+}
+
+.donut {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    /* چهار ناحیه با conic-gradient — بدون کتابخانه نمودار */
+    background: conic-gradient(
+        var(--d-gold-deep) 0 41%,
+        rgba(198, 164, 106, 0.62) 41% 73%,
+        rgba(198, 164, 106, 0.34) 73% 95%,
+        rgba(42, 36, 32, 0.16) 95% 100%
+    );
+    /* سوراخ مرکزی با ماسک رادیال.
+       نکته مهم: mask به فرزندان عنصر هم اعمال می‌شود. اگر متن مرکزی داخل
+       همین عنصر باشد، ماسک آن را هم پنهان می‌کند؛ پس متن در یک عنصر خواهر
+       و بیرون از ماسک قرار دارد. */
+    -webkit-mask: radial-gradient(circle, transparent 0 37px, #000 37px);
+    mask: radial-gradient(circle, transparent 0 37px, #000 37px);
+}
+
+.donut-center {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+}
+
+.donut-center b { display: block; font-size: 1.05rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.donut-center span { font-size: 0.62rem; color: var(--d-muted); }
+
+.donut-legend { display: flex; flex-direction: column; gap: 8px; flex: 1 1 140px; }
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.76rem;
+}
+
+.legend-swatch {
+    inline-size: 10px; block-size: 10px; border-radius: 3px; flex: 0 0 auto;
+}
+
+.legend-row b {
+    margin-inline-start: auto;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- جعبه بینش (Insight) ---------- */
+.dash-insight {
+    display: flex;
+    gap: 12px;
+    padding: 15px 16px;
+    border-radius: var(--d-radius-sm);
+    background: linear-gradient(135deg, rgba(198, 164, 106, 0.15), rgba(198, 164, 106, 0.04));
+    border: 1px solid rgba(198, 164, 106, 0.35);
+}
+
+.dash-insight-icon {
+    display: grid;
+    place-items: center;
+    inline-size: 36px;
+    block-size: 36px;
+    border-radius: 11px;
+    background: var(--d-gold);
+    color: #2A2420;
+    flex: 0 0 auto;
+}
+
+.dash-insight-body { display: flex; flex-direction: column; gap: 5px; min-inline-size: 0; }
+.dash-insight-title { font-size: 0.82rem; font-weight: 800; }
+.dash-insight-text { font-size: 0.76rem; line-height: 1.75; color: rgba(42, 36, 32, 0.72); }
+.dash-insight-text b { color: var(--d-text); font-weight: 700; }
+
+/* ---------- ردیف‌های ساده (تخفیف، رضایت، تولد) ---------- */
+.simple-rows { display: flex; flex-direction: column; gap: 0; }
+
+.simple-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    font-size: 0.78rem;
+    border-block-end: 1px solid var(--d-border);
+}
+
+.simple-row:last-child { border-block-end: 0; padding-block-end: 0; }
+.simple-row:first-child { padding-block-start: 0; }
+.simple-row > b { margin-inline-start: auto; font-weight: 800; font-variant-numeric: tabular-nums; }
+.simple-row span { color: var(--d-muted); font-size: 0.72rem; }
+
+.stars { display: inline-flex; gap: 2px; color: var(--d-gold); }
+
+/* ---------- ستاره‌های رضایت ---------- */
+.dash-rating { display: flex; align-items: baseline; gap: 8px; }
+
+.dash-rating b {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    /* والدش .simple-row span است و رنگ محو می‌گیرد؛ اینجا صریح تیره می‌شود */
+    color: var(--d-text);
+}
+
+.dash-rating span { font-size: 0.74rem; color: var(--d-muted); }
+
+/* ---------- متفرقه ---------- */
+.dash-note {
+    font-size: 0.7rem;
+    color: var(--d-faint);
+    line-height: 1.9;
+}
+
+.dash-empty {
+    display: grid;
+    place-items: center;
+    padding: 26px 14px;
+    border-radius: var(--d-radius-sm);
+    border: 1px dashed var(--d-border-strong);
+    font-size: 0.76rem;
+    color: var(--d-muted);
+    text-align: center;
+}
+
+/* ---------- ورود ملایم بخش‌ها ----------
+   هر بخش با تأخیر کوچکی بالا می‌آید تا چشم مدیر مسیر را از بالا به پایین
+   دنبال کند، نه اینکه همه‌چیز یک‌جا شلیک شود. */
+@media (prefers-reduced-motion: no-preference) {
+    .dash-rise {
+        animation: dash-rise 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .dash-rise:nth-child(2) { animation-delay: 60ms; }
+    .dash-rise:nth-child(3) { animation-delay: 110ms; }
+    .dash-rise:nth-child(4) { animation-delay: 160ms; }
+    .dash-rise:nth-child(5) { animation-delay: 210ms; }
+
+    @keyframes dash-rise {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: none; }
+    }
+}
