@@ -38,14 +38,14 @@
                 <div class="login-form-block">
                     <div class="form-field">
                         <label>شماره موبایل</label>
-                        <input class="panel-input" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
+                        <input class="panel-input" type="tel" inputmode="tel" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
                     </div>
 
                     @if (_codeSent)
                     {
                         <div class="form-field">
                             <label>کد تأیید پیامک شده</label>
-                            <input class="panel-input" dir="ltr" placeholder="کد ۵ رقمی (کد تستی: 12345)" @bind="_code" />
+                            <input class="panel-input" type="text" inputmode="numeric" dir="ltr" placeholder="کد ۵ رقمی (کد تستی: 12345)" @bind="_code" />
                         </div>
                     }
 
@@ -80,7 +80,7 @@
                 <div class="login-form-block">
                     <div class="form-field">
                         <label>شماره موبایل</label>
-                        <input class="panel-input" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
+                        <input class="panel-input" type="tel" inputmode="tel" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
                     </div>
 
                     <div class="form-field">
@@ -127,7 +127,7 @@
 @* ==================== مودال بازیابی رمز عبور با OTP پیامکی (بند ۱۳ سند) ==================== *@
 @if (_showForgotModal)
 {
-    <div class="search-overlay" @onclick="@(() => _showForgotModal = false)">
+    <div class="search-overlay">
         <div class="search-modal" @onclick:stopPropagation style="max-width:480px">
             <div class="staff-modal-header">
                 <h3>بازیابی رمز عبور با کد پیامکی (OTP)</h3>
@@ -141,11 +141,11 @@
                 <div class="form-grid">
                     <div class="form-field" style="grid-column:1/-1">
                         <label>شماره موبایل</label>
-                        <input class="panel-input" dir="ltr" @bind="_forgotMobile" placeholder="09xxxxxxxxx" />
+                        <input class="panel-input" type="tel" inputmode="tel" dir="ltr" @bind="_forgotMobile" placeholder="09xxxxxxxxx" />
                     </div>
                     <div class="form-field" style="grid-column:1/-1">
                         <label>کد تأیید پیامک شده (کد تستی: 12345)</label>
-                        <input class="panel-input" dir="ltr" @bind="_forgotCode" placeholder="12345" />
+                        <input class="panel-input" type="text" inputmode="numeric" dir="ltr" @bind="_forgotCode" placeholder="12345" />
                     </div>
                     <div class="form-field" style="grid-column:1/-1">
                         <label>رمز عبور جدید</label>

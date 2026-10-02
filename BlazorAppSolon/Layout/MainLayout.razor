@@ -1,9 +1,13 @@
 @inherits LayoutComponentBase
+@using BlazorAppSolon.Components
 
 <SiteHeader />
 
-<main>
+<main class="main-content-flow">
     @Body
 </main>
 
 <SiteFooter />
+
+<!-- نوار ناوبری پایین صفحه مخصوص موبایل (Bottom Navigation) -->
+<MobileBottomNav />

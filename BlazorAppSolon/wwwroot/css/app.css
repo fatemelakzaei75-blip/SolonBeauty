@@ -2265,3 +2265,499 @@ a { color: inherit; text-decoration: none; }
     background: #443B33;
     color: #D4AF37;
 }
+
+/* ==========================================================================
+   معماری مدرن Web Application تجاری — Mobile First و Responsive صد در صد
+   ========================================================================== */
+
+/* قانون طلایی عدم خروج از عرض صفحه در هر رزولوشن */
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+}
+* {
+    box-sizing: border-box;
+}
+img, svg, video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ۱. برند متنی در نوار ناوبری بالا */
+.navbar-brand-title {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #1A1A1A;
+}
+.brand-monogram {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #B89047;
+    background: #FAF5EB;
+    border: 1px solid #E8DFD3;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+.brand-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1A1A1A;
+}
+
+/* ۲. دکمه همبرگری موبایل */
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #1A1A1A;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    transition: background 0.15s;
+}
+.mobile-menu-toggle:active {
+    background: #FAF5EB;
+}
+
+/* ۳. نوار ناوبری پایین صفحه مخصوص موبایل (Bottom Navigation) */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(212, 175, 55, 0.35);
+    z-index: 1000;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 6px;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.08);
+}
+.mob-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: #666;
+    font-size: 0.72rem;
+    font-weight: 500;
+    min-height: 48px;
+    transition: all 0.2s ease;
+}
+.mob-nav-icon {
+    width: 21px;
+    height: 21px;
+    stroke-width: 1.9;
+}
+.mob-nav-item.active {
+    color: #B89047;
+    font-weight: 700;
+}
+.mob-nav-item.active .mob-nav-icon {
+    stroke: #B89047;
+}
+.mob-nav-item.center-cta {
+    position: relative;
+    top: -10px;
+}
+.center-cta-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4AF37 0%, #A67C1E 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(184, 144, 71, 0.45);
+    color: #FFF;
+    transition: transform 0.15s ease;
+}
+.center-cta-circle:active {
+    transform: scale(0.92);
+}
+.center-cta .cta-icon {
+    width: 22px;
+    height: 22px;
+    stroke: #FFF;
+}
+.center-cta .cta-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #A67C1E;
+    margin-top: 3px;
+}
+
+/* ۴. منوی کشویی موبایل (Off-canvas Mobile Drawer) */
+.mobile-drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1100;
+    animation: fadeIn 0.2s ease;
+}
+.mobile-drawer-sheet {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 82vw;
+    max-width: 320px;
+    background: #FFF;
+    z-index: 1101;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.25);
+    animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+}
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+.drawer-header {
+    padding: 1.2rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #EFEAE3;
+    background: #FAF7F2;
+}
+.drawer-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.drawer-brand strong {
+    font-size: 0.95rem;
+    color: #1A1A1A;
+    display: block;
+}
+.drawer-brand small {
+    font-size: 0.75rem;
+    color: #888;
+}
+.drawer-close-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid #DDD;
+    background: #FFF;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #666;
+}
+.drawer-user-card {
+    padding: 1rem;
+    background: #FFF;
+    border-bottom: 1px solid #EFEAE3;
+}
+.drawer-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.drawer-user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #FAF5EB;
+    border: 1px solid #D4AF37;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+.role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 999px;
+    background: #FAF5EB;
+    color: #B89047;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+.drawer-nav-list {
+    padding: 0.8rem 0.5rem;
+    flex: 1;
+    overflow-y: auto;
+}
+.drawer-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background 0.15s;
+    min-height: 44px;
+}
+.drawer-nav-item:hover, .drawer-nav-item.active {
+    background: #FAF5EB;
+    color: #B89047;
+    font-weight: 700;
+}
+.drawer-nav-item.highlight {
+    background: rgba(212, 175, 55, 0.12);
+    color: #A67C1E;
+    font-weight: 700;
+    margin: 4px 0;
+}
+.drawer-sublinks {
+    padding-right: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.drawer-sublink-item {
+    padding: 6px 10px;
+    font-size: 0.84rem;
+    color: #666;
+    text-decoration: none;
+}
+.drawer-sublink-item:hover {
+    color: #B89047;
+}
+.drawer-footer {
+    padding: 1rem;
+    border-top: 1px solid #EFEAE3;
+    background: #FAF7F2;
+}
+.drawer-call-btn {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    background: #1A1A1A;
+    color: #FFF;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+/* ۵. هدر موبایل و سایدبار دراور در پنل */
+.panel-mobile-header {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #FFF;
+    border-bottom: 1px solid #EAE0D3;
+    padding: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+}
+.panel-mob-toggle {
+    background: transparent;
+    border: none;
+    color: #1A1A1A;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+}
+.panel-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #1A1A1A;
+    font-size: 0.95rem;
+}
+.panel-side-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.panel-drawer-close {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #DDD;
+    background: #FFF;
+    font-size: 0.9rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+.panel-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #FFF;
+    border-top: 1px solid #EAE0D3;
+    z-index: 1000;
+    align-items: center;
+    justify-content: space-around;
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.05);
+}
+.panel-bnav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #666;
+    font-size: 0.72rem;
+    font-weight: 500;
+    gap: 2px;
+    min-height: 48px;
+}
+.panel-bnav-item.bnav-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+.panel-bnav-item.active {
+    color: #B89047;
+    font-weight: 700;
+}
+.bnav-icon {
+    font-size: 1.15rem;
+}
+
+/* ۶. نوار چسبان عملیات رزرو در موبایل (Sticky Action Bar) */
+.mobile-sticky-action-bar {
+    display: none;
+    position: fixed;
+    bottom: 64px;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid #EAE0D3;
+    padding: 10px 16px;
+    z-index: 990;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.sticky-action-info {
+    display: flex;
+    flex-direction: column;
+}
+.sticky-info-label {
+    font-size: 0.74rem;
+    color: #777;
+}
+.sticky-info-val {
+    font-size: 0.92rem;
+    color: #1A1A1A;
+    font-weight: 700;
+}
+.sticky-action-btn button {
+    min-height: 42px;
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+/* ۷. استانداردهای Media Query برای موبایل و تبلت */
+@media (max-width: 900px) {
+    .mobile-bottom-nav { display: flex; }
+    .mobile-menu-toggle { display: flex; }
+    .navbar-brand-title { display: flex; }
+    .nav-links { display: none !important; }
+    .topbar-info { display: none; }
+    .search-label { display: none; }
+    .book-btn span { display: none; }
+    .book-btn::before { content: "رزرو"; }
+    .main-content-flow { padding-bottom: 75px !important; }
+
+    /* پنل در موبایل */
+    .panel-body { padding-bottom: 75px !important; padding: 12px !important; }
+    .panel-shell { display: block !important; }
+    .panel-mobile-header { display: flex; }
+    .panel-bottom-nav { display: flex; }
+    .panel-top { display: none !important; }
+    .panel-side {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 290px;
+        background: #FAF7F2;
+        z-index: 1200;
+        transform: translateX(100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: -4px 0 24px rgba(0,0,0,0.25);
+        overflow-y: auto;
+    }
+    .panel-side.drawer-open { transform: translateX(0); }
+    .panel-drawer-close { display: flex; }
+    .panel-drawer-backdrop {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(3px);
+        z-index: 1199;
+    }
+
+    .mobile-sticky-action-bar { display: flex; }
+
+    /* جداول واکنش‌گرا و بدون اسکرول ناخواسته در صفحه */
+    .panel-card, .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .panel-table {
+        min-width: 600px;
+    }
+}
+
+/* تبدیل مودال‌ها به فرم کشویی پایین (Bottom Sheet) در موبایل */
+@media (max-width: 768px) {
+    .modal-box, .search-modal {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 88vh !important;
+        overflow-y: auto !important;
+        margin: 0 !important;
+        animation: slideUpBottom 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    @keyframes slideUpBottom {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+}

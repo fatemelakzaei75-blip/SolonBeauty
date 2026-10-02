@@ -1,8 +1,10 @@
 @using BlazorAppSolon.Data
+@using BlazorAppSolon.Auth
 @inject IDataStore Store
+@inject NavigationManager Nav
 
 <header class="solon-header">
-    <!-- نوار بالایی: تماس، ایمیل و شبکه‌های اجتماعی -->
+    <!-- نوار بالایی: تماس، ساعت کاری و شبکه‌های اجتماعی -->
     <div class="topbar">
         <div class="container">
             <!-- سمت راست: شبکه‌های اجتماعی -->
@@ -26,7 +28,7 @@
             <div class="topbar-info">
                 <span>ساعات کاری: ۰۹:۰۰ الی ۲۱:۰۰</span>
                 <span class="dot-separator">•</span>
-                <a href="tel:+982112345678" dir="ltr">+98 21 1234 5678</a>
+                <a href="tel:+982112345678" dir="ltr">۰۲۱-۱۲۳۴۵۶۷۸</a>
             </div>
 
             <!-- سمت چپ: لینک مستقیم ورود به پنل کاربری -->
@@ -47,14 +49,29 @@
         </div>
     </div>
 
-    <!-- نوار اصلی ناوبری (بدون هیچ لوگویی طبق بند ۱ سند نیازمندی‌ها) -->
+    <!-- نوار اصلی ناوبری با پشتیبانی کامل از موبایل و دسکتاپ -->
     <div class="main-navbar">
         <div class="container navbar-container">
-            <!-- سمت راست: منوی صفحات اصلی با منوی بازشوی دسته‌بندی خدمات -->
+            <!-- دکمه همبرگری موبایل جهت باز کردن دراور کشویی -->
+            <button class="mobile-menu-toggle" @onclick="@(() => _mobileMenuOpen = true)" aria-label="منوی دسترسی سریع">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+
+            <!-- لوگوی متنی سالن در موبایل و دسکتاپ -->
+            <a href="" class="navbar-brand-title">
+                <span class="brand-monogram">HB</span>
+                <span class="brand-name">سالن زیبایی حدیث</span>
+            </a>
+
+            <!-- منوی اصلی در دسکتاپ -->
             <nav class="nav-links">
                 <NavLink href="" Match="NavLinkMatch.All" class="nav-item">صفحه اصلی</NavLink>
 
-                <!-- دسته‌بندی خدمات در هدر و ورود مستقیم به خدمات همان دسته (بند ۱ سند) -->
+                <!-- دسته‌بندی خدمات در هدر -->
                 <div class="nav-dropdown" @onmouseenter="@(() => _showCatMenu = true)" @onmouseleave="@(() => _showCatMenu = false)">
                     <NavLink href="services" class="nav-item nav-dropdown-toggle">
                         خدمات ما <span class="arrow-down">▾</span>
@@ -80,9 +97,9 @@
                 <NavLink href="terms" class="nav-item">قوانین و مقررات</NavLink>
             </nav>
 
-            <!-- سمت چپ: جستجو، سبد خرید، رزرو وقت و پنل کاربری (بند ۱ سند) -->
+            <!-- ابزارهای سمت چپ: جستجو، سبد خرید، رزرو وقت -->
             <div class="navbar-actions">
-                <!-- دکمه جستجوی حرفه‌ای در تمام صفحات (بند ۱ سند) -->
+                <!-- دکمه جستجو -->
                 <button class="nav-action-btn search-trigger" @onclick="@(() => _searchOpen = true)" title="جستجو در تمام صفحات">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -91,7 +108,7 @@
                     <span class="search-label">جستجو...</span>
                 </button>
 
-                <!-- آیکون سبد خرید (بند ۱ سند) -->
+                <!-- آیکون سبد خرید -->
                 <a class="nav-action-btn cart-btn" href="cart" title="سبد خرید">
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M4 6h16l-1.4 10.2a2 2 0 0 1-2 1.8H7.4a2 2 0 0 1-2-1.8L4 6z" />
@@ -99,7 +116,7 @@
                     </svg>
                 </a>
 
-                <!-- دکمه رزرو وقت (بند ۱ سند) -->
+                <!-- دکمه رزرو وقت -->
                 <a class="btn-solon red book-btn" href="reserve">
                     <span>رزرو وقت</span>
                 </a>
@@ -108,12 +125,102 @@
     </div>
 </header>
 
-<!-- مودال جستجوی حرفه‌ای (بند ۱ سند) -->
+<!-- منوی کشویی موبایل (Off-canvas Mobile Drawer) با استانداردهای بومی وب‌اپلیکیشن -->
+@if (_mobileMenuOpen)
+{
+    <div class="mobile-drawer-backdrop" @onclick="@(() => _mobileMenuOpen = false)"></div>
+    <div class="mobile-drawer-sheet @(_mobileMenuOpen ? "open" : "")">
+        <div class="drawer-header">
+            <div class="drawer-brand">
+                <span class="brand-monogram">HB</span>
+                <div>
+                    <strong>سالن زیبایی حدیث</strong>
+                    <small>تجربه لوکس و مدرن</small>
+                </div>
+            </div>
+            <button class="drawer-close-btn" @onclick="@(() => _mobileMenuOpen = false)">✕</button>
+        </div>
+
+        <div class="drawer-user-card">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="drawer-user-info">
+                        <div class="drawer-user-avatar">👤</div>
+                        <div>
+                            <strong>@context.User.Identity?.Name</strong>
+                            <span class="role-badge">
+                                @AppRoles.Persian(context.User.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? "")
+                            </span>
+                        </div>
+                    </div>
+                    <a href="@AppRoles.PanelUrl(context.User.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? "")"
+                       class="btn-solon red full-width sm"
+                       style="margin-top:0.6rem"
+                       @onclick="@(() => _mobileMenuOpen = false)">
+                        ورود به پنل کاربری
+                    </a>
+                </Authorized>
+                <NotAuthorized>
+                    <p style="font-size:0.85rem; margin-bottom:0.6rem; color:#666;">برای دسترسی به سوابق و رزروها وارد شوید:</p>
+                    <a href="login" class="btn-solon red full-width sm" @onclick="@(() => _mobileMenuOpen = false)">
+                        ورود / ثبت‌نام در سامانه
+                    </a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <nav class="drawer-nav-list">
+            <NavLink href="" Match="NavLinkMatch.All" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>🏠 صفحه اصلی</span>
+            </NavLink>
+            <NavLink href="services" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>💅 خدمات تخصصی سالن</span>
+            </NavLink>
+
+            <div class="drawer-sublinks">
+                @foreach (var s in PortfolioCatalog.Services)
+                {
+                    <a href="@($"services/{s.Slug}")" class="drawer-sublink-item" @onclick="@(() => _mobileMenuOpen = false)">
+                        <span>▪ @s.Title</span>
+                    </a>
+                }
+            </div>
+
+            <NavLink href="reserve" class="drawer-nav-item highlight" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>🗓 رزرو آنلاین نوبت</span>
+            </NavLink>
+            <NavLink href="gallery" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>🖼 آلبوم نمونه‌کارها و تصاویر سالن</span>
+            </NavLink>
+            <NavLink href="blog" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>📖 وبلاگ و مقالات آموزشی</span>
+            </NavLink>
+            <NavLink href="about" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>ℹ️ درباره ما و کادر سالن</span>
+            </NavLink>
+            <NavLink href="contact" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>📞 تماس با ما و موقعیت مکانی</span>
+            </NavLink>
+            <NavLink href="terms" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+                <span>📜 قوانین و شرایط نوبت‌دهی</span>
+            </NavLink>
+        </nav>
+
+        <div class="drawer-footer">
+            <a href="tel:+982112345678" class="drawer-call-btn">
+                📞 تماس سریع: ۰۲۱-۱۲۳۴۵۶۷۸
+            </a>
+        </div>
+    </div>
+}
+
+<!-- مودال جستجوی حرفه‌ای -->
 <SearchModal @bind-IsOpen="_searchOpen" />
 
 @code {
     private bool _showCatMenu = false;
     private bool _searchOpen = false;
+    private bool _mobileMenuOpen = false;
     private string _instagram = "https://instagram.com/hadisbeauty.salon";
     private string _telegram = "https://t.me/hadisbeauty";
 

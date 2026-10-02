@@ -337,13 +337,46 @@
             </div>
         }
 
+        <!-- نوار چسبان پایین صفحه مخصوص عملیات رزرو در موبایل (Sticky Mobile Action Bar) -->
+        @if (_step >= 1 && _step <= 3)
+        {
+            <div class="mobile-sticky-action-bar">
+                <div class="sticky-action-info">
+                    <span class="sticky-info-label">
+                        @(_step == 1 ? "خدمت انتخابی:" : _step == 2 ? "زمان نوبت:" : "مبلغ بیعانه:")
+                    </span>
+                    <strong class="sticky-info-val">
+                        @(_step == 1 ? (PortfolioCatalog.ServiceBySlug(_selectedServiceSlug)?.Title ?? "کاشت ناخن")
+                          : _step == 2 ? $"{PersianDateHelper.ToShamsi(_selectedDate)} ({_selectedTime.ToString(@"hh\:mm")})"
+                          : $"{_payableAmount.ToString("#,0")} تومان")
+                    </strong>
+                </div>
+                <div class="sticky-action-btn">
+                    @if (_step == 1)
+                    {
+                        <button type="button" class="btn-solon red sm" @onclick="GoToStep2">مرحله بعد ←</button>
+                    }
+                    else if (_step == 2)
+                    {
+                        <button type="button" class="btn-solon red sm" @onclick="GoToStep3">مرحله بعد ←</button>
+                    }
+                    else if (_step == 3)
+                    {
+                        <button type="button" class="btn-solon red sm" @onclick="OpenConfirmModal" disabled="@(!_variablePriceAgreed)">
+                            تأیید و پرداخت ←
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
     </div>
 </section>
 
 @* ==================== مودال تأیید قبل از ثبت نهایی رزرو (بند ۱۲ سند نیازمندی‌ها) ==================== *@
 @if (_showConfirmModal)
 {
-    <div class="search-overlay" @onclick="@(() => _showConfirmModal = false)">
+    <div class="search-overlay">
         <div class="search-modal booking-confirm-modal" @onclick:stopPropagation>
             <div class="confirm-modal-head">
                 <span class="confirm-icon">📋</span>
@@ -410,7 +443,7 @@
 @* ==================== مودال ثبت در لیست انتظار (بند ۱۱ سند) ==================== *@
 @if (_showWaitingModal)
 {
-    <div class="search-overlay" @onclick="@(() => _showWaitingModal = false)">
+    <div class="search-overlay">
         <div class="search-modal" @onclick:stopPropagation style="max-width:540px">
             <div class="staff-modal-header">
                 <h3>⏳ قرارگیری در لیست انتظار سالن</h3>

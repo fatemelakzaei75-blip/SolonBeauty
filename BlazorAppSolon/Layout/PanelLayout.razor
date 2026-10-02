@@ -12,57 +12,96 @@
 </HeadContent>
 
 <div class="panel-shell">
-    <aside class="panel-side">
-        <a class="panel-logo" href="">
+    <!-- هدر مخصوص موبایل با دکمه همبرگری جهت باز کردن سایدبار به صورت Drawer -->
+    <header class="panel-mobile-header">
+        <button class="panel-mob-toggle" @onclick="@(() => _drawerOpen = true)" aria-label="منوی پنل">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+
+        <a class="panel-mobile-brand" href="">
             <span class="monogram">HB</span>
-            <small>HADIS BEAUTY</small>
+            <strong>سالن زیبایی حدیث</strong>
         </a>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="panel-mob-user">
+                    <span class="role-badge">
+                        @AppRoles.Persian(context.User.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? "")
+                    </span>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </header>
+
+    <!-- لایه پس‌زمینه دراور در موبایل -->
+    @if (_drawerOpen)
+    {
+        <div class="panel-drawer-backdrop" @onclick="@(() => _drawerOpen = false)"></div>
+    }
+
+    <!-- سایدبار پنل (در دسکتاپ ستون کناری و در موبایل کشویی/Drawer) -->
+    <aside class="panel-side @(_drawerOpen ? "drawer-open" : "")">
+        <div class="panel-side-head">
+            <a class="panel-logo" href="">
+                <span class="monogram">HB</span>
+                <small>HADIS BEAUTY</small>
+            </a>
+            <button class="panel-drawer-close" @onclick="@(() => _drawerOpen = false)">✕</button>
+        </div>
 
         <AuthorizeView Roles="Admin">
             <nav class="panel-nav">
                 <div class="nav-group">مدیریت کلان سالن</div>
-                <NavLink href="panel/admin" Match="NavLinkMatch.All">📊 داشبورد و شاخص‌ها</NavLink>
-                <NavLink href="panel/admin/base-data">🗂 اطلاعات پایه (بند ۱۹)</NavLink>
+                <NavLink href="panel/admin" Match="NavLinkMatch.All" @onclick="@(() => _drawerOpen = false)">📊 داشبورد و شاخص‌ها</NavLink>
+                <NavLink href="panel/admin/base-data" @onclick="@(() => _drawerOpen = false)">🗂 اطلاعات پایه (بند ۱۹)</NavLink>
 
                 <div class="nav-group">نوبت‌دهی و مراجعین</div>
-                <NavLink href="panel/admin/data/reservation">🗓 مدیریت نوبت‌ها</NavLink>
-                <NavLink href="panel/admin/data/waiting-list">⏳ لیست انتظار</NavLink>
-                <NavLink href="panel/admin/data/customer">👥 پرونده مشتریان</NavLink>
+                <NavLink href="panel/admin/data/reservation" @onclick="@(() => _drawerOpen = false)">🗓 مدیریت نوبت‌ها</NavLink>
+                <NavLink href="panel/admin/data/waiting-list" @onclick="@(() => _drawerOpen = false)">⏳ لیست انتظار</NavLink>
+                <NavLink href="panel/admin/data/customer" @onclick="@(() => _drawerOpen = false)">👥 پرونده مشتریان</NavLink>
 
                 <div class="nav-group">تیم و خدمات</div>
-                <NavLink href="panel/admin/data/personal">👩‍🎨 پرسنل سالن</NavLink>
-                <NavLink href="panel/admin/data/salon-service">💅 خدمات و تعرفه‌ها</NavLink>
-                <NavLink href="panel/admin/data/portfolio">🖼 گالری نمونه‌کارها</NavLink>
+                <NavLink href="panel/admin/data/personal" @onclick="@(() => _drawerOpen = false)">👩‍🎨 پرسنل سالن</NavLink>
+                <NavLink href="panel/admin/data/salon-service" @onclick="@(() => _drawerOpen = false)">💅 خدمات و تعرفه‌ها</NavLink>
+                <NavLink href="panel/admin/data/portfolio" @onclick="@(() => _drawerOpen = false)">🖼 گالری نمونه‌کارها</NavLink>
 
                 <div class="nav-group">تنظیمات و تعاملات</div>
-                <NavLink href="panel/admin/data/salon-setting">⚙️ تنظیمات سالن و تم</NavLink>
-                <NavLink href="panel/admin/data/discount">🏷️ کدهای تخفیف</NavLink>
-                <NavLink href="panel/admin/data/news-day">📣 اخبار و وبلاگ</NavLink>
-                <NavLink href="panel/admin/data/notification">🔔 اعلانات سیستم</NavLink>
+                <NavLink href="panel/admin/data/salon-setting" @onclick="@(() => _drawerOpen = false)">⚙️ تنظیمات سالن و تم</NavLink>
+                <NavLink href="panel/admin/data/discount" @onclick="@(() => _drawerOpen = false)">🏷️ کدهای تخفیف</NavLink>
+                <NavLink href="panel/admin/data/news-day" @onclick="@(() => _drawerOpen = false)">📣 اخبار و وبلاگ</NavLink>
+                <NavLink href="panel/admin/data/notification" @onclick="@(() => _drawerOpen = false)">🔔 اعلانات سیستم</NavLink>
             </nav>
         </AuthorizeView>
 
         <AuthorizeView Roles="Personnel">
             <nav class="panel-nav">
                 <div class="nav-group">کارتابل پرسنل</div>
-                <NavLink href="panel/personnel" Match="NavLinkMatch.All">📊 داشبورد کاری</NavLink>
-                <NavLink href="panel/personnel/schedule">🗓 کارتابل و نوبت‌ها</NavLink>
-                <NavLink href="panel/personnel/portfolio">🖼 نمونه کارهای من</NavLink>
-                <NavLink href="panel/personnel/profile">👤 مشخصات و ساعت کاری</NavLink>
+                <NavLink href="panel/personnel" Match="NavLinkMatch.All" @onclick="@(() => _drawerOpen = false)">📊 داشبورد کاری</NavLink>
+                <NavLink href="panel/personnel/schedule" @onclick="@(() => _drawerOpen = false)">🗓 کارتابل و نوبت‌ها</NavLink>
+                <NavLink href="panel/personnel/portfolio" @onclick="@(() => _drawerOpen = false)">🖼 نمونه کارهای من</NavLink>
+                <NavLink href="panel/personnel/profile" @onclick="@(() => _drawerOpen = false)">👤 مشخصات و ساعت کاری</NavLink>
             </nav>
         </AuthorizeView>
 
         <AuthorizeView Roles="Customer">
             <nav class="panel-nav">
                 <div class="nav-group">حساب کاربری من</div>
-                <NavLink href="panel/customer" Match="NavLinkMatch.All">📊 خلاصه وضعیت</NavLink>
-                <NavLink href="panel/customer/appointments">🗓 نوبت‌های رزرو شده</NavLink>
-                <NavLink href="panel/customer/favorites">❤️ علاقه‌مندی‌ها</NavLink>
-                <NavLink href="panel/customer/profile">👤 اطلاعات حساب</NavLink>
+                <NavLink href="panel/customer" Match="NavLinkMatch.All" @onclick="@(() => _drawerOpen = false)">📊 خلاصه وضعیت</NavLink>
+                <NavLink href="panel/customer/appointments" @onclick="@(() => _drawerOpen = false)">🗓 نوبت‌های رزرو شده</NavLink>
+                <NavLink href="panel/customer/favorites" @onclick="@(() => _drawerOpen = false)">❤️ علاقه‌مندی‌ها</NavLink>
+                <NavLink href="panel/customer/profile" @onclick="@(() => _drawerOpen = false)">👤 اطلاعات حساب</NavLink>
             </nav>
         </AuthorizeView>
 
-        <button class="logout" @onclick="Logout">خروج از حساب</button>
+        <div class="panel-side-footer">
+            <button class="logout" @onclick="Logout">خروج از حساب</button>
+            <a class="btn-solon ghost sm full-width" href="" style="margin-top:0.5rem; text-align:center;">صفحه اصلی سایت</a>
+        </div>
     </aside>
 
     <section class="panel-main">
@@ -89,9 +128,83 @@
             @Body
         </div>
     </section>
+
+    <!-- نوار ناوبری پایین صفحه مخصوص پنل در موبایل (Panel Mobile Bottom Nav) -->
+    <div class="panel-bottom-nav">
+        <AuthorizeView Roles="Admin">
+            <NavLink href="panel/admin" Match="NavLinkMatch.All" class="panel-bnav-item">
+                <span class="bnav-icon">📊</span>
+                <span>شاخص‌ها</span>
+            </NavLink>
+            <NavLink href="panel/admin/data/reservation" class="panel-bnav-item">
+                <span class="bnav-icon">🗓</span>
+                <span>نوبت‌ها</span>
+            </NavLink>
+            <NavLink href="panel/admin/base-data" class="panel-bnav-item">
+                <span class="bnav-icon">🗂</span>
+                <span>پایه‌ها</span>
+            </NavLink>
+            <NavLink href="panel/admin/data/notification" class="panel-bnav-item">
+                <span class="bnav-icon">🔔</span>
+                <span>اعلانات</span>
+            </NavLink>
+            <button type="button" class="panel-bnav-item bnav-btn" @onclick="@(() => _drawerOpen = true)">
+                <span class="bnav-icon">☰</span>
+                <span>منو</span>
+            </button>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Personnel">
+            <NavLink href="panel/personnel" Match="NavLinkMatch.All" class="panel-bnav-item">
+                <span class="bnav-icon">📊</span>
+                <span>داشبورد</span>
+            </NavLink>
+            <NavLink href="panel/personnel/schedule" class="panel-bnav-item">
+                <span class="bnav-icon">🗓</span>
+                <span>نوبت‌ها</span>
+            </NavLink>
+            <NavLink href="panel/personnel/portfolio" class="panel-bnav-item">
+                <span class="bnav-icon">🖼</span>
+                <span>نمونه‌کار</span>
+            </NavLink>
+            <NavLink href="panel/personnel/profile" class="panel-bnav-item">
+                <span class="bnav-icon">👤</span>
+                <span>پروفایل</span>
+            </NavLink>
+            <button type="button" class="panel-bnav-item bnav-btn" @onclick="@(() => _drawerOpen = true)">
+                <span class="bnav-icon">☰</span>
+                <span>منو</span>
+            </button>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Customer">
+            <NavLink href="panel/customer" Match="NavLinkMatch.All" class="panel-bnav-item">
+                <span class="bnav-icon">📊</span>
+                <span>داشبورد</span>
+            </NavLink>
+            <NavLink href="panel/customer/appointments" class="panel-bnav-item">
+                <span class="bnav-icon">🗓</span>
+                <span>نوبت‌های من</span>
+            </NavLink>
+            <NavLink href="panel/customer/favorites" class="panel-bnav-item">
+                <span class="bnav-icon">❤️</span>
+                <span>علاقه‌ها</span>
+            </NavLink>
+            <NavLink href="panel/customer/profile" class="panel-bnav-item">
+                <span class="bnav-icon">👤</span>
+                <span>حساب</span>
+            </NavLink>
+            <button type="button" class="panel-bnav-item bnav-btn" @onclick="@(() => _drawerOpen = true)">
+                <span class="bnav-icon">☰</span>
+                <span>منو</span>
+            </button>
+        </AuthorizeView>
+    </div>
 </div>
 
 @code {
+    private bool _drawerOpen = false;
+
     private async Task Logout()
     {
         await Auth.LogoutAsync();
