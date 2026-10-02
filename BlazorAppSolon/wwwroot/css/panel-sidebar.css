@@ -1,0 +1,730 @@
+/* ==========================================================================
+   SolonBeauty — Sidebar کپسولی پنل
+   --------------------------------------------------------------------------
+   این فایل کاملاً مستقل است: توکن‌ها و استایل‌های Sidebar را در خود دارد و
+   به app.css اضافه نشده تا فایل ۳۱۰۰ خطی بزرگ‌تر نشود (بند «شکستن app.css»
+   در نقشه راه ممیزی). فقط متغیرهای برند از :root سراسری خوانده می‌شوند.
+   ========================================================================== */
+
+:root {
+    /* ---------- طلایی برند (یکدست‌سازی‌شده: جایگزین #B89047) ---------- */
+    --gold-champagne: #C6A46A;
+    --gold-champagne-deep: #A8843F;
+
+    /* ---------- پوسته صفحه پنل: گرادیان تیره + درخشش طلایی بالا ---------- */
+    --sb-page-bg:
+        radial-gradient(120% 78% at 78% -12%, rgba(198, 164, 106, 0.16), transparent 62%),
+        linear-gradient(180deg, #2A221B 0%, #1A1512 44%, #0D0B09 100%);
+
+    /* ---------- کپسول ---------- */
+    --sb-bg: #14110F;                                   /* توپر: پایه هم‌ترازی گوشه‌های مقعر */
+    --sb-border: rgba(198, 164, 106, 0.25);             /* حاشیه طلایی ۲۵٪ */
+    --sb-border-strong: rgba(198, 164, 106, 0.48);
+
+    /* ---------- سطوح شیشه‌ای (قرص و دایره آیکون) ---------- */
+    --sb-surface: rgba(237, 230, 218, 0.08);            /* شفافیت ۸٪ */
+    --sb-surface-hover: rgba(237, 230, 218, 0.14);      /* شفافیت ۱۴٪ */
+    --sb-surface-sunken: rgba(0, 0, 0, 0.22);
+
+    /* ---------- آیتم فعال و پنل محتوا ---------- */
+    --sb-active-bg: #F7F2EA;
+    --sb-active-fg: #2A2420;
+
+    /* ---------- متن و آیکون ---------- */
+    --sb-fg: #EDE6DA;                                   /* کنتراست ۱۵.۳:۱ روی --sb-bg */
+    --sb-fg-muted: rgba(237, 230, 218, 0.58);
+    --sb-fg-hover: var(--gold-champagne);               /* کنتراست ۸.۱:۱ روی --sb-bg */
+
+    /* ---------- اعلان ---------- */
+    --sb-badge: #C25B7A;                                /* رنگ اعلامی بریف */
+    --sb-badge-safe: #B34F6E;                           /* تیره‌تر: متن سفید ۴.۹۳:۱ پاس می‌شود */
+    --sb-badge-fg: #FFFFFF;
+
+    /* ---------- هندسه ---------- */
+    --sb-w-expanded: 236px;
+    --sb-w-rail: 78px;
+    --sb-capsule-pad: 10px;
+    --sb-gap: 16px;
+    --sb-radius-capsule: 28px;
+    --sb-radius-pill: 999px;
+    --sb-item-h: 44px;                                  /* حداقل سطح لمس استاندارد */
+    --sb-icon-circle: 44px;
+    --sb-fillet: 18px;                                  /* شعاع گوشه مقعر */
+
+    /* جهت لبه روبه‌روی محتوا برای گرادیان گوشه‌های مقعر.
+       نکته: موقعیت رنگ در radial-gradient یک ویژگی فیزیکی است و با
+       direction آینه نمی‌شود، پس باید دستی آینه شود.
+       در RTL محتوا سمت چپ است ⇒ گوشه‌ی inline-start مربعِ گوشه، سمت راست
+       آن است ⇒ 100% ؛ در LTR مقدار 0% می‌شود. */
+    --sb-fillet-x: 100%;
+
+    /* سرکشی پل اتصال از لبه کپسول تا لبه پنل محتوا.
+       مقدار پیش‌فرض از سایز حفره گرید می‌آید؛ JS مقدار دقیق را جایگزین
+       می‌کند تا اگر فاصله تغییر کند پل دقیقاً به پنل بچسبد. */
+    --bridge-overhang: calc(var(--sb-gap) + 1px);
+    --bridge-start: 0px;
+    --bridge-y: 0px;
+    --bridge-h: var(--sb-item-h);
+
+    /* ---------- سایه ---------- */
+    --sb-shadow: 0 20px 52px rgba(0, 0, 0, 0.46), 0 2px 10px rgba(0, 0, 0, 0.3);
+    --sb-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --sb-shadow-item: 0 6px 18px rgba(0, 0, 0, 0.28);
+
+    /* ---------- حرکت ---------- */
+    --sb-dur: 220ms;
+    --sb-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* ---------- فوکوس ---------- */
+    --sb-focus-ring: 0 0 0 2px var(--sb-bg), 0 0 0 4px var(--gold-champagne);
+}
+
+/* آینه‌سازی توکن‌های جهت‌دار برای چیدمان چپ‌به‌راست.
+   پروژه RTL است؛ این بلوک تضمین می‌کند اگر روزی زبان به LTR برگردد،
+   گوشه‌های مقعر و پل اتصال خودبه‌خود به سمت درست منتقل شوند. */
+[dir="ltr"] {
+    --sb-fillet-x: 0%;
+}
+
+/* ==========================================================================
+   ۱) پوسته پنل: گرادیان تیره + ذرات ستاره‌مانند (CSS خالص، بدون JS)
+   --------------------------------------------------------------------------
+   ساختار موبایل‌اول: پایه یک‌ستونه و بدون Sidebar است؛ از ۱۰۲۴px به بالا
+   به گرید دوسطونه (کپسول + پنل محتوا) تبدیل می‌شود. این ترتیب با بند ۱ بریف
+   مطابقت دارد: چیدمان از موبایل شروع می‌شود، نه اینکه دسکتاپ به زور کوچک شود.
+   ========================================================================== */
+.panel-shell--capsule {
+    display: block;
+    min-height: 100vh;
+    background: var(--sb-page-bg);
+    background-attachment: fixed;
+    /* بستر انباشت مستقل: تضمین می‌کند لایه ذرات ستاره‌مانند و دیگر لایه‌های
+       تزئینی از پوسته بیرون نزنند و ترتیب z-index داخل پوسته پیش‌بینی‌پذیر
+       بماند. بدون این، پل اتصال برای رفتن روی پنل محتوا به z-index منفی
+       نیاز پیدا می‌کرد که شکننده است. */
+    isolation: isolate;
+    /* سپر ایمنی در برابر سرریز افقی؛ بدون !important تا قابل بازنویسی بماند */
+    max-inline-size: 100%;
+    overflow-x: clip;
+}
+
+/* ذرات ریز ستاره‌مانند — چند radial-gradient سبک، بدون تصویر و JS */
+.panel-shell--capsule::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.7;
+    background-image:
+        radial-gradient(1.6px 1.6px at 12% 16%, rgba(237, 230, 218, 0.55), transparent),
+        radial-gradient(1.2px 1.2px at 27% 7%,  rgba(237, 230, 218, 0.32), transparent),
+        radial-gradient(1.8px 1.8px at 41% 22%, rgba(237, 230, 218, 0.42), transparent),
+        radial-gradient(1.1px 1.1px at 56% 11%, rgba(237, 230, 218, 0.28), transparent),
+        radial-gradient(1.5px 1.5px at 69% 19%, rgba(198, 164, 106, 0.48), transparent),
+        radial-gradient(1.2px 1.2px at 83% 6%,  rgba(237, 230, 218, 0.34), transparent),
+        radial-gradient(1.7px 1.7px at 92% 26%, rgba(237, 230, 218, 0.3), transparent),
+        radial-gradient(1.3px 1.3px at 18% 34%, rgba(198, 164, 106, 0.34), transparent);
+    background-repeat: no-repeat;
+}
+
+/* از ۱۰۲۴px: گرید دوسطونه با ستون کپسول سراسری */
+@media (min-width: 1024px) {
+    .panel-shell--capsule {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: var(--sb-gap);
+        padding: var(--sb-gap);
+    }
+}
+
+/* ---------- پنل محتوا: سطح عاجی روبه‌روی کپسول ---------- */
+.panel-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;                    /* جلوگیری از سرریز ستون گرید */
+    background: var(--sb-active-bg);
+    border-radius: var(--sb-radius-capsule);
+    box-shadow: var(--sb-shadow);
+    overflow-x: clip;
+}
+
+@media (min-width: 1024px) {
+    .panel-content {
+        min-block-size: calc(100vh - (var(--sb-gap) * 2));
+    }
+    /* در پوسته کپسولی، نوار بالای پنل یک سطح پیوسته با محتواست،
+       نه یک نوار سفید جدا با خط جداکننده. */
+    .panel-shell--capsule .panel-top {
+        background: transparent;
+        border-block-end: 1px solid rgba(42, 36, 32, 0.08);
+        border-start-start-radius: var(--sb-radius-capsule);
+    }
+}
+
+/* ==========================================================================
+   ۱-ب) نمایش Sidebar فقط از ۱۰۲۴px به بالا
+   زیر این عرض، ناوبری به عهده Bottom Navigation و Drawer است (بند ۵ بریف)
+   ========================================================================== */
+.panel-sidebar {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .panel-sidebar {
+        display: block;
+    }
+}
+
+/* ==========================================================================
+   ۲) کپسول Sidebar
+   ========================================================================== */
+.panel-sidebar {
+    position: relative;
+    /* عمداً z-index ندارد. اگر اینجا z-index بگذاریم، یک بستر انباشت
+       (Stacking Context) ساخته می‌شود و پل اتصال زندانی می‌شود: هرچقدر هم
+       z-index بالاتری بگیرد، نمی‌تواند از سایه و لبه‌ی پنل محتوا عبور کند و
+       اتصال قرص فعال دیده نمی‌شود. با z-index: auto پل در بستر پوسته
+       ارزیابی می‌شود و از پنل بالاتر می‌نشیند.
+       برای اینکه ذرات ستاره‌مانند (که z-index آن‌ها از این بیشتر است) از
+       پوسته بیرون نزنند، خود پوسته با isolation: isolate جدا شده است. */
+    inline-size: var(--sb-w-expanded);
+    transition: inline-size var(--sb-dur) var(--sb-ease);
+    will-change: inline-size;
+}
+
+.panel-sidebar.is-rail {
+    inline-size: var(--sb-w-rail);
+}
+
+.pnav-capsule {
+    position: sticky;
+    inset-block-start: var(--sb-gap);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    block-size: calc(100vh - (var(--sb-gap) * 2));
+    padding: var(--sb-capsule-pad);
+    background: var(--sb-bg);
+    border: 1px solid var(--sb-border);
+    border-radius: var(--sb-radius-capsule);
+    box-shadow: var(--sb-shadow), var(--sb-sheen);
+}
+
+/* ==========================================================================
+   ۳) ردیف برند: لوگو + دکمه جمع‌کردن
+   ========================================================================== */
+.pnav-brand {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-block-end: 10px;
+    margin-block-end: 4px;
+    border-block-end: 1px solid rgba(198, 164, 106, 0.16);
+}
+
+/* درخشش طلایی ملایم فقط در ناحیه برند — نه کل ارتفاع.
+   دلیل: گوشه‌های مقعر آیتم فعال باید با رنگ پس‌زمینه هم‌تراز باشند و
+   گرادیان سراسری این هم‌ترازی را در رزولوشن‌های مختلف می‌شکند. */
+.pnav-brand::before {
+    content: "";
+    position: absolute;
+    inset: -8px -6px 0;
+    pointer-events: none;
+    border-start-start-radius: calc(var(--sb-radius-capsule) - 4px);
+    border-start-end-radius: calc(var(--sb-radius-capsule) - 4px);
+    background: radial-gradient(100% 130% at 50% -30%, rgba(198, 164, 106, 0.22), transparent 68%);
+}
+
+.pnav-logo {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: 50%;
+    background: var(--sb-surface-sunken);
+    border: 1px solid var(--sb-border-strong);
+    color: var(--gold-champagne);
+    overflow: hidden;
+    transition: border-color var(--sb-dur) var(--sb-ease), transform var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-logo:hover {
+    border-color: var(--gold-champagne);
+}
+
+.pnav-logo-img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+.pnav-logo-fallback {
+    font-family: var(--font-brand, 'Playfair Display', Georgia, serif);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1;
+}
+
+/* دکمه جمع‌کردن — دایره کوچک کنار لوگو */
+.pnav-toggle {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    inline-size: 32px;
+    block-size: 32px;
+    margin-inline-start: auto;
+    padding: 0;
+    border: 1px solid var(--sb-border);
+    border-radius: 50%;
+    background: var(--sb-surface);
+    color: var(--sb-fg);
+    cursor: pointer;
+    transition: background var(--sb-dur) var(--sb-ease), color var(--sb-dur) var(--sb-ease),
+                transform var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-toggle:hover {
+    background: var(--sb-surface-hover);
+    color: var(--sb-fg-hover);
+}
+
+.pnav-toggle .pnav-svg {
+    inline-size: 16px;
+    block-size: 16px;
+}
+
+/* در RTL فلش به سمت لبه بیرونی (راست) می‌چرخد — جهت درست جمع‌شدن */
+[dir="rtl"] .pnav-toggle .pnav-svg {
+    transform: scaleX(-1);
+}
+
+/* در حالت Rail دکمه جمع‌کردن پنهان می‌شود (جای آن Tooltip و باز شدن با کلیک) */
+.panel-sidebar.is-rail .pnav-toggle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.panel-sidebar.is-rail .pnav-logo {
+    margin-inline: auto;
+}
+
+/* ==========================================================================
+   ۴) لیست آیتم‌ها + آکاردئون گروه‌ها
+   ========================================================================== */
+.pnav-list {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* بالاتر از پل اتصال (z-index: 2).
+       چرا صریح و نه با تکیه بر رفتار پیش‌فرض: فهرست یک مخزن اسکرول است و
+       بخشی از موتورهای مرورگر برای مخزن اسکرول بستر انباشت می‌سازند. اگر
+       اینجا z-index نگذاریم، در آن مرورگرها آیکون و متن آیتم فعال داخل بستر
+       فهرست زندانی می‌شوند و سطح عاجی پل روی آن‌ها می‌افتد. با تعیین صریح
+       z-index، ترتیب در همه مرورگرها یکسان است.
+       پس‌زمینه فهرست شفاف است، پس پل از پشتش دیده می‌شود. */
+    position: relative;
+    z-index: 3;
+    overflow-y: auto;
+    overscroll-behavior: contain;             /* اسکرول به صفحه زیرین سرریز نکند */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(198, 164, 106, 0.35) transparent;
+}
+
+.pnav-list::-webkit-scrollbar { inline-size: 6px; }
+.pnav-list::-webkit-scrollbar-thumb {
+    background: rgba(198, 164, 106, 0.3);
+    border-radius: 999px;
+}
+
+.pnav-group + .pnav-group { margin-block-start: 4px; }
+
+/* ---------- سرگروه آکاردئون ---------- */
+.pnav-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    inline-size: 100%;
+    padding: 8px 10px 6px;
+    border: 0;
+    background: none;
+    color: var(--sb-fg-muted);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: start;
+    cursor: pointer;
+    transition: color var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-group-head:hover { color: var(--sb-fg-hover); }
+
+.pnav-group-caret {
+    display: grid;
+    place-items: center;
+    transition: transform var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-group-caret .pnav-svg {
+    inline-size: 14px;
+    block-size: 14px;
+}
+
+.pnav-group.is-closed .pnav-group-caret { transform: rotate(-90deg); }
+
+.pnav-group-items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pnav-group.is-closed .pnav-group-items { display: none; }
+
+/* در حالت Rail سرگروه‌ها پنهان می‌شوند و همه آیتم‌ها نمایش داده می‌شوند */
+.panel-sidebar.is-rail .pnav-group-head { display: none; }
+.panel-sidebar.is-rail .pnav-group-items { display: flex !important; }
+
+/* ==========================================================================
+   ۵) آیتم منو (قرص / دایره)
+   ========================================================================== */
+.pnav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-block-size: var(--sb-item-h);
+    padding-inline: 10px 14px;
+    border: 0;
+    border-radius: var(--sb-radius-pill);
+    background: var(--sb-surface);
+    color: var(--sb-fg);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background var(--sb-dur) var(--sb-ease), color var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-item:hover {
+    background: var(--sb-surface-hover);
+    color: var(--sb-fg-hover);
+}
+
+.pnav-item:hover .pnav-svg { color: var(--sb-fg-hover); }
+
+/* حالت Rail: قرص به دایره تبدیل می‌شود */
+.panel-sidebar.is-rail .pnav-item {
+    inline-size: var(--sb-icon-circle);
+    block-size: var(--sb-icon-circle);
+    min-block-size: var(--sb-icon-circle);
+    margin-inline: auto;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.panel-sidebar.is-rail .pnav-label { display: none; }
+
+.pnav-icon {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    inline-size: 24px;
+    block-size: 24px;
+}
+
+.pnav-svg {
+    inline-size: 21px;
+    block-size: 21px;
+    color: inherit;
+    transition: color var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-label {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   ۶) قرص فعال و «پل اتصال» به پنل محتوا
+   --------------------------------------------------------------------------
+   نکته معماری مهم:
+   فهرست منو (.pnav-list) برای اسکرول عمودی overflow دارد. در CSS اگر یک
+   محور overflow بگیرد، محور دیگر هم بُرده می‌شود؛ بنابراین هیچ قرصی که
+   داخل فهرست باشد نمی‌تواند از لبه کپسول بیرون بزند و گوشه مقعر آن هم
+   رندر نمی‌شود.
+
+   راه‌حل: قرص فعال داخل فهرست فقط رنگ متن و آیکون را عوض می‌کند و پس‌زمینه
+   ندارد. عنصر جداگانه‌ای به نام .pnav-bridge بیرون از فهرست (و پیش از آن
+   در DOM تا زیرش بماند) کل پس‌زمینه، امتداد تا پنل محتوا و گوشه‌های مقعر
+   را می‌کشد. موقعیت آن با JS از ارتفاع آیتم فعال خوانده می‌شود.
+   ========================================================================== */
+
+/* ---------- پل اتصال ---------- */
+.pnav-bridge {
+    display: none;
+    position: absolute;
+    /* بالاتر از پنل محتوا (z-index: 1) تا سایه‌ی پنل روی نقطه‌ی اتصال
+       نیفتد. اگر زیر پنل بماند، آن ۱۷ پیکسل فاصله با سایه‌ی تیره پوشیده
+       می‌شود و اتصال به‌جای یک سطح پیوسته، لکه‌ی خاکستری می‌شود. */
+    z-index: 2;
+    inset-block-start: var(--bridge-y, 0);
+    block-size: var(--bridge-h, var(--sb-item-h));
+    inset-inline-start: var(--bridge-start, 0);
+    /* از ابتدای آیتم تا لبه کپسول، به‌همراه سرکشی به داخل فاصله تا پنل */
+    inline-size: calc(100% - var(--bridge-start, 0px) + var(--bridge-overhang));
+    background: var(--sb-active-bg);
+    border-start-start-radius: var(--sb-radius-pill);
+    border-end-start-radius: var(--sb-radius-pill);
+    pointer-events: none;
+}
+
+/* فقط وقتی JS موقعیت را با موفقیت خوانده باشد نمایش داده می‌شود */
+.panel-sidebar.has-bridge .pnav-bridge { display: block; }
+
+/* ---------- گوشه‌های مقعر (Inverted Corner) ----------
+   هر گوشه یک مربع هم‌اندازه --sb-fillet است که لبه‌ی سمت محتوای آن دقیقاً
+   روی لبه‌ی پنل می‌نشیند. برای ساختن قوس مقعر، یک دایره در مربع نقاشی
+   می‌شود که مرکزش روی گوشه‌ی «دور از محل اتصال» است. داخل دایره شفاف
+   می‌ماند تا پس‌زمینه تیره کپسول دیده شود و بیرون آن (نوکِ رو به قرص و
+   پنل) عاجی می‌شود؛ نتیجه، یک هلال عاجی است که قرص را با نرمی به پنل
+   می‌رساند.
+
+   نکته‌ای که خرابکاری می‌کند: ترتیب رنگ‌ها. عاجی باید در STOP دوم بیاید،
+   نه اول. اگر عاجی اول بیاید دایره توپر می‌شود و گوشه به‌جای مقعر، محدب
+   و لکه‌دار رندر می‌شود. */
+.pnav-bridge::before,
+.pnav-bridge::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 0;
+    inline-size: var(--sb-fillet);
+    block-size: var(--sb-fillet);
+    pointer-events: none;
+}
+
+.pnav-bridge::before {
+    inset-block-end: 100%;
+    background: radial-gradient(
+        circle at var(--sb-fillet-x) 0%,
+        transparent 0 calc(var(--sb-fillet) - 0.5px),
+        var(--sb-active-bg) var(--sb-fillet));
+}
+
+.pnav-bridge::after {
+    inset-block-start: 100%;
+    background: radial-gradient(
+        circle at var(--sb-fillet-x) 100%,
+        transparent 0 calc(var(--sb-fillet) - 0.5px),
+        var(--sb-active-bg) var(--sb-fillet));
+}
+
+/* ---------- آیتم فعال ----------
+   وقتی پل فعال است، خود آیتم پس‌زمینه نمی‌گیرد تا پل از زیرش دیده شود.
+   اگر JS در دسترس نباشد (has-bridge اضافه نشود) پس‌زمینه بازمی‌گردد تا
+   آیتم فعال بی‌نشانه نماند؛ یعنی فروپاشی محترمانه. */
+.panel-sidebar:not(.has-bridge) .pnav-item.is-active {
+    background: var(--sb-active-bg);
+    box-shadow: var(--sb-shadow-item);
+}
+
+.panel-sidebar.has-bridge .pnav-item.is-active {
+    background: transparent;
+    box-shadow: none;
+}
+
+.pnav-item.is-active {
+    color: var(--sb-active-fg);
+    font-weight: 700;
+    position: relative;
+    /* بالاتر از پل (z-index: 2) تا آیکون و متن روی سطح عاجی خوانا بمانند.
+       عدد باید بلاواسطه بالای پل باشد، نه برابر با آن؛ چون هر دو در بستر
+       انباشت پوسته ارزیابی می‌شوند. */
+    z-index: 3;
+}
+
+.pnav-item.is-active .pnav-svg { color: var(--sb-active-fg); }
+
+/* ==========================================================================
+   ۷) Badge اعلان
+   ========================================================================== */
+.pnav-badge {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    min-inline-size: 20px;
+    block-size: 20px;
+    padding-inline: 6px;
+    border-radius: 999px;
+    background: var(--sb-badge-safe);   /* تیره‌تر از #C25B7A برای کنتراست ۴.۹۳:۱ */
+    color: var(--sb-badge-fg);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* در حالت Rail فقط یک نقطه کوچک نمایش داده می‌شود.
+   رنگ اصلی اعلامی بریف (#C25B7A) اینجا بی‌خطر است چون نقطه متنی نیست و
+   حداقل کنتراست ۴.۵:۱ برای متن بر آن اعمال نمی‌شود. */
+.panel-sidebar.is-rail .pnav-badge {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-end: 4px;
+    min-inline-size: 9px;
+    block-size: 9px;
+    padding: 0;
+    font-size: 0;
+    background: var(--sb-badge);
+    border: 1.5px solid var(--sb-bg);
+}
+
+/* ==========================================================================
+   ۸) پابرگ: خروج از حساب
+   ========================================================================== */
+.pnav-foot {
+    flex: 0 0 auto;
+    padding-block-start: 10px;
+    border-block-start: 1px solid rgba(198, 164, 106, 0.16);
+}
+
+.pnav-item--logout {
+    inline-size: 100%;
+    background: transparent;
+}
+
+.pnav-item--logout:hover {
+    background: var(--sb-surface);
+    color: var(--sb-fg-hover);
+}
+
+/* ==========================================================================
+   ۹) فوکوس قابل مشاهده — ناوبری کامل با کیبورد
+   ========================================================================== */
+.pnav-item:focus-visible,
+.pnav-toggle:focus-visible,
+.pnav-group-head:focus-visible,
+.pnav-logo:focus-visible {
+    outline: none;
+    box-shadow: var(--sb-focus-ring);
+}
+
+/* ==========================================================================
+   ۱۰) احترام به prefers-reduced-motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .panel-sidebar,
+    .pnav-item,
+    .pnav-toggle,
+    .pnav-group-caret,
+    .pnav-svg,
+    .pnav-logo {
+        transition-duration: 1ms !important;
+    }
+}
+
+/* ==========================================================================
+   ۱۱) حالت روشن/تیره
+   Sidebar در هر دو حالت تیره می‌ماند (هویت برند)؛ فقط پنل محتوا تغییر می‌کند.
+   ========================================================================== */
+[data-theme="dark"] .panel-shell--capsule {
+    --sb-page-bg: linear-gradient(180deg, #1B1714 0%, #100D0B 100%);
+}
+
+[data-theme="dark"] .panel-sidebar {
+    --sb-active-bg: #2A2420;
+    --sb-active-fg: #F7F2EA;
+}
+
+/* ==========================================================================
+   ۱۲) رفتار واکنش‌گرا: تبلت و موبایل در برابر دسکتاپ
+   --------------------------------------------------------------------------
+   مرز ۱۰۲۴px: تبلت افقی و بالاتر Sidebar کپسولی می‌گیرند.
+   تبلت عمودی و موبایل: Bottom Navigation + Drawer.
+   نکته: دراور موبایل در مرحله ۵ با ظاهر قرص‌های همین کپسول بازطراحی می‌شود؛
+   تا آن زمان همان دراور موجود کار می‌کند تا مسیر موبایل نشکند.
+   ========================================================================== */
+
+/* ---------- جلوگیری از پرش بصری پیش از خواندن وضعیت ذخیره‌شده ---------- */
+.panel-shell--capsule[data-sidebar-ready="false"] .panel-sidebar {
+    visibility: hidden;
+}
+
+/* ---------- زیر ۱۰۲۴px: کپسول پنهان، ناوبری موبایل فعال ---------- */
+@media (max-width: 1023px) {
+    .panel-shell--capsule .panel-mobile-header {
+        display: flex;
+    }
+    .panel-shell--capsule .panel-bottom-nav {
+        display: flex;
+    }
+    /* نوار پایین محتوا نباید زیر Bottom Navigation برود */
+    .panel-shell--capsule .panel-body {
+        padding-block-end: calc(78px + var(--safe-bottom, 0px));
+    }
+
+    /* دراور موبایل: همان عنصر .panel-side که در پوسته قدیمی سایدبار بود */
+    .panel-shell--capsule .panel-side {
+        position: fixed;
+        inset-block: 0;
+        inset-inline-end: 0;
+        inline-size: min(88vw, 320px);
+        max-inline-size: 88vw;
+        z-index: 1200;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        transform: translateX(100%);
+        transition: transform 250ms var(--sb-ease);
+        padding-block-end: var(--safe-bottom, 0px);
+        box-shadow: -6px 0 32px rgba(0, 0, 0, 0.34);
+    }
+    .panel-shell--capsule .panel-side.drawer-open {
+        transform: translateX(0);
+    }
+    .panel-shell--capsule .panel-drawer-close {
+        display: flex;
+    }
+}
+
+/* ---------- از ۱۰۲۴px: ناوبری موبایل پنهان، کپسول فعال ---------- */
+@media (min-width: 1024px) {
+    .panel-shell--capsule .panel-mobile-header,
+    .panel-shell--capsule .panel-bottom-nav,
+    .panel-shell--capsule .panel-side,
+    .panel-shell--capsule .panel-drawer-backdrop {
+        display: none;
+    }
+    .panel-shell--capsule .panel-body {
+        padding: 26px;
+    }
+}
+
+/* ==========================================================================
+   ۱۳) احترام به prefers-reduced-motion برای انتقال عرض کپسول
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .panel-shell--capsule .panel-side {
+        transition-duration: 1ms !important;
+    }
+}

@@ -1,0 +1,284 @@
+@using BlazorAppSolon.Components.Panel
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@implements IDisposable
+
+@* ==========================================================================
+   Sidebar کپسولی پنل — مطابق تصویر مرجع
+   --------------------------------------------------------------------------
+   ساختار: nav > capsule > (برند | لیست آکاردئونی | پابرگ)
+   دو حالت: is-expanded (پیش‌فرض دسکتاپ عریض) و is-rail (لپ‌تاپ و تبلت افقی)
+   وضعیت باز/بسته در مرحله ۳ به localStorage متصل می‌شود؛ اینجا فقط ساختار.
+   ========================================================================== *@
+
+<nav class="panel-sidebar @(Expanded ? "is-expanded" : "is-rail")"
+     id="@DomId"
+     aria-label="@AriaLabel"
+     data-state="@(Expanded ? "expanded" : "rail")">
+
+    <div class="pnav-capsule">
+
+        @* پل اتصال قرص فعال به پنل محتوا.
+           چرا بیرون از <ul> است: فهرست منو overflow-y دارد و در CSS وقتی یک
+           محور overflow بگیرد، محور دیگر هم بُرده می‌شود؛ پس هیچ قرصی داخل
+           فهرست نمی‌تواند از لبه کپسول بیرون بزند. این عنصر پس‌زمینه و
+           گوشه‌های مقعر را می‌کشد و موقعیتش را از ارتفاع آیتم فعال می‌گیرد.
+           پیش از فهرست آمده تا در ترتیب رندر زیرش بماند. *@
+        <div class="pnav-bridge" aria-hidden="true"></div>
+
+        @* ─────────────── ردیف برند: لوگو + دکمه جمع‌کردن ─────────────── *@
+        <div class="pnav-brand">
+            <a class="pnav-logo" href="@HomeHref" aria-label="@BrandName — صفحه اصلی پنل">
+                @if (!string.IsNullOrWhiteSpace(LogoUrl))
+                {
+                    <img class="pnav-logo-img" src="@LogoUrl" alt="" width="38" height="38"
+                         loading="eager" decoding="async" />
+                }
+                else
+                {
+                    @* Fallback در نبود لوگو در تنظیمات سالن *@
+                    <span class="pnav-logo-fallback" aria-hidden="true">@FallbackMonogram</span>
+                }
+            </a>
+
+            <button type="button"
+                    class="pnav-toggle"
+                    @onclick="HandleToggle"
+                    aria-expanded="@(Expanded ? "true" : "false")"
+                    aria-controls="@ListId"
+                    aria-label="@(Expanded ? "جمع کردن منو" : "باز کردن منو")"
+                    title="@(Expanded ? "جمع کردن منو" : "باز کردن منو")">
+                <PanelNavIcons Name="chevron" />
+            </button>
+        </div>
+
+        @* ─────────────── لیست آیتم‌های منو ─────────────── *@
+        <ul class="pnav-list" id="@ListId">
+            @foreach (var group in Groups)
+            {
+                var isOpen = IsGroupOpen(group.Key);
+                <li class="pnav-group @(isOpen ? "is-open" : "is-closed")">
+
+                    @* سرگروه آکاردئون — در حالت Rail پنهان می‌شود *@
+                    <button type="button"
+                            class="pnav-group-head"
+                            @onclick="() => ToggleGroup(group.Key)"
+                            aria-expanded="@(isOpen ? "true" : "false")"
+                            aria-controls="@GroupItemsId(group.Key)"
+                            tabindex="@(Expanded ? "0" : "-1")">
+                        <span class="pnav-group-title">@group.Title</span>
+                        <span class="pnav-group-caret" aria-hidden="true">
+                            <PanelNavIcons Name="caret" />
+                        </span>
+                    </button>
+
+                    <ul class="pnav-group-items" id="@GroupItemsId(group.Key)">
+                        @foreach (var item in group.Items)
+                        {
+                            @RenderItem(item)
+                        }
+                    </ul>
+                </li>
+            }
+        </ul>
+
+        @* ─────────────── پابرگ: خروج از حساب ─────────────── *@
+        <div class="pnav-foot">
+            <button type="button" class="pnav-item pnav-item--logout" @onclick="HandleLogout">
+                <span class="pnav-icon">
+                    <PanelNavIcons Name="logout" />
+                </span>
+                <span class="pnav-label">خروج از حساب</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+@code {
+    // ─────────────── پارامترها ───────────────
+
+    /// <summary>وضعیت باز (قرص‌های افقی) یا بسته (Rail دایره‌ای)</summary>
+    [Parameter] public bool Expanded { get; set; } = true;
+
+    /// <summary>اعلان تغییر وضعیت به والد — ذخیره‌سازی در مرحله ۳ به این وصل می‌شود</summary>
+    [Parameter] public EventCallback<bool> ExpandedChanged { get; set; }
+
+    /// <summary>نقش کاربر برای فیلتر آیتم‌ها (Admin / Personnel / Customer)</summary>
+    [Parameter] public string? UserRole { get; set; }
+
+    /// <summary>آدرس لوگو از تنظیمات سالن؛ در نبود آن مونوگرام نمایش داده می‌شود</summary>
+    [Parameter] public string? LogoUrl { get; set; }
+
+    /// <summary>نام سالن — برای متن دسترس‌پذیر لوگو</summary>
+    [Parameter] public string BrandName { get; set; } = "سالن زیبایی";
+
+    /// <summary>حروف جایگزین لوگو در حالت نبود تصویر</summary>
+    [Parameter] public string FallbackMonogram { get; set; } = "HB";
+
+    /// <summary>آدرس بازگشت لوگو به صفحه اصلی پنل</summary>
+    [Parameter] public string HomeHref { get; set; } = "";
+
+    /// <summary>برچسب دسترس‌پذیر ناحیه ناوبری</summary>
+    [Parameter] public string AriaLabel { get; set; } = "ناوبری پنل کاربری";
+
+    /// <summary>شمارش اعلان‌های خوانده‌نشده به تفکیک کلید BadgeKey</summary>
+    [Parameter] public IReadOnlyDictionary<string, int>? BadgeCounts { get; set; }
+
+    /// <summary>رویداد خروج از حساب</summary>
+    [Parameter] public EventCallback OnLogout { get; set; }
+
+    /// <summary>پیشوند یکتا برای شناسه‌های DOM — در صورت چندبار رندر شدن یک ناحیه</summary>
+    [Parameter] public string IdPrefix { get; set; } = "pnav";
+
+    // ─────────────── وضعیت داخلی ───────────────
+
+    private readonly HashSet<string> _closedGroups = new();
+
+    private IReadOnlyList<PanelNavGroup> Groups => PanelNavConfig.GroupsFor(UserRole);
+
+    private string DomId => $"{IdPrefix}-sidebar";
+    private string ListId => $"{IdPrefix}-list";
+    private string GroupItemsId(string key) => $"{IdPrefix}-group-{key}";
+
+    // ─────────────── چرخه عمر ───────────────
+
+    protected override void OnInitialized()
+    {
+        // گروهی که آیتم فعال در آن است همیشه باز نمایش داده می‌شود
+        var active = Groups.SelectMany(g => g.Items).FirstOrDefault(IsRouteActive);
+        if (active is not null)
+        {
+            var owner = Groups.First(g => g.Items.Contains(active));
+            _closedGroups.Remove(owner.Key);
+        }
+
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+        => StateHasChanged();
+
+    /// <summary>
+    /// همگام‌سازی پل اتصال پس از هر رندر.
+    /// چرا JS لازم است: موقعیت عمودی آیتم فعال با آکاردئون، اسکرول فهرست و
+    /// تغییر وضعیت باز/بسته جابه‌جا می‌شود و CSS راهی برای «ارتفاع پسرعموی
+    /// خودم» ندارد. اگر JS در دسترس نباشد (یا خطا بدهد) کلاس has-bridge
+    /// اضافه نمی‌شود و قاعده پشتیبان CSS قرص فعال را با پس‌زمینه عاجی ساده
+    /// نشان می‌دهد — یعنی رابط هرگز بی‌نشانه نمی‌ماند.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("solonUx.initActiveBridge");
+        }
+        catch (JSException)
+        {
+            // محیط بدون JS یا بارگذاری‌نشدن اسکریپت — فروپاشی محترمانه
+        }
+        catch (InvalidOperationException)
+        {
+            // JSInterop پیش از آماده شدن رندر — رندر بعدی جبران می‌کند
+        }
+    }
+
+    // ─────────────── تشخیص آیتم فعال ───────────────
+
+    private string CurrentPath
+    {
+        get
+        {
+            try
+            {
+                var rel = Nav.ToBaseRelativePath(Nav.Uri);
+                return rel.Split('?')[0].Split('#')[0].Trim('/');
+            }
+            catch (ArgumentException)
+            {
+                // آدرس خارج از BaseUrl — برای جلوگیری از خطا مسیر خالی برگردانده می‌شود
+                return string.Empty;
+            }
+        }
+    }
+
+    /// <summary>
+    /// تشخیص فعال بودن آدرس. برای صفحه‌ی خانه‌ی هر نقش تطابق دقیق لازم است،
+    /// وگرنه تمام زیرصفحه‌ها آن را فعال می‌کنند.
+    /// </summary>
+    private bool IsRouteActive(PanelNavItem item)
+    {
+        var current = CurrentPath;
+        var target = item.Href.Trim('/');
+
+        return item.Exact
+            ? string.Equals(current, target, StringComparison.OrdinalIgnoreCase)
+            : string.Equals(current, target, StringComparison.OrdinalIgnoreCase)
+              || current.StartsWith(target + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // ─────────────── آکاردئون ───────────────
+
+    private bool IsGroupOpen(string key) => !_closedGroups.Contains(key);
+
+    private void ToggleGroup(string key)
+    {
+        if (!_closedGroups.Remove(key))
+        {
+            _closedGroups.Add(key);
+        }
+    }
+
+    // ─────────────── رویدادها ───────────────
+
+    private async Task HandleToggle()
+    {
+        Expanded = !Expanded;
+        await ExpandedChanged.InvokeAsync(Expanded);
+    }
+
+    private async Task HandleLogout() => await OnLogout.InvokeAsync();
+
+    // ─────────────── رندر یک آیتم ───────────────
+
+    private RenderFragment RenderItem(PanelNavItem item) => @<li class="pnav-row">
+        @{
+            var active = IsRouteActive(item);
+            var count = BadgeCount(item);
+        }
+        <a class="pnav-item @(active ? "is-active" : "")"
+           href="@item.Href"
+           aria-current="@(active ? "page" : null)"
+           aria-label="@AriaFor(item, count)"
+           title="@(Expanded ? null : item.Label)">
+
+            <span class="pnav-icon" aria-hidden="true">
+                <PanelNavIcons Name="@item.Icon" />
+            </span>
+
+            <span class="pnav-label">@item.Label</span>
+
+            @if (count > 0)
+            {
+                <span class="pnav-badge" aria-hidden="true">@FormatCount(count)</span>
+            }
+        </a>
+    </li>;
+
+    private int BadgeCount(PanelNavItem item)
+    {
+        if (item.BadgeKey is null || BadgeCounts is null) return 0;
+        return BadgeCounts.TryGetValue(item.BadgeKey, out var n) ? n : 0;
+    }
+
+    private static string FormatCount(int n) => n > 99 ? "۹۹+" : ToPersianDigits(n);
+
+    private static string ToPersianDigits(int n) =>
+        n.ToString().Replace('0', '۰').Replace('1', '۱').Replace('2', '۲').Replace('3', '۳')
+         .Replace('4', '۴').Replace('5', '۵').Replace('6', '۶').Replace('7', '۷')
+         .Replace('8', '۸').Replace('9', '۹');
+
+    private static string AriaFor(PanelNavItem item, int count) =>
+        count > 0 ? $"{item.Label} — {ToPersianDigits(count)} مورد خوانده‌نشده" : item.Label;
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+}

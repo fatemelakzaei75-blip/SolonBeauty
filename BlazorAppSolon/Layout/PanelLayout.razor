@@ -8,12 +8,28 @@
 @inject IDataStore Store
 @inject NavigationManager Nav
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthState
 
 <HeadContent>
     <meta name="robots" content="noindex, nofollow" />
 </HeadContent>
 
-<div class="panel-shell">
+@* data-sidebar-ready تا خوانده‌شدن وضعیت ذخیره‌شده، از پرش بصری جلوگیری می‌کند *@
+<div class="panel-shell--capsule"
+     data-sidebar="@(_sidebarExpanded ? "expanded" : "rail")"
+     data-sidebar-ready="@(_sidebarStateLoaded ? "true" : "false")">
+
+    <!-- ═══ Sidebar کپسولی: دسکتاپ و لپ‌تاپ (≥1024px) ═══ -->
+    <PanelSidebar Expanded="_sidebarExpanded"
+                  ExpandedChanged="OnSidebarExpandedChanged"
+                  UserRole="@_role"
+                  LogoUrl="@_logoUrl"
+                  BrandName="@_salonName"
+                  FallbackMonogram="@_monogram"
+                  HomeHref="@_panelHome"
+                  BadgeCounts="_badgeCounts"
+                  OnLogout="Logout" />
+
     <!-- هدر مخصوص موبایل با دکمه همبرگری جهت باز کردن سایدبار به صورت Drawer -->
     <header class="panel-mobile-header">
         <button class="panel-mob-toggle" @onclick="OpenDrawer"
@@ -26,8 +42,8 @@
         </button>
 
         <a class="panel-mobile-brand" href="">
-            <span class="monogram">HB</span>
-            <strong>سالن زیبایی حدیث</strong>
+            <span class="monogram">@_monogram</span>
+            <strong>@_salonName</strong>
         </a>
 
         <AuthorizeView>
@@ -56,8 +72,8 @@
            aria-hidden="@(!_drawerOpen)">
         <div class="panel-side-head">
             <a class="panel-logo" href="">
-                <span class="monogram">HB</span>
-                <small>HADIS BEAUTY</small>
+                <span class="monogram">@_monogram</span>
+                <small>@_salonName</small>
             </a>
             <button class="panel-drawer-close" @onclick="CloseDrawer" aria-label="بستن منو">✕</button>
         </div>
@@ -112,7 +128,7 @@
         </div>
     </aside>
 
-    <section class="panel-main">
+    <section class="panel-content">
         <header class="panel-top">
             <AuthorizeView>
                 <Authorized>
@@ -215,6 +231,52 @@
     private bool _scrollLocked;
     private DotNetObjectReference<PanelLayout>? _selfRef;
 
+    // ---------- وضعیت Sidebar کپسولی ----------
+    private bool _sidebarExpanded = true;   // پیش‌فرض تا خوانده‌شدن وضعیت واقعی
+    private bool _sidebarStateLoaded;
+    private string? _role;
+    private string _salonName = "سالن زیبایی حدیث";
+    private string _monogram = "HB";
+    private string? _logoUrl;
+    private IReadOnlyDictionary<string, int>? _badgeCounts;
+
+    /// <summary>آدرس خانه‌ی پنل بر اساس نقش — مقصد کلیک روی لوگو</summary>
+    private string _panelHome => AppRoles.PanelUrl(_role ?? AppRoles.Customer);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        _role = state.User.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value;
+
+        // نام سالن و لوگو از تنظیمات؛ در نبود سرویس، برند پیش‌فرض و مونوگرام می‌ماند
+        try
+        {
+            var settings = await Store.AllAsync<Tbl_SalonSetting>();
+            var s = settings.FirstOrDefault();
+            if (s is not null)
+            {
+                if (!string.IsNullOrWhiteSpace(s.SalonName)) _salonName = s.SalonName;
+                if (!string.IsNullOrWhiteSpace(s.LogoUrl)) _logoUrl = s.LogoUrl;
+            }
+        }
+        catch { }
+
+        // شمارش اعلان‌های خوانده‌نشده همان نقش برای Badge منو
+        try
+        {
+            var notifications = await Store.AllAsync<Tbl_Notification>();
+            var unread = notifications.Count(n =>
+                n.IsActive && !n.IsRead &&
+                (string.IsNullOrWhiteSpace(n.TargetRole) || n.TargetRole == _role));
+
+            if (unread > 0)
+            {
+                _badgeCounts = new Dictionary<string, int> { ["notifications"] = unread };
+            }
+        }
+        catch { }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -223,6 +285,36 @@
         // نباید روی صفحه بزرگ «گیر» کند.
         _selfRef = DotNetObjectReference.Create(this);
         await SafeInvokeAsync("solonUx.watchViewport", _selfRef);
+
+        await LoadSidebarStateAsync();
+    }
+
+    /// <summary>
+    /// بازیابی وضعیت Sidebar: اگر کاربر قبلاً دستی باز/بسته کرده باشد همان
+    /// حفظ می‌شود؛ وگرنه پیش‌فرض از عرض صفحه می‌آید — دسکتاپ عریض باز و
+    /// لپ‌تاپ و تبلت افقی بسته (Rail).
+    /// </summary>
+    private async Task LoadSidebarStateAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("solonUx.getSidebarState");
+            _sidebarExpanded = string.IsNullOrEmpty(stored)
+                ? await JS.InvokeAsync<bool>("solonUx.isWideDesktop")
+                : stored == "expanded";
+        }
+        catch (JSDisconnectedException) { /* اتصال قطع شده است */ }
+        catch (InvalidOperationException) { /* JS در دسترس نیست */ }
+
+        _sidebarStateLoaded = true;
+        StateHasChanged();
+    }
+
+    /// <summary>تغییر وضعیت توسط کاربر — در localStorage ذخیره می‌شود</summary>
+    private async Task OnSidebarExpandedChanged(bool expanded)
+    {
+        _sidebarExpanded = expanded;
+        await SafeInvokeAsync("solonUx.setSidebarState", expanded ? "expanded" : "rail");
     }
 
     /// <summary>باز کردن منوی کشویی پنل + قفل اسکرول پس‌زمینه</summary>

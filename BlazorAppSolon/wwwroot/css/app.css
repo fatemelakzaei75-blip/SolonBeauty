@@ -2107,7 +2107,7 @@ a { color: inherit; text-decoration: none; }
     color: #777;
 }
 .breadcrumb-item a {
-    color: var(--gold, #B89047);
+    color: var(--gold-champagne);
     text-decoration: none;
     transition: color 0.2s ease;
 }
@@ -2214,7 +2214,7 @@ a { color: inherit; text-decoration: none; }
 }
 .select-option:hover {
     background: #FAF5EB;
-    color: #B89047;
+    color: #C6A46A;
 }
 .select-option.selected {
     background: #F3EBDD;
@@ -2243,7 +2243,7 @@ a { color: inherit; text-decoration: none; }
 }
 [data-theme="dark"] .select-dropdown {
     background: #22201E;
-    border-color: #B89047;
+    border-color: #C6A46A;
 }
 [data-theme="dark"] .select-search-box {
     background: #2C2926;
@@ -2298,7 +2298,7 @@ img, svg, video {
     font-family: 'Playfair Display', serif;
     font-size: 1.25rem;
     font-weight: 700;
-    color: #B89047;
+    color: #C6A46A;
     background: #FAF5EB;
     border: 1px solid #E8DFD3;
     padding: 2px 7px;
@@ -2367,11 +2367,11 @@ img, svg, video {
     stroke-width: 1.9;
 }
 .mob-nav-item.active {
-    color: #B89047;
+    color: #C6A46A;
     font-weight: 700;
 }
 .mob-nav-item.active .mob-nav-icon {
-    stroke: #B89047;
+    stroke: #C6A46A;
 }
 .mob-nav-item.center-cta {
     position: relative;
@@ -2498,7 +2498,7 @@ img, svg, video {
     font-weight: 600;
     border-radius: 999px;
     background: #FAF5EB;
-    color: #B89047;
+    color: #C6A46A;
     border: 1px solid rgba(212, 175, 55, 0.3);
 }
 .drawer-nav-list {
@@ -2520,7 +2520,7 @@ img, svg, video {
 }
 .drawer-nav-item:hover, .drawer-nav-item.active {
     background: #FAF5EB;
-    color: #B89047;
+    color: #C6A46A;
     font-weight: 700;
 }
 .drawer-nav-item.highlight {
@@ -2542,7 +2542,7 @@ img, svg, video {
     text-decoration: none;
 }
 .drawer-sublink-item:hover {
-    color: #B89047;
+    color: #C6A46A;
 }
 .drawer-footer {
     padding: 1rem;
@@ -2641,7 +2641,7 @@ img, svg, video {
     font-family: inherit;
 }
 .panel-bnav-item.active {
-    color: #B89047;
+    color: #C6A46A;
     font-weight: 700;
 }
 .bnav-icon {
@@ -2700,7 +2700,14 @@ img, svg, video {
     .main-content-flow { padding-bottom: 75px !important; }
 
     /* پنل در موبایل */
-    .panel-body { padding-bottom: 75px !important; padding: 12px !important; }
+    /* توجه: پیش‌تر اینجا «padding-bottom: 75px» پیش از «padding: 12px» نوشته شده بود
+       و شکل خلاصه‌ی padding مقدار آن را بازنویسی می‌کرد؛ یعنی فاصله‌ی لازم برای
+       نوار ناوبری پایین هرگز اعمال نمی‌شد و محتوا زیر آن می‌رفت. اکنون ترتیب و
+       واحد درست است و ارتفاع دکمه امن دستگاه‌های ناچ‌دار هم لحاظ می‌شود. */
+    .panel-body {
+        padding: 12px !important;
+        padding-block-end: calc(78px + var(--safe-bottom, 0px)) !important;
+    }
     .panel-shell { display: block !important; }
     .panel-mobile-header { display: flex; }
     .panel-bottom-nav { display: flex; }

@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>پیش‌نمایش Sidebar کپسولی — SolonBeauty</title>
+<style>
+/* ==========================================================================
+   SolonBeauty — Sidebar کپسولی پنل
+   --------------------------------------------------------------------------
+   این فایل کاملاً مستقل است: توکن‌ها و استایل‌های Sidebar را در خود دارد و
+   به app.css اضافه نشده تا فایل ۳۱۰۰ خطی بزرگ‌تر نشود (بند «شکستن app.css»
+   در نقشه راه ممیزی). فقط متغیرهای برند از :root سراسری خوانده می‌شوند.
+   ========================================================================== */
+
+:root {
+    /* ---------- طلایی برند (یکدست‌سازی‌شده: جایگزین #B89047) ---------- */
+    --gold-champagne: #C6A46A;
+    --gold-champagne-deep: #A8843F;
+
+    /* ---------- پوسته صفحه پنل: گرادیان تیره + درخشش طلایی بالا ---------- */
+    --sb-page-bg:
+        radial-gradient(120% 78% at 78% -12%, rgba(198, 164, 106, 0.16), transparent 62%),
+        linear-gradient(180deg, #2A221B 0%, #1A1512 44%, #0D0B09 100%);
+
+    /* ---------- کپسول ---------- */
+    --sb-bg: #14110F;                                   /* توپر: پایه هم‌ترازی گوشه‌های مقعر */
+    --sb-border: rgba(198, 164, 106, 0.25);             /* حاشیه طلایی ۲۵٪ */
+    --sb-border-strong: rgba(198, 164, 106, 0.48);
+
+    /* ---------- سطوح شیشه‌ای (قرص و دایره آیکون) ---------- */
+    --sb-surface: rgba(237, 230, 218, 0.08);            /* شفافیت ۸٪ */
+    --sb-surface-hover: rgba(237, 230, 218, 0.14);      /* شفافیت ۱۴٪ */
+    --sb-surface-sunken: rgba(0, 0, 0, 0.22);
+
+    /* ---------- آیتم فعال و پنل محتوا ---------- */
+    --sb-active-bg: #F7F2EA;
+    --sb-active-fg: #2A2420;
+
+    /* ---------- متن و آیکون ---------- */
+    --sb-fg: #EDE6DA;                                   /* کنتراست ۱۵.۳:۱ روی --sb-bg */
+    --sb-fg-muted: rgba(237, 230, 218, 0.58);
+    --sb-fg-hover: var(--gold-champagne);               /* کنتراست ۸.۱:۱ روی --sb-bg */
+
+    /* ---------- اعلان ---------- */
+    --sb-badge: #C25B7A;                                /* رنگ اعلامی بریف */
+    --sb-badge-safe: #B34F6E;                           /* تیره‌تر: متن سفید ۴.۹۳:۱ پاس می‌شود */
+    --sb-badge-fg: #FFFFFF;
+
+    /* ---------- هندسه ---------- */
+    --sb-w-expanded: 236px;
+    --sb-w-rail: 78px;
+    --sb-capsule-pad: 10px;
+    --sb-gap: 16px;
+    --sb-radius-capsule: 28px;
+    --sb-radius-pill: 999px;
+    --sb-item-h: 44px;                                  /* حداقل سطح لمس استاندارد */
+    --sb-icon-circle: 44px;
+    --sb-fillet: 18px;                                  /* شعاع گوشه مقعر */
+
+    /* جهت لبه روبه‌روی محتوا برای گرادیان گوشه‌های مقعر.
+       نکته: موقعیت رنگ در radial-gradient یک ویژگی فیزیکی است و با
+       direction آینه نمی‌شود، پس باید دستی آینه شود.
+       در RTL محتوا سمت چپ است ⇒ گوشه‌ی inline-start مربعِ گوشه، سمت راست
+       آن است ⇒ 100% ؛ در LTR مقدار 0% می‌شود. */
+    --sb-fillet-x: 100%;
+
+    /* سرکشی پل اتصال از لبه کپسول تا لبه پنل محتوا.
+       مقدار پیش‌فرض از سایز حفره گرید می‌آید؛ JS مقدار دقیق را جایگزین
+       می‌کند تا اگر فاصله تغییر کند پل دقیقاً به پنل بچسبد. */
+    --bridge-overhang: calc(var(--sb-gap) + 1px);
+    --bridge-start: 0px;
+    --bridge-y: 0px;
+    --bridge-h: var(--sb-item-h);
+
+    /* ---------- سایه ---------- */
+    --sb-shadow: 0 20px 52px rgba(0, 0, 0, 0.46), 0 2px 10px rgba(0, 0, 0, 0.3);
+    --sb-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --sb-shadow-item: 0 6px 18px rgba(0, 0, 0, 0.28);
+
+    /* ---------- حرکت ---------- */
+    --sb-dur: 220ms;
+    --sb-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* ---------- فوکوس ---------- */
+    --sb-focus-ring: 0 0 0 2px var(--sb-bg), 0 0 0 4px var(--gold-champagne);
+}
+
+/* آینه‌سازی توکن‌های جهت‌دار برای چیدمان چپ‌به‌راست.
+   پروژه RTL است؛ این بلوک تضمین می‌کند اگر روزی زبان به LTR برگردد،
+   گوشه‌های مقعر و پل اتصال خودبه‌خود به سمت درست منتقل شوند. */
+[dir="ltr"] {
+    --sb-fillet-x: 0%;
+}
+
+/* ==========================================================================
+   ۱) پوسته پنل: گرادیان تیره + ذرات ستاره‌مانند (CSS خالص، بدون JS)
+   --------------------------------------------------------------------------
+   ساختار موبایل‌اول: پایه یک‌ستونه و بدون Sidebar است؛ از ۱۰۲۴px به بالا
+   به گرید دوسطونه (کپسول + پنل محتوا) تبدیل می‌شود. این ترتیب با بند ۱ بریف
+   مطابقت دارد: چیدمان از موبایل شروع می‌شود، نه اینکه دسکتاپ به زور کوچک شود.
+   ========================================================================== */
+.panel-shell--capsule {
+    display: block;
+    min-height: 100vh;
+    background: var(--sb-page-bg);
+    background-attachment: fixed;
+    /* بستر انباشت مستقل: تضمین می‌کند لایه ذرات ستاره‌مانند و دیگر لایه‌های
+       تزئینی از پوسته بیرون نزنند و ترتیب z-index داخل پوسته پیش‌بینی‌پذیر
+       بماند. بدون این، پل اتصال برای رفتن روی پنل محتوا به z-index منفی
+       نیاز پیدا می‌کرد که شکننده است. */
+    isolation: isolate;
+    /* سپر ایمنی در برابر سرریز افقی؛ بدون !important تا قابل بازنویسی بماند */
+    max-inline-size: 100%;
+    overflow-x: clip;
+}
+
+/* ذرات ریز ستاره‌مانند — چند radial-gradient سبک، بدون تصویر و JS */
+.panel-shell--capsule::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.7;
+    background-image:
+        radial-gradient(1.6px 1.6px at 12% 16%, rgba(237, 230, 218, 0.55), transparent),
+        radial-gradient(1.2px 1.2px at 27% 7%,  rgba(237, 230, 218, 0.32), transparent),
+        radial-gradient(1.8px 1.8px at 41% 22%, rgba(237, 230, 218, 0.42), transparent),
+        radial-gradient(1.1px 1.1px at 56% 11%, rgba(237, 230, 218, 0.28), transparent),
+        radial-gradient(1.5px 1.5px at 69% 19%, rgba(198, 164, 106, 0.48), transparent),
+        radial-gradient(1.2px 1.2px at 83% 6%,  rgba(237, 230, 218, 0.34), transparent),
+        radial-gradient(1.7px 1.7px at 92% 26%, rgba(237, 230, 218, 0.3), transparent),
+        radial-gradient(1.3px 1.3px at 18% 34%, rgba(198, 164, 106, 0.34), transparent);
+    background-repeat: no-repeat;
+}
+
+/* از ۱۰۲۴px: گرید دوسطونه با ستون کپسول سراسری */
+@media (min-width: 1024px) {
+    .panel-shell--capsule {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: var(--sb-gap);
+        padding: var(--sb-gap);
+    }
+}
+
+/* ---------- پنل محتوا: سطح عاجی روبه‌روی کپسول ---------- */
+.panel-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;                    /* جلوگیری از سرریز ستون گرید */
+    background: var(--sb-active-bg);
+    border-radius: var(--sb-radius-capsule);
+    box-shadow: var(--sb-shadow);
+    overflow-x: clip;
+}
+
+@media (min-width: 1024px) {
+    .panel-content {
+        min-block-size: calc(100vh - (var(--sb-gap) * 2));
+    }
+    /* در پوسته کپسولی، نوار بالای پنل یک سطح پیوسته با محتواست،
+       نه یک نوار سفید جدا با خط جداکننده. */
+    .panel-shell--capsule .panel-top {
+        background: transparent;
+        border-block-end: 1px solid rgba(42, 36, 32, 0.08);
+        border-start-start-radius: var(--sb-radius-capsule);
+    }
+}
+
+/* ==========================================================================
+   ۱-ب) نمایش Sidebar فقط از ۱۰۲۴px به بالا
+   زیر این عرض، ناوبری به عهده Bottom Navigation و Drawer است (بند ۵ بریف)
+   ========================================================================== */
+.panel-sidebar {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .panel-sidebar {
+        display: block;
+    }
+}
+
+/* ==========================================================================
+   ۲) کپسول Sidebar
+   ========================================================================== */
+.panel-sidebar {
+    position: relative;
+    /* عمداً z-index ندارد. اگر اینجا z-index بگذاریم، یک بستر انباشت
+       (Stacking Context) ساخته می‌شود و پل اتصال زندانی می‌شود: هرچقدر هم
+       z-index بالاتری بگیرد، نمی‌تواند از سایه و لبه‌ی پنل محتوا عبور کند و
+       اتصال قرص فعال دیده نمی‌شود. با z-index: auto پل در بستر پوسته
+       ارزیابی می‌شود و از پنل بالاتر می‌نشیند.
+       برای اینکه ذرات ستاره‌مانند (که z-index آن‌ها از این بیشتر است) از
+       پوسته بیرون نزنند، خود پوسته با isolation: isolate جدا شده است. */
+    inline-size: var(--sb-w-expanded);
+    transition: inline-size var(--sb-dur) var(--sb-ease);
+    will-change: inline-size;
+}
+
+.panel-sidebar.is-rail {
+    inline-size: var(--sb-w-rail);
+}
+
+.pnav-capsule {
+    position: sticky;
+    inset-block-start: var(--sb-gap);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    block-size: calc(100vh - (var(--sb-gap) * 2));
+    padding: var(--sb-capsule-pad);
+    background: var(--sb-bg);
+    border: 1px solid var(--sb-border);
+    border-radius: var(--sb-radius-capsule);
+    box-shadow: var(--sb-shadow), var(--sb-sheen);
+}
+
+/* ==========================================================================
+   ۳) ردیف برند: لوگو + دکمه جمع‌کردن
+   ========================================================================== */
+.pnav-brand {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-block-end: 10px;
+    margin-block-end: 4px;
+    border-block-end: 1px solid rgba(198, 164, 106, 0.16);
+}
+
+/* درخشش طلایی ملایم فقط در ناحیه برند — نه کل ارتفاع.
+   دلیل: گوشه‌های مقعر آیتم فعال باید با رنگ پس‌زمینه هم‌تراز باشند و
+   گرادیان سراسری این هم‌ترازی را در رزولوشن‌های مختلف می‌شکند. */
+.pnav-brand::before {
+    content: "";
+    position: absolute;
+    inset: -8px -6px 0;
+    pointer-events: none;
+    border-start-start-radius: calc(var(--sb-radius-capsule) - 4px);
+    border-start-end-radius: calc(var(--sb-radius-capsule) - 4px);
+    background: radial-gradient(100% 130% at 50% -30%, rgba(198, 164, 106, 0.22), transparent 68%);
+}
+
+.pnav-logo {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: 50%;
+    background: var(--sb-surface-sunken);
+    border: 1px solid var(--sb-border-strong);
+    color: var(--gold-champagne);
+    overflow: hidden;
+    transition: border-color var(--sb-dur) var(--sb-ease), transform var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-logo:hover {
+    border-color: var(--gold-champagne);
+}
+
+.pnav-logo-img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+.pnav-logo-fallback {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1;
+}
+
+/* دکمه جمع‌کردن — دایره کوچک کنار لوگو */
+.pnav-toggle {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    inline-size: 32px;
+    block-size: 32px;
+    margin-inline-start: auto;
+    padding: 0;
+    border: 1px solid var(--sb-border);
+    border-radius: 50%;
+    background: var(--sb-surface);
+    color: var(--sb-fg);
+    cursor: pointer;
+    transition: background var(--sb-dur) var(--sb-ease), color var(--sb-dur) var(--sb-ease),
+                transform var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-toggle:hover {
+    background: var(--sb-surface-hover);
+    color: var(--sb-fg-hover);
+}
+
+.pnav-toggle .pnav-svg {
+    inline-size: 16px;
+    block-size: 16px;
+}
+
+/* در RTL فلش به سمت لبه بیرونی (راست) می‌چرخد — جهت درست جمع‌شدن */
+[dir="rtl"] .pnav-toggle .pnav-svg {
+    transform: scaleX(-1);
+}
+
+/* در حالت Rail دکمه جمع‌کردن پنهان می‌شود (جای آن Tooltip و باز شدن با کلیک) */
+.panel-sidebar.is-rail .pnav-toggle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.panel-sidebar.is-rail .pnav-logo {
+    margin-inline: auto;
+}
+
+/* ==========================================================================
+   ۴) لیست آیتم‌ها + آکاردئون گروه‌ها
+   ========================================================================== */
+.pnav-list {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* بالاتر از پل اتصال (z-index: 2).
+       چرا صریح و نه با تکیه بر رفتار پیش‌فرض: فهرست یک مخزن اسکرول است و
+       بخشی از موتورهای مرورگر برای مخزن اسکرول بستر انباشت می‌سازند. اگر
+       اینجا z-index نگذاریم، در آن مرورگرها آیکون و متن آیتم فعال داخل بستر
+       فهرست زندانی می‌شوند و سطح عاجی پل روی آن‌ها می‌افتد. با تعیین صریح
+       z-index، ترتیب در همه مرورگرها یکسان است.
+       پس‌زمینه فهرست شفاف است، پس پل از پشتش دیده می‌شود. */
+    position: relative;
+    z-index: 3;
+    overflow-y: auto;
+    overscroll-behavior: contain;             /* اسکرول به صفحه زیرین سرریز نکند */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(198, 164, 106, 0.35) transparent;
+}
+
+.pnav-list::-webkit-scrollbar { inline-size: 6px; }
+.pnav-list::-webkit-scrollbar-thumb {
+    background: rgba(198, 164, 106, 0.3);
+    border-radius: 999px;
+}
+
+.pnav-group + .pnav-group { margin-block-start: 4px; }
+
+/* ---------- سرگروه آکاردئون ---------- */
+.pnav-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    inline-size: 100%;
+    padding: 8px 10px 6px;
+    border: 0;
+    background: none;
+    color: var(--sb-fg-muted);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: start;
+    cursor: pointer;
+    transition: color var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-group-head:hover { color: var(--sb-fg-hover); }
+
+.pnav-group-caret {
+    display: grid;
+    place-items: center;
+    transition: transform var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-group-caret .pnav-svg {
+    inline-size: 14px;
+    block-size: 14px;
+}
+
+.pnav-group.is-closed .pnav-group-caret { transform: rotate(-90deg); }
+
+.pnav-group-items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pnav-group.is-closed .pnav-group-items { display: none; }
+
+/* در حالت Rail سرگروه‌ها پنهان می‌شوند و همه آیتم‌ها نمایش داده می‌شوند */
+.panel-sidebar.is-rail .pnav-group-head { display: none; }
+.panel-sidebar.is-rail .pnav-group-items { display: flex !important; }
+
+/* ==========================================================================
+   ۵) آیتم منو (قرص / دایره)
+   ========================================================================== */
+.pnav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-block-size: var(--sb-item-h);
+    padding-inline: 10px 14px;
+    border: 0;
+    border-radius: var(--sb-radius-pill);
+    background: var(--sb-surface);
+    color: var(--sb-fg);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background var(--sb-dur) var(--sb-ease), color var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-item:hover {
+    background: var(--sb-surface-hover);
+    color: var(--sb-fg-hover);
+}
+
+.pnav-item:hover .pnav-svg { color: var(--sb-fg-hover); }
+
+/* حالت Rail: قرص به دایره تبدیل می‌شود */
+.panel-sidebar.is-rail .pnav-item {
+    inline-size: var(--sb-icon-circle);
+    block-size: var(--sb-icon-circle);
+    min-block-size: var(--sb-icon-circle);
+    margin-inline: auto;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.panel-sidebar.is-rail .pnav-label { display: none; }
+
+.pnav-icon {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    inline-size: 24px;
+    block-size: 24px;
+}
+
+.pnav-svg {
+    inline-size: 21px;
+    block-size: 21px;
+    color: inherit;
+    transition: color var(--sb-dur) var(--sb-ease);
+}
+
+.pnav-label {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   ۶) قرص فعال و «پل اتصال» به پنل محتوا
+   --------------------------------------------------------------------------
+   نکته معماری مهم:
+   فهرست منو (.pnav-list) برای اسکرول عمودی overflow دارد. در CSS اگر یک
+   محور overflow بگیرد، محور دیگر هم بُرده می‌شود؛ بنابراین هیچ قرصی که
+   داخل فهرست باشد نمی‌تواند از لبه کپسول بیرون بزند و گوشه مقعر آن هم
+   رندر نمی‌شود.
+
+   راه‌حل: قرص فعال داخل فهرست فقط رنگ متن و آیکون را عوض می‌کند و پس‌زمینه
+   ندارد. عنصر جداگانه‌ای به نام .pnav-bridge بیرون از فهرست (و پیش از آن
+   در DOM تا زیرش بماند) کل پس‌زمینه، امتداد تا پنل محتوا و گوشه‌های مقعر
+   را می‌کشد. موقعیت آن با JS از ارتفاع آیتم فعال خوانده می‌شود.
+   ========================================================================== */
+
+/* ---------- پل اتصال ---------- */
+.pnav-bridge {
+    display: none;
+    position: absolute;
+    /* بالاتر از پنل محتوا (z-index: 1) تا سایه‌ی پنل روی نقطه‌ی اتصال
+       نیفتد. اگر زیر پنل بماند، آن ۱۷ پیکسل فاصله با سایه‌ی تیره پوشیده
+       می‌شود و اتصال به‌جای یک سطح پیوسته، لکه‌ی خاکستری می‌شود. */
+    z-index: 2;
+    inset-block-start: var(--bridge-y, 0);
+    block-size: var(--bridge-h, var(--sb-item-h));
+    inset-inline-start: var(--bridge-start, 0);
+    /* از ابتدای آیتم تا لبه کپسول، به‌همراه سرکشی به داخل فاصله تا پنل */
+    inline-size: calc(100% - var(--bridge-start, 0px) + var(--bridge-overhang));
+    background: var(--sb-active-bg);
+    border-start-start-radius: var(--sb-radius-pill);
+    border-end-start-radius: var(--sb-radius-pill);
+    pointer-events: none;
+}
+
+/* فقط وقتی JS موقعیت را با موفقیت خوانده باشد نمایش داده می‌شود */
+.panel-sidebar.has-bridge .pnav-bridge { display: block; }
+
+/* ---------- گوشه‌های مقعر (Inverted Corner) ----------
+   هر گوشه یک مربع هم‌اندازه --sb-fillet است که لبه‌ی سمت محتوای آن دقیقاً
+   روی لبه‌ی پنل می‌نشیند. برای ساختن قوس مقعر، یک دایره در مربع نقاشی
+   می‌شود که مرکزش روی گوشه‌ی «دور از محل اتصال» است. داخل دایره شفاف
+   می‌ماند تا پس‌زمینه تیره کپسول دیده شود و بیرون آن (نوکِ رو به قرص و
+   پنل) عاجی می‌شود؛ نتیجه، یک هلال عاجی است که قرص را با نرمی به پنل
+   می‌رساند.
+
+   نکته‌ای که خرابکاری می‌کند: ترتیب رنگ‌ها. عاجی باید در STOP دوم بیاید،
+   نه اول. اگر عاجی اول بیاید دایره توپر می‌شود و گوشه به‌جای مقعر، محدب
+   و لکه‌دار رندر می‌شود. */
+.pnav-bridge::before,
+.pnav-bridge::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 0;
+    inline-size: var(--sb-fillet);
+    block-size: var(--sb-fillet);
+    pointer-events: none;
+}
+
+.pnav-bridge::before {
+    inset-block-end: 100%;
+    background: radial-gradient(
+        circle at var(--sb-fillet-x) 0%,
+        transparent 0 calc(var(--sb-fillet) - 0.5px),
+        var(--sb-active-bg) var(--sb-fillet));
+}
+
+.pnav-bridge::after {
+    inset-block-start: 100%;
+    background: radial-gradient(
+        circle at var(--sb-fillet-x) 100%,
+        transparent 0 calc(var(--sb-fillet) - 0.5px),
+        var(--sb-active-bg) var(--sb-fillet));
+}
+
+/* ---------- آیتم فعال ----------
+   وقتی پل فعال است، خود آیتم پس‌زمینه نمی‌گیرد تا پل از زیرش دیده شود.
+   اگر JS در دسترس نباشد (has-bridge اضافه نشود) پس‌زمینه بازمی‌گردد تا
+   آیتم فعال بی‌نشانه نماند؛ یعنی فروپاشی محترمانه. */
+.panel-sidebar:not(.has-bridge) .pnav-item.is-active {
+    background: var(--sb-active-bg);
+    box-shadow: var(--sb-shadow-item);
+}
+
+.panel-sidebar.has-bridge .pnav-item.is-active {
+    background: transparent;
+    box-shadow: none;
+}
+
+.pnav-item.is-active {
+    color: var(--sb-active-fg);
+    font-weight: 700;
+    position: relative;
+    /* بالاتر از پل (z-index: 2) تا آیکون و متن روی سطح عاجی خوانا بمانند.
+       عدد باید بلاواسطه بالای پل باشد، نه برابر با آن؛ چون هر دو در بستر
+       انباشت پوسته ارزیابی می‌شوند. */
+    z-index: 3;
+}
+
+.pnav-item.is-active .pnav-svg { color: var(--sb-active-fg); }
+
+/* ==========================================================================
+   ۷) Badge اعلان
+   ========================================================================== */
+.pnav-badge {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    min-inline-size: 20px;
+    block-size: 20px;
+    padding-inline: 6px;
+    border-radius: 999px;
+    background: var(--sb-badge-safe);   /* تیره‌تر از #C25B7A برای کنتراست ۴.۹۳:۱ */
+    color: var(--sb-badge-fg);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* در حالت Rail فقط یک نقطه کوچک نمایش داده می‌شود.
+   رنگ اصلی اعلامی بریف (#C25B7A) اینجا بی‌خطر است چون نقطه متنی نیست و
+   حداقل کنتراست ۴.۵:۱ برای متن بر آن اعمال نمی‌شود. */
+.panel-sidebar.is-rail .pnav-badge {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-end: 4px;
+    min-inline-size: 9px;
+    block-size: 9px;
+    padding: 0;
+    font-size: 0;
+    background: var(--sb-badge);
+    border: 1.5px solid var(--sb-bg);
+}
+
+/* ==========================================================================
+   ۸) پابرگ: خروج از حساب
+   ========================================================================== */
+.pnav-foot {
+    flex: 0 0 auto;
+    padding-block-start: 10px;
+    border-block-start: 1px solid rgba(198, 164, 106, 0.16);
+}
+
+.pnav-item--logout {
+    inline-size: 100%;
+    background: transparent;
+}
+
+.pnav-item--logout:hover {
+    background: var(--sb-surface);
+    color: var(--sb-fg-hover);
+}
+
+/* ==========================================================================
+   ۹) فوکوس قابل مشاهده — ناوبری کامل با کیبورد
+   ========================================================================== */
+.pnav-item:focus-visible,
+.pnav-toggle:focus-visible,
+.pnav-group-head:focus-visible,
+.pnav-logo:focus-visible {
+    outline: none;
+    box-shadow: var(--sb-focus-ring);
+}
+
+/* ==========================================================================
+   ۱۰) احترام به prefers-reduced-motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .panel-sidebar,
+    .pnav-item,
+    .pnav-toggle,
+    .pnav-group-caret,
+    .pnav-svg,
+    .pnav-logo {
+        transition-duration: 1ms !important;
+    }
+}
+
+/* ==========================================================================
+   ۱۱) حالت روشن/تیره
+   Sidebar در هر دو حالت تیره می‌ماند (هویت برند)؛ فقط پنل محتوا تغییر می‌کند.
+   ========================================================================== */
+[data-theme="dark"] .panel-shell--capsule {
+    --sb-page-bg: linear-gradient(180deg, #1B1714 0%, #100D0B 100%);
+}
+
+[data-theme="dark"] .panel-sidebar {
+    --sb-active-bg: #2A2420;
+    --sb-active-fg: #F7F2EA;
+}
+
+/* ==========================================================================
+   ۱۲) رفتار واکنش‌گرا: تبلت و موبایل در برابر دسکتاپ
+   --------------------------------------------------------------------------
+   مرز ۱۰۲۴px: تبلت افقی و بالاتر Sidebar کپسولی می‌گیرند.
+   تبلت عمودی و موبایل: Bottom Navigation + Drawer.
+   نکته: دراور موبایل در مرحله ۵ با ظاهر قرص‌های همین کپسول بازطراحی می‌شود؛
+   تا آن زمان همان دراور موجود کار می‌کند تا مسیر موبایل نشکند.
+   ========================================================================== */
+
+/* ---------- جلوگیری از پرش بصری پیش از خواندن وضعیت ذخیره‌شده ---------- */
+.panel-shell--capsule[data-sidebar-ready="false"] .panel-sidebar {
+    visibility: hidden;
+}
+
+/* ---------- زیر ۱۰۲۴px: کپسول پنهان، ناوبری موبایل فعال ---------- */
+@media (max-width: 1023px) {
+    .panel-shell--capsule .panel-mobile-header {
+        display: flex;
+    }
+    .panel-shell--capsule .panel-bottom-nav {
+        display: flex;
+    }
+    /* نوار پایین محتوا نباید زیر Bottom Navigation برود */
+    .panel-shell--capsule .panel-body {
+        padding-block-end: calc(78px + var(--safe-bottom, 0px));
+    }
+
+    /* دراور موبایل: همان عنصر .panel-side که در پوسته قدیمی سایدبار بود */
+    .panel-shell--capsule .panel-side {
+        position: fixed;
+        inset-block: 0;
+        inset-inline-end: 0;
+        inline-size: min(88vw, 320px);
+        max-inline-size: 88vw;
+        z-index: 1200;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        transform: translateX(100%);
+        transition: transform 250ms var(--sb-ease);
+        padding-block-end: var(--safe-bottom, 0px);
+        box-shadow: -6px 0 32px rgba(0, 0, 0, 0.34);
+    }
+    .panel-shell--capsule .panel-side.drawer-open {
+        transform: translateX(0);
+    }
+    .panel-shell--capsule .panel-drawer-close {
+        display: flex;
+    }
+}
+
+/* ---------- از ۱۰۲۴px: ناوبری موبایل پنهان، کپسول فعال ---------- */
+@media (min-width: 1024px) {
+    .panel-shell--capsule .panel-mobile-header,
+    .panel-shell--capsule .panel-bottom-nav,
+    .panel-shell--capsule .panel-side,
+    .panel-shell--capsule .panel-drawer-backdrop {
+        display: none;
+    }
+    .panel-shell--capsule .panel-body {
+        padding: 26px;
+    }
+}
+
+/* ==========================================================================
+   ۱۳) احترام به prefers-reduced-motion برای انتقال عرض کپسول
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .panel-shell--capsule .panel-side {
+        transition-duration: 1ms !important;
+    }
+}
+
+
+/* ---------- چیدمان خودِ صفحه پیش‌نمایش (بخشی از اپ نیست) ---------- */
+body {
+    margin: 0;
+    background: var(--sb-page-bg);
+    background-attachment: fixed;
+    font-family: 'Vazirmatn', Tahoma, system-ui, sans-serif;
+    color: #EDE6DA;
+}
+.stage-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-x: auto;
+    gap: 48px;
+    align-items: flex-start;
+    padding: 40px 32px 64px;
+}
+.stage { margin: 0; }
+.stage-title {
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    color: rgba(237,230,218,.55);
+    margin: 0 0 14px;
+}
+/* ---------- بازنویسی‌های مخصوص پیش‌نمایش ----------
+   در iframe، عرض ممکن است کمتر از ۱۰۲۴px باشد و قاعده موبایل‌اول اپ
+   کپسول را پنهان می‌کند. اینجا چیدمان دسکتاپ به‌زور روشن می‌شود تا
+   پیش‌نمایش در هر عرضی قابل مشاهده باشد. هیچ‌کدام از این قواعد در اپ
+   وجود ندارند. */
+.stage-shell {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--sb-gap);
+    padding: 0;
+    min-height: 0;
+    background: none;
+    background-attachment: scroll;
+    /* عرض ثابت تا هندسه‌ی پل قطعی و قابل پیش‌بینی باشد و به عرض iframe
+       وابسته نشود. */
+    inline-size: 900px;
+    max-inline-size: none;
+    overflow: visible;
+}
+.stage-shell::before { content: none; }
+.stage .panel-sidebar { display: block; position: static; }
+/* کپسول باید relative بماند تا پل اتصال نسبت به خودش موقعیت بگیرد،
+   نه نسبت به کل صحنه. */
+.stage .pnav-capsule { position: relative; block-size: 720px; }
+.stage .panel-content { block-size: 720px; }
+
+/* ---------- محتوای نمایشی داخل پنل ---------- */
+.pv-content { padding: 26px; }
+.pv-crumb {
+    margin: 0 0 6px; font-size: .74rem; letter-spacing: .04em;
+    color: rgba(42,36,32,.5);
+}
+.pv-h { margin: 0 0 18px; font-size: 1.1rem; color: #2A2420; font-weight: 700; }
+.pv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.pv-card {
+    display: flex; flex-direction: column; gap: 8px; padding: 14px;
+    border-radius: 16px; background: rgba(42,36,32,.05);
+    border: 1px solid rgba(42,36,32,.08);
+}
+.pv-card span { font-size: .74rem; color: rgba(42,36,32,.6); }
+.pv-card strong { font-size: 1.4rem; color: #2A2420; }
+.pv-line { margin: 0; font-size: .8rem; line-height: 1.9; color: rgba(42,36,32,.62); }
+.note {
+    max-width: 720px;
+    margin: 0 auto 8px;
+    padding: 0 32px;
+    font-size: .82rem;
+    line-height: 2;
+    color: rgba(237,230,218,.62);
+}
+.note strong { color: #C6A46A; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="note">
+    <p><strong>پیش‌نمایش مرحله ۴</strong> — قرص فعال از Sidebar بیرون می‌زند،
+    از روی فاصله می‌گذرد و با دو <strong>گوشه مقعر</strong> به پنل محتوا جوش می‌خورد.
+    در هر دو حالت باز و بسته اعمال می‌شود.</p>
+    <p>CSS و JS این فایل از فایل‌های واقعی اپ درون‌خطی شده‌اند
+    (<code>panel-sidebar.css</code> و <code>mobile-ux.js</code>)، پس هرگز از کد اپ
+    جدا نمی‌افتند. بازسازی با:</p>
+    <p><code>python3 tools/build-sidebar-preview.py</code></p>
+</div>
+<div class="stage-wrap">
+
+<section class="stage">
+  <h2 class="stage-title">حالت باز (Expanded) — جوش کامل به پنل</h2>
+  <div class="panel-shell--capsule stage-shell">
+    <nav class="panel-sidebar is-expanded" aria-label="ناوبری پنل کاربری — حالت باز (Expanded) — جوش کامل به پنل" data-state="expanded">
+      <div class="pnav-capsule">
+        <div class="pnav-bridge" aria-hidden="true"></div>
+        <div class="pnav-brand">
+          <a class="pnav-logo" href="#" aria-label="سالن زیبایی حدیث">
+            <span class="pnav-logo-fallback" aria-hidden="true">HB</span>
+          </a>
+          <button type="button" class="pnav-toggle" aria-expanded="true"
+                  aria-controls="pv2-list" title="جمع کردن منو">
+            <svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg>
+          </button>
+        </div>
+        <ul class="pnav-list" id="pv2-list">
+          <li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">مدیریت کلان سالن</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv2-g0">
+<li class="pnav-row"><a class="pnav-item is-active" href="#" aria-current="page" title="داشبورد و شاخص‌ها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="pnav-label">داشبورد و شاخص‌ها</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="اطلاعات پایه"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3Z"/><path d="M2.5 13 12 18l9.5-5"/><path d="M2.5 17.5 12 22.5l9.5-5"/></svg></span><span class="pnav-label">اطلاعات پایه</span></a></li>
+</ul></li>
+<li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">نوبت‌دهی و مراجعین</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv2-g1">
+<li class="pnav-row"><a class="pnav-item" href="#" title="مدیریت نوبت‌ها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="8.5" cy="14.5" r="1" fill="currentColor" stroke="none"/><circle cx="12.5" cy="14.5" r="1" fill="currentColor" stroke="none"/></svg></span><span class="pnav-label">مدیریت نوبت‌ها</span><span class="pnav-badge" aria-hidden="true">۳</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="لیست انتظار"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10M7 21h10"/><path d="M8 3v4.2c0 2.2 4 3.9 4 4.8 0 .9-4 2.6-4 4.8V21"/><path d="M16 3v4.2c0 2.2-4 3.9-4 4.8 0 .9 4 2.6 4 4.8V21"/></svg></span><span class="pnav-label">لیست انتظار</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="پرونده مشتریان"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c.5-3.6 3.2-6 6.2-6s5.7 2.4 6.2 6"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 6.6"/><path d="M18 20h3.2c-.3-2.4-1.5-4.3-3.3-5.3"/></svg></span><span class="pnav-label">پرونده مشتریان</span></a></li>
+</ul></li>
+<li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">تیم و خدمات</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv2-g2">
+<li class="pnav-row"><a class="pnav-item" href="#" title="پرسنل سالن"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="7.5" r="3.6"/><path d="M3.5 20c.5-4 3.3-6.6 6.5-6.6 1.6 0 3.1.6 4.3 1.7"/><path d="M15.2 18.4l2.2 2.2 4.4-4.6"/></svg></span><span class="pnav-label">پرسنل سالن</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="خدمات و تعرفه‌ها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5c.9 3.6 1.9 4.6 5.5 5.5-3.6.9-4.6 1.9-5.5 5.5-.9-3.6-1.9-4.6-5.5-5.5 3.6-.9 4.6-1.9 5.5-5.5Z"/><path d="M18.5 15c.45 1.8.95 2.3 2.75 2.75-1.8.45-2.3.95-2.75 2.75-.45-1.8-.95-2.3-2.75-2.75 1.8-.45 2.3-.95 2.75-2.75Z"/><path d="M6 16.5c.3 1.2.65 1.55 1.85 1.85-1.2.3-1.55.65-1.85 1.85-.3-1.2-.65-1.55-1.85-1.85 1.2-.3 1.55-.65 1.85-1.85Z"/></svg></span><span class="pnav-label">خدمات و تعرفه‌ها</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="گالری نمونه‌کارها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.6" cy="9.6" r="1.7"/><path d="m4 17.5 4.6-4.6c.7-.7 1.8-.7 2.5 0l3 3c.7.7 1.8.7 2.5 0L20 12.5"/></svg></span><span class="pnav-label">گالری نمونه‌کارها</span></a></li>
+</ul></li>
+<li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">تنظیمات و تعاملات</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv2-g3">
+<li class="pnav-row"><a class="pnav-item" href="#" title="تنظیمات سالن و تم"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.6 14.4a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V22a2 2 0 1 1-4 0v-.11a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H8a2 2 0 1 1 0-4h.11A1.7 1.7 0 0 0 9.67 9.8a1.7 1.7 0 0 0-.34-1.87l-.06-.06A2 2 0 1 1 12.1 5.04l.06.06a1.7 1.7 0 0 0 1.87.34H14a1.7 1.7 0 0 0 1.03-1.56V3.77a2 2 0 1 1 4 0v.11a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.56 1.03h.11a2 2 0 1 1 0 4h-.11a1.7 1.7 0 0 0-1.42 1.03Z" transform="translate(-3.2 -1.8) scale(0.92)"/></svg></span><span class="pnav-label">تنظیمات سالن و تم</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="کدهای تخفیف"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.83 0l-7.2-7.2A2 2 0 0 1 2.8 12V4.8A2 2 0 0 1 4.8 2.8H12a2 2 0 0 1 1.41.58l7.2 7.2a2 2 0 0 1 0 2.83Z"/><circle cx="7.9" cy="7.9" r="1.4"/></svg></span><span class="pnav-label">کدهای تخفیف</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="اخبار و وبلاگ"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.2v3.6a1.8 1.8 0 0 0 1.8 1.8h1.4l7.6 4.2V4.2L6.7 8.4H5.3a1.8 1.8 0 0 0-1.8 1.8Z"/><path d="M18 8.4a5 5 0 0 1 0 7.2"/><path d="M7.5 15.6V19a1.6 1.6 0 0 0 3.2 0v-1.6"/></svg></span><span class="pnav-label">اخبار و وبلاگ</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="اعلانات سیستم"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.4a6 6 0 1 0-12 0c0 5.2-2 6.6-2 6.6h16s-2-1.4-2-6.6Z"/><path d="M13.7 19a2 2 0 0 1-3.4 0"/></svg></span><span class="pnav-label">اعلانات سیستم</span><span class="pnav-badge" aria-hidden="true">۵</span></a></li>
+</ul></li><div class="pnav-foot"><button type="button" class="pnav-item pnav-item--logout"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.5"/><path d="m15 16.5 4.5-4.5L15 7.5"/><path d="M19.5 12H9"/></svg></span><span class="pnav-label">خروج از حساب</span></button></div>
+        </ul>
+      </div>
+    </nav>
+    <div class="panel-content">
+      <div class="pv-content">
+        <p class="pv-crumb">پنل مدیریت / داشبورد</p>
+        <h3 class="pv-h">نوبت‌های امروز</h3>
+        <div class="pv-grid">
+          <div class="pv-card"><span>نوبت فعال</span><strong>۱۲</strong></div>
+          <div class="pv-card"><span>در انتظار</span><strong>۴</strong></div>
+          <div class="pv-card"><span>لغوشده</span><strong>۲</strong></div>
+        </div>
+        <p class="pv-line">این پنل محتوا فقط برای نمایش دقیق محل اتصال قرص فعال است.
+        عرض و گردی گوشه‌ها از همان متغیرهای CSS خودِ اپ می‌آید.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stage">
+  <h2 class="stage-title">حالت بسته (Rail) — همان جوش، در عرض کم</h2>
+  <div class="panel-shell--capsule stage-shell">
+    <nav class="panel-sidebar is-rail" aria-label="ناوبری پنل کاربری — حالت بسته (Rail) — همان جوش، در عرض کم" data-state="rail">
+      <div class="pnav-capsule">
+        <div class="pnav-bridge" aria-hidden="true"></div>
+        <div class="pnav-brand">
+          <a class="pnav-logo" href="#" aria-label="سالن زیبایی حدیث">
+            <span class="pnav-logo-fallback" aria-hidden="true">HB</span>
+          </a>
+          <button type="button" class="pnav-toggle" aria-expanded="false"
+                  aria-controls="pv1-list" title="باز کردن منو">
+            <svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14.5 6-6 6 6 6"/></svg>
+          </button>
+        </div>
+        <ul class="pnav-list" id="pv1-list">
+          <li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">مدیریت کلان سالن</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv1-g0">
+<li class="pnav-row"><a class="pnav-item is-active" href="#" aria-current="page" title="داشبورد و شاخص‌ها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="pnav-label">داشبورد و شاخص‌ها</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="اطلاعات پایه"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 8 12 13l9.5-5L12 3Z"/><path d="M2.5 13 12 18l9.5-5"/><path d="M2.5 17.5 12 22.5l9.5-5"/></svg></span><span class="pnav-label">اطلاعات پایه</span></a></li>
+</ul></li>
+<li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">نوبت‌دهی و مراجعین</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv1-g1">
+<li class="pnav-row"><a class="pnav-item" href="#" title="مدیریت نوبت‌ها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="8.5" cy="14.5" r="1" fill="currentColor" stroke="none"/><circle cx="12.5" cy="14.5" r="1" fill="currentColor" stroke="none"/></svg></span><span class="pnav-label">مدیریت نوبت‌ها</span><span class="pnav-badge" aria-hidden="true">۳</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="لیست انتظار"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10M7 21h10"/><path d="M8 3v4.2c0 2.2 4 3.9 4 4.8 0 .9-4 2.6-4 4.8V21"/><path d="M16 3v4.2c0 2.2-4 3.9-4 4.8 0 .9 4 2.6 4 4.8V21"/></svg></span><span class="pnav-label">لیست انتظار</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="پرونده مشتریان"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c.5-3.6 3.2-6 6.2-6s5.7 2.4 6.2 6"/><path d="M16.5 5.2a3.4 3.4 0 0 1 0 6.6"/><path d="M18 20h3.2c-.3-2.4-1.5-4.3-3.3-5.3"/></svg></span><span class="pnav-label">پرونده مشتریان</span></a></li>
+</ul></li>
+<li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">تیم و خدمات</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv1-g2">
+<li class="pnav-row"><a class="pnav-item" href="#" title="پرسنل سالن"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="7.5" r="3.6"/><path d="M3.5 20c.5-4 3.3-6.6 6.5-6.6 1.6 0 3.1.6 4.3 1.7"/><path d="M15.2 18.4l2.2 2.2 4.4-4.6"/></svg></span><span class="pnav-label">پرسنل سالن</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="خدمات و تعرفه‌ها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5c.9 3.6 1.9 4.6 5.5 5.5-3.6.9-4.6 1.9-5.5 5.5-.9-3.6-1.9-4.6-5.5-5.5 3.6-.9 4.6-1.9 5.5-5.5Z"/><path d="M18.5 15c.45 1.8.95 2.3 2.75 2.75-1.8.45-2.3.95-2.75 2.75-.45-1.8-.95-2.3-2.75-2.75 1.8-.45 2.3-.95 2.75-2.75Z"/><path d="M6 16.5c.3 1.2.65 1.55 1.85 1.85-1.2.3-1.55.65-1.85 1.85-.3-1.2-.65-1.55-1.85-1.85 1.2-.3 1.55-.65 1.85-1.85Z"/></svg></span><span class="pnav-label">خدمات و تعرفه‌ها</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="گالری نمونه‌کارها"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.6" cy="9.6" r="1.7"/><path d="m4 17.5 4.6-4.6c.7-.7 1.8-.7 2.5 0l3 3c.7.7 1.8.7 2.5 0L20 12.5"/></svg></span><span class="pnav-label">گالری نمونه‌کارها</span></a></li>
+</ul></li>
+<li class="pnav-group is-open">
+<button type="button" class="pnav-group-head"><span class="pnav-group-title">تنظیمات و تعاملات</span><span class="pnav-group-caret"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9.5 6 6 6-6"/></svg></span></button>
+<ul class="pnav-group-items" id="pv1-g3">
+<li class="pnav-row"><a class="pnav-item" href="#" title="تنظیمات سالن و تم"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.6 14.4a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V22a2 2 0 1 1-4 0v-.11a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H8a2 2 0 1 1 0-4h.11A1.7 1.7 0 0 0 9.67 9.8a1.7 1.7 0 0 0-.34-1.87l-.06-.06A2 2 0 1 1 12.1 5.04l.06.06a1.7 1.7 0 0 0 1.87.34H14a1.7 1.7 0 0 0 1.03-1.56V3.77a2 2 0 1 1 4 0v.11a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V10a1.7 1.7 0 0 0 1.56 1.03h.11a2 2 0 1 1 0 4h-.11a1.7 1.7 0 0 0-1.42 1.03Z" transform="translate(-3.2 -1.8) scale(0.92)"/></svg></span><span class="pnav-label">تنظیمات سالن و تم</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="کدهای تخفیف"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.83 0l-7.2-7.2A2 2 0 0 1 2.8 12V4.8A2 2 0 0 1 4.8 2.8H12a2 2 0 0 1 1.41.58l7.2 7.2a2 2 0 0 1 0 2.83Z"/><circle cx="7.9" cy="7.9" r="1.4"/></svg></span><span class="pnav-label">کدهای تخفیف</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="اخبار و وبلاگ"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.2v3.6a1.8 1.8 0 0 0 1.8 1.8h1.4l7.6 4.2V4.2L6.7 8.4H5.3a1.8 1.8 0 0 0-1.8 1.8Z"/><path d="M18 8.4a5 5 0 0 1 0 7.2"/><path d="M7.5 15.6V19a1.6 1.6 0 0 0 3.2 0v-1.6"/></svg></span><span class="pnav-label">اخبار و وبلاگ</span></a></li>
+<li class="pnav-row"><a class="pnav-item" href="#" title="اعلانات سیستم"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.4a6 6 0 1 0-12 0c0 5.2-2 6.6-2 6.6h16s-2-1.4-2-6.6Z"/><path d="M13.7 19a2 2 0 0 1-3.4 0"/></svg></span><span class="pnav-label">اعلانات سیستم</span><span class="pnav-badge" aria-hidden="true">۵</span></a></li>
+</ul></li><div class="pnav-foot"><button type="button" class="pnav-item pnav-item--logout"><span class="pnav-icon" aria-hidden="true"><svg class="pnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.5"/><path d="m15 16.5 4.5-4.5L15 7.5"/><path d="M19.5 12H9"/></svg></span><span class="pnav-label">خروج از حساب</span></button></div>
+        </ul>
+      </div>
+    </nav>
+    <div class="panel-content">
+      <div class="pv-content">
+        <p class="pv-crumb">پنل مدیریت / داشبورد</p>
+        <h3 class="pv-h">نوبت‌های امروز</h3>
+        <div class="pv-grid">
+          <div class="pv-card"><span>نوبت فعال</span><strong>۱۲</strong></div>
+          <div class="pv-card"><span>در انتظار</span><strong>۴</strong></div>
+          <div class="pv-card"><span>لغوشده</span><strong>۲</strong></div>
+        </div>
+        <p class="pv-line">این پنل محتوا فقط برای نمایش دقیق محل اتصال قرص فعال است.
+        عرض و گردی گوشه‌ها از همان متغیرهای CSS خودِ اپ می‌آید.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+<script>
+/* ==========================================================================
+   SolonBeauty — هلپر تجربه کاربری موبایل (Mobile UX Helper)
+   --------------------------------------------------------------------------
+   مسئولیت‌ها:
+   ۱) قفل/آزادسازی اسکرول پس‌زمینه هنگام باز بودن Drawer یا مودال
+      (بدون این مورد، کاربر موبایل پشت منو هم اسکرول می‌کند)
+   ۲) بستن Drawer/مودال با کلید Escape و دکمه بازگشت اندروید
+   ۳) حفظ موقعیت اسکرول هنگام قفل شدن صفحه (بدون پرش به بالا)
+   ========================================================================== */
+
+(function () {
+    'use strict';
+
+    // تعداد عناصری که درخواست قفل اسکرول کرده‌اند (شمارشِ مرجع)
+    var lockCount = 0;
+    var savedScrollY = 0;
+
+    function lockScroll() {
+        lockCount++;
+        if (lockCount > 1) return;
+
+        savedScrollY = window.scrollY || window.pageYOffset || 0;
+        document.documentElement.classList.add('ux-scroll-locked');
+        document.body.classList.add('ux-scroll-locked');
+
+        // تثبیت بصری موقعیت فعلی تا صفحه به بالا نپرد
+        document.body.style.top = '-' + savedScrollY + 'px';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+    }
+
+    function unlockScroll() {
+        if (lockCount > 0) lockCount--;
+        if (lockCount > 0) return;
+
+        document.documentElement.classList.remove('ux-scroll-locked');
+        document.body.classList.remove('ux-scroll-locked');
+
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+
+        window.scrollTo(0, savedScrollY);
+    }
+
+    /**
+     * قفل یا آزادسازی اسکرول پس‌زمینه.
+     * @param {boolean} locked
+     */
+    function setScrollLock(locked) {
+        if (locked) { lockScroll(); } else { unlockScroll(); }
+    }
+
+    /**
+     * تشخیص دستگاه لمسی — برای تصمیم‌گیری‌های رفتاری در کامپوننت‌ها
+     * @returns {boolean}
+     */
+    function isTouchDevice() {
+        return window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    }
+
+    /**
+     * تشخیص موبایل واقعی (عرض کمتر از نقطه شکست md)
+     * @returns {boolean}
+     */
+    function isMobileViewport() {
+        return window.matchMedia('(max-width: 900px)').matches;
+    }
+
+    /**
+     * اسکرول نرم به بالای صفحه — در تغییر مسیرهای موبایل استفاده می‌شود
+     * تا کاربر وسط صفحه جدید فرود نیاید.
+     */
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * بستن خودکار Drawer در صورت چرخش دستگاه به حالت تبلت/دسکتاپ
+     * تا منوی کشویی روی صفحه بزرگ گیر نکند.
+     * @param {any} dotNetRef ارجاع به کامپوننت Blazor
+     */
+    var viewportMq = null;
+    var viewportHandler = null;
+    var viewportRef = null;
+
+    function watchViewport(dotNetRef) {
+        unwatchViewport();
+
+        viewportRef = dotNetRef;
+        viewportMq = window.matchMedia('(min-width: 1024px)');
+        viewportHandler = function (e) {
+            if (!e.matches) return;
+            try { viewportRef.invokeMethodAsync('OnViewportBecameDesktop'); }
+            catch (err) { /* کامپوننت آزاد شده است */ }
+        };
+        viewportMq.addEventListener('change', viewportHandler);
+    }
+
+    function unwatchViewport() {
+        if (viewportMq && viewportHandler) {
+            viewportMq.removeEventListener('change', viewportHandler);
+        }
+        viewportMq = null;
+        viewportHandler = null;
+        viewportRef = null;
+    }
+
+    /* ======================================================================
+       وضعیت باز/بسته بودن Sidebar پنل
+       ----------------------------------------------------------------------
+       ذخیره در localStorage تا بین بارگذاری‌های صفحه حفظ شود.
+       ====================================================================== */
+    var SIDEBAR_KEY = 'solon.panel.sidebar';
+
+    /**
+     * خواندن وضعیت ذخیره‌شده Sidebar.
+     * @returns {string|null} 'expanded' یا 'rail' یا null اگر ذخیره نشده باشد
+     */
+    function getSidebarState() {
+        try {
+            var v = window.localStorage.getItem(SIDEBAR_KEY);
+            return (v === 'expanded' || v === 'rail') ? v : null;
+        } catch (e) {
+            // حالت مرور خصوصی یا مسدود بودن localStorage
+            return null;
+        }
+    }
+
+    /**
+     * ذخیره وضعیت Sidebar.
+     * @param {string} state 'expanded' | 'rail'
+     */
+    function setSidebarState(state) {
+        if (state !== 'expanded' && state !== 'rail') return;
+        try { window.localStorage.setItem(SIDEBAR_KEY, state); } catch (e) { }
+    }
+
+    /**
+     * دسکتاپ عریض (≥1280px) — حالت پیش‌فرض باز در این عرض است.
+     * در لپ‌تاپ و تبلت افقی (1024 تا 1279) پیش‌فرض حالت بسته (Rail) است.
+     * @returns {boolean}
+     */
+    function isWideDesktop() {
+        return window.matchMedia('(min-width: 1280px)').matches;
+    }
+
+    /**
+     * آیا کاربر روی صفحه‌ای است که Sidebar کپسولی نمایش داده می‌شود؟ (≥1024px)
+     * @returns {boolean}
+     */
+    function isSidebarCapable() {
+        return window.matchMedia('(min-width: 1024px)').matches;
+    }
+
+    /**
+     * پاک‌کردن وضعیت ذخیره‌شده — برای بازگشت به پیش‌فرض بر اساس عرض صفحه.
+     */
+    function clearSidebarState() {
+        try { window.localStorage.removeItem(SIDEBAR_KEY); } catch (e) { }
+    }
+
+    /* ======================================================================
+       پل اتصال قرص فعال به پنل محتوا
+       ----------------------------------------------------------------------
+       چرا این کار با JS انجام می‌شود و نه CSS خالص:
+       فهرست منو (.pnav-list) برای اسکرول عمودی overflow دارد و overflow در
+       یک محور باعث می‌شود محور دیگر هم بُرده شود. پس هر قرصی که بخواهد از
+       لبه کپسول بیرون بزند، حذف می‌شود. راه‌حل درست: قرص فعال داخل فهرست
+       کاملاً شفاف می‌ماند و یک عنصر جداگانه بیرون از فهرست، پس‌زمینه و
+       گوشه‌های مقعر را می‌کشد. این عنصر موقعیت خود را از ارتفاع آیتم فعال
+       می‌گیرد.
+       ====================================================================== */
+    var bridgeRaf = null;
+
+    function syncActiveBridge() {
+        if (bridgeRaf) cancelAnimationFrame(bridgeRaf);
+        bridgeRaf = requestAnimationFrame(applyBridgeGeometry);
+    }
+
+    function applyBridgeGeometry() {
+        bridgeRaf = null;
+        // روی همه Sidebarهای صفحه کار می‌کند. در اپ یکی است، ولی در ابزار
+        // پیش‌نمایش دو نمونه (باز و بسته) کنار هم رندر می‌شوند و همین باعث
+        // می‌شود پیش‌نمایش دقیقاً با کد واقعی ساخته شود، نه با کد موازی.
+        var sidebars = document.querySelectorAll('.panel-sidebar');
+        for (var i = 0; i < sidebars.length; i++) {
+            applyBridgeTo(sidebars[i]);
+        }
+    }
+
+    function applyBridgeTo(sidebar) {
+        var capsule = sidebar.querySelector('.pnav-capsule');
+        var list = sidebar.querySelector('.pnav-list');
+        var active = sidebar.querySelector('.pnav-item.is-active');
+        var bridge = sidebar.querySelector('.pnav-bridge');
+        if (!capsule || !list || !bridge) return;
+
+        var hide = function () { sidebar.classList.remove('has-bridge'); };
+
+        // در موبایل کپسول پنهان است (offsetParent تهی می‌شود) و پل لازم نیست
+        if (!active || sidebar.offsetParent === null) { hide(); return; }
+
+        var cRect = capsule.getBoundingClientRect();
+        var lRect = list.getBoundingClientRect();
+        var aRect = active.getBoundingClientRect();
+
+        // اگر آیتم فعال با اسکرول از کادر فهرست بیرون رفته باشد، پل خارج از
+        // کپسول رندر می‌شود. در این حالت کنارش می‌گذاریم و خود آیتم با
+        // قاعده پشتیبان CSS پس‌زمینه می‌گیرد.
+        if (aRect.bottom <= lRect.top + 1 || aRect.top >= lRect.bottom - 1) {
+            hide();
+            return;
+        }
+
+        // ضخامت حاشیه کپسول: مختصات getBoundingClientRect روی border-box است
+        // ولی عناصر absolute نسبت به padding-box موقعیت می‌گیرند.
+        var border = capsule.clientLeft || 0;
+        var borderTop = capsule.clientTop || 0;
+
+        var rtl = getComputedStyle(document.documentElement).direction === 'rtl';
+
+        // شروع پل = لبه‌ی inline-start خودِ آیتم فعال. این فرمول در هر دو
+        // حالت باز و بسته یکسان است: در حالت باز قرص از لبه‌ی متن شروع
+        // می‌شود و در حالت بسته از لبه‌ی دایره‌ی آیکون.
+        var startPx = rtl
+            ? (cRect.right - border) - aRect.right
+            : aRect.left - (cRect.left + border);
+
+        // سرکشی پل تا لبه‌ی پنل محتوا. اندازه‌گیری واقعی به‌جای تکیه بر
+        // سایز حفره گرید، تا اگر فاصله در بریک‌پوینتی عوض شد پل جدا نیفتد.
+        // جست‌وجو در همان پوسته انجام می‌شود نه در کل سند، تا اگر چند پوسته
+        // در صفحه باشد هر پل به پنل خودش وصل شود.
+        var shell = sidebar.closest('.panel-shell--capsule');
+        var content = shell ? shell.querySelector('.panel-content') : null;
+        var overhang = null;
+        if (content) {
+            var pRect = content.getBoundingClientRect();
+            var gap = rtl
+                ? (cRect.left + border) - pRect.right
+                : pRect.left - (cRect.right - border);
+            // یک پیکسل داخل پنل هم می‌رود تا خط موییِ ناشی از گردکردن
+            // اعشار در رزولوشن‌های خاص بین پل و پنل باقی نماند.
+            overhang = gap + 1;
+        }
+
+        sidebar.style.setProperty('--bridge-start', Math.max(startPx, 0) + 'px');
+        sidebar.style.setProperty('--bridge-y', (aRect.top - cRect.top - borderTop) + 'px');
+        sidebar.style.setProperty('--bridge-h', aRect.height + 'px');
+        if (overhang !== null && overhang >= 0) {
+            sidebar.style.setProperty('--bridge-overhang', overhang + 'px');
+        }
+
+        sidebar.classList.add('has-bridge');
+    }
+
+    /**
+     * اتصال شنونده‌های لازم: اسکرول فهرست، تغییر اندازه پنجره و بارگذاری فونت.
+     * بدون این‌ها، پل پس از اسکرول یا تغییر اندازه از جای آیتم فعال می‌افتد.
+     */
+    function initActiveBridge() {
+        var sidebars = document.querySelectorAll('.panel-sidebar');
+        for (var i = 0; i < sidebars.length; i++) {
+            bindBridgeTo(sidebars[i]);
+        }
+
+        if (!window.__solonBridgeBound) {
+            window.addEventListener('resize', syncActiveBridge, { passive: true });
+            window.addEventListener('orientationchange', syncActiveBridge, { passive: true });
+            // فونت‌ها پس از بارگذاری ارتفاع آیتم‌ها را تغییر می‌دهند
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(syncActiveBridge);
+            }
+            window.__solonBridgeBound = true;
+        }
+
+        syncActiveBridge();
+    }
+
+    function bindBridgeTo(sidebar) {
+        var list = sidebar.querySelector('.pnav-list');
+        if (list && !list.dataset.bridgeBound) {
+            list.addEventListener('scroll', syncActiveBridge, { passive: true });
+            list.dataset.bridgeBound = '1';
+        }
+
+        // انیمیشن عرض کپسول ۲۲۰ms است؛ در میانه‌ی آن ارتفاع و جای آیتم فعال
+        // هنوز نهایی نشده و پل باید پس از پایان انیمیشن دوباره خوانده شود.
+        //
+        // نام ویژگی عمداً بررسی نمی‌شود: مرورگرها برای ویژگی‌های منطقی
+        // (inline-size) گاهی نام فیزیکی (width) را گزارش می‌کنند و گیرکردن
+        // روی یک نام، پل را برای همیشه در جای اشتباه رها می‌کند. هزینه‌ی
+        // خواندن دوباره صفر است چون با requestAnimationFrame مهار شده.
+        var capsule = sidebar.querySelector('.pnav-capsule');
+        if (capsule && !capsule.dataset.bridgeBound) {
+            capsule.addEventListener('transitionend', function () { syncActiveBridge(); });
+            capsule.dataset.bridgeBound = '1';
+        }
+    }
+
+    window.solonUx = {
+        setScrollLock: setScrollLock,
+        isTouchDevice: isTouchDevice,
+        isMobileViewport: isMobileViewport,
+        scrollToTop: scrollToTop,
+        watchViewport: watchViewport,
+        unwatchViewport: unwatchViewport,
+        getSidebarState: getSidebarState,
+        setSidebarState: setSidebarState,
+        isWideDesktop: isWideDesktop,
+        isSidebarCapable: isSidebarCapable,
+        clearSidebarState: clearSidebarState,
+        initActiveBridge: initActiveBridge,
+        syncActiveBridge: syncActiveBridge
+    };
+})();
+
+</script>
+<script>
+// همان تابعی که کامپوننت PanelSidebar پس از هر رندر صدا می‌زند
+if (window.solonUx && window.solonUx.initActiveBridge) {
+    window.solonUx.initActiveBridge();
+}
+</script>
+</body>
+</html>
