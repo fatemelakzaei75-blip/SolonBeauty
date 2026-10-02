@@ -1,4 +1,5 @@
 using BlazorAppSolon.Auth;
+using Microsoft.AspNetCore.Components;
 
 namespace BlazorAppSolon.Components.Panel;
 
@@ -233,4 +234,73 @@ public static class PanelNavConfig
     /// <summary>جست‌وجوی یک گروه بر اساس کلید پایدار آن</summary>
     public static PanelNavGroup? FindGroup(string? role, string key) =>
         GroupsFor(role).FirstOrDefault(g => g.Key == key);
+}
+
+/// <summary>
+/// کمکی‌های مشترک ناوبری پنل.
+/// --------------------------------------------------------------------------
+/// چرا اینجا و نه داخل هر کامپوننت: با اضافه‌شدن Drawer و Bottom Navigation،
+/// منطق «آیا این آیتم فعال است؟»، «چند اعلان خوانده‌نشده دارد؟» و «عدد را
+/// فارسی کن» باید در سه جا تکرار می‌شد. هر سه از همین منبع تغذیه می‌کنند تا
+/// رفتارشان هرگز از هم جدا نیفتد.
+/// </summary>
+public static class PanelNavHelper
+{
+    /// <summary>
+    /// مسیر جاری نسبت به BaseUrl، بدون کوئری و Fragment.
+    /// اگر آدرس خارج از BaseUrl باشد (مثلاً هنگام ریدایرکت)، رشته خالی
+    /// برگردانده می‌شود تا خطا رخ ندهد.
+    /// </summary>
+    public static string CurrentPath(NavigationManager nav)
+    {
+        try
+        {
+            return nav.ToBaseRelativePath(nav.Uri)
+                      .Split('?')[0].Split('#')[0].Trim('/');
+        }
+        catch (ArgumentException)
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// تشخیص فعال بودن یک آیتم.
+    /// برای صفحه‌ی خانه‌ی هر نقش تطابق دقیق لازم است؛ وگرنه تمام زیرصفحه‌ها
+    /// آن را فعال می‌کنند (مثلاً panel/admin همه‌ی panel/admin/... را روشن
+    /// می‌کرد).
+    /// </summary>
+    public static bool IsRouteActive(PanelNavItem item, string currentPath)
+    {
+        var target = item.Href.Trim('/');
+
+        if (item.Exact)
+        {
+            return string.Equals(currentPath, target, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return string.Equals(currentPath, target, StringComparison.OrdinalIgnoreCase)
+               || currentPath.StartsWith(target + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>شمارش اعلان خوانده‌نشده برای یک آیتم؛ صفر یعنی Badge نمایش داده نشود</summary>
+    public static int BadgeCount(PanelNavItem item, IReadOnlyDictionary<string, int>? counts)
+    {
+        if (item.BadgeKey is null || counts is null) return 0;
+        return counts.TryGetValue(item.BadgeKey, out var n) ? n : 0;
+    }
+
+    public static string FormatCount(int n) => n > 99 ? "۹۹+" : ToPersianDigits(n);
+
+    public static string ToPersianDigits(int n) =>
+        n.ToString().Replace('0', '۰').Replace('1', '۱').Replace('2', '۲').Replace('3', '۳')
+         .Replace('4', '۴').Replace('5', '۵').Replace('6', '۶').Replace('7', '۷')
+         .Replace('8', '۸').Replace('9', '۹');
+
+    /// <summary>
+    /// برچسب دسترس‌پذیر یک آیتم. عدد Badge فقط دیداری است و با aria-hidden
+    /// پنهان شده، پس معنایش باید داخل همین متن بیاید تا صفحه‌خوان آن را بخواند.
+    /// </summary>
+    public static string AriaFor(PanelNavItem item, int count) =>
+        count > 0 ? $"{item.Label} — {ToPersianDigits(count)} مورد خوانده‌نشده" : item.Label;
 }

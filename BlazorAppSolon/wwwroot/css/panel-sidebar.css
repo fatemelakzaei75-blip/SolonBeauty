@@ -62,6 +62,20 @@
        مقدار پیش‌فرض از سایز حفره گرید می‌آید؛ JS مقدار دقیق را جایگزین
        می‌کند تا اگر فاصله تغییر کند پل دقیقاً به پنل بچسبد. */
     --bridge-overhang: calc(var(--sb-gap) + 1px);
+
+    /* ---------- موبایل: نوار پایین و دراور ---------- */
+    /* فاصله‌ای که محتوا باید از پایین خالی بگذارد تا زیر نوار شناور نرود.
+       یک عدد واحد، چون هم نوار و هم پدینگ محتوا از همین تغذیه می‌شوند. */
+    --sb-bnav-space: 86px;
+    --sb-bnav-radius: 24px;
+
+    /* جابه‌جایی دراور برای پنهان‌شدن.
+       نکته‌ای که به‌سادگی باگ می‌سازد: transform منطقی نیست و با direction
+       آینه نمی‌شود. دراور با inset-inline-start: 0 در RTL سمت راست می‌نشیند،
+       پس برای بیرون رفتن باید به راست (+۱۰۰٪) برود؛ در LTR سمت چپ می‌نشیند و
+       باید به چپ (−۱۰۰٪) برود. بلوک [dir="ltr"] پایین‌تر این را جابه‌جا
+       می‌کند. نسخه پیشین این توکن را نداشت و دراور در RTL روی صفحه می‌ماند. */
+    --sb-drawer-off: 100%;
     --bridge-start: 0px;
     --bridge-y: 0px;
     --bridge-h: var(--sb-item-h);
@@ -84,6 +98,7 @@
    گوشه‌های مقعر و پل اتصال خودبه‌خود به سمت درست منتقل شوند. */
 [dir="ltr"] {
     --sb-fillet-x: 0%;
+    --sb-drawer-off: -100%;
 }
 
 /* ==========================================================================
@@ -542,20 +557,15 @@
 }
 
 /* ---------- آیتم فعال ----------
-   وقتی پل فعال است، خود آیتم پس‌زمینه نمی‌گیرد تا پل از زیرش دیده شود.
-   اگر JS در دسترس نباشد (has-bridge اضافه نشود) پس‌زمینه بازمی‌گردد تا
-   آیتم فعال بی‌نشانه نماند؛ یعنی فروپاشی محترمانه. */
-.panel-sidebar:not(.has-bridge) .pnav-item.is-active {
+   پیش‌فرض: هر آیتم فعالی، در هر ظرفی (Sidebar، Drawer، نوار ناوبری پایین)
+   پس‌زمینه عاجی می‌گیرد. تنها استثنا پایین‌تر می‌آید.
+
+   چرا ترتیب را برعکس کردم: نسخه پیشین، پیش‌فرض را به .panel-sidebar قید
+   کرده بود، پس در Drawer و نوار پایین آیتم فعال هیچ پس‌زمینه‌ای نمی‌گرفت و
+   کاربر نمی‌فهمید کجاست. حالا پیش‌فرض عمومی است و فقط یک مورد استثنا دارد. */
+.pnav-item.is-active {
     background: var(--sb-active-bg);
     box-shadow: var(--sb-shadow-item);
-}
-
-.panel-sidebar.has-bridge .pnav-item.is-active {
-    background: transparent;
-    box-shadow: none;
-}
-
-.pnav-item.is-active {
     color: var(--sb-active-fg);
     font-weight: 700;
     position: relative;
@@ -563,6 +573,15 @@
        عدد باید بلاواسطه بالای پل باشد، نه برابر با آن؛ چون هر دو در بستر
        انباشت پوسته ارزیابی می‌شوند. */
     z-index: 3;
+}
+
+/* استثنا: داخل Sidebar وقتی پل اتصال فعال است، پل به‌جای خود آیتم رنگ
+   می‌زند تا بتواند از لبه کپسول بیرون بزند. اگر JS در دسترس نباشد پل
+   خاموش می‌ماند و همین استثنا اعمال نمی‌شود؛ یعنی آیتم فعال هرگز
+   بی‌نشانه نمی‌ماند. */
+.panel-sidebar.has-bridge .pnav-item.is-active {
+    background: transparent;
+    box-shadow: none;
 }
 
 .pnav-item.is-active .pnav-svg { color: var(--sb-active-fg); }
@@ -676,43 +695,20 @@
     .panel-shell--capsule .panel-mobile-header {
         display: flex;
     }
-    .panel-shell--capsule .panel-bottom-nav {
-        display: flex;
-    }
-    /* نوار پایین محتوا نباید زیر Bottom Navigation برود */
+    /* محتوا نباید زیر نوار شناور پایین برود. ارتفاع نوار در توکن
+       --sb-bnav-space آمده تا با تغییر اندازه نوار، این عدد هم خودبه‌خود
+       دنبالش بیاید و دو عدد جدا از هم نیفتند. */
     .panel-shell--capsule .panel-body {
-        padding-block-end: calc(78px + var(--safe-bottom, 0px));
-    }
-
-    /* دراور موبایل: همان عنصر .panel-side که در پوسته قدیمی سایدبار بود */
-    .panel-shell--capsule .panel-side {
-        position: fixed;
-        inset-block: 0;
-        inset-inline-end: 0;
-        inline-size: min(88vw, 320px);
-        max-inline-size: 88vw;
-        z-index: 1200;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        transform: translateX(100%);
-        transition: transform 250ms var(--sb-ease);
-        padding-block-end: var(--safe-bottom, 0px);
-        box-shadow: -6px 0 32px rgba(0, 0, 0, 0.34);
-    }
-    .panel-shell--capsule .panel-side.drawer-open {
-        transform: translateX(0);
-    }
-    .panel-shell--capsule .panel-drawer-close {
-        display: flex;
+        padding-block-end: calc(var(--sb-bnav-space) + var(--safe-bottom, 0px));
     }
 }
 
 /* ---------- از ۱۰۲۴px: ناوبری موبایل پنهان، کپسول فعال ---------- */
 @media (min-width: 1024px) {
     .panel-shell--capsule .panel-mobile-header,
-    .panel-shell--capsule .panel-bottom-nav,
-    .panel-shell--capsule .panel-side,
-    .panel-shell--capsule .panel-drawer-backdrop {
+    .panel-shell--capsule .pnav-bnav,
+    .panel-shell--capsule .pnav-drawer,
+    .panel-shell--capsule .pnav-scrim {
         display: none;
     }
     .panel-shell--capsule .panel-body {
@@ -721,10 +717,303 @@
 }
 
 /* ==========================================================================
-   ۱۳) احترام به prefers-reduced-motion برای انتقال عرض کپسول
+   ۱۳) احترام به prefers-reduced-motion
+   --------------------------------------------------------------------------
+   کپسول، دراور، لایه تاریک و گذارهای نوار پایین همه در این حالت تقریباً
+   بی‌حرکت می‌شوند. از ۱ms استفاده می‌شود نه ۰، چون transitionend در بعضی
+   مرورگرها با صفر شلیک نمی‌شود و موتور پل اتصال به آن تکیه دارد.
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
-    .panel-shell--capsule .panel-side {
+    .panel-sidebar,
+    .pnav-capsule,
+    .pnav-drawer,
+    .pnav-bnav-item,
+    .pnav-scrim {
         transition-duration: 1ms !important;
+        animation-duration: 1ms !important;
     }
+}
+
+/* ==========================================================================
+   ۱۴) موبایل و تبلت عمودی — نوار ناوبری پایین و دراور
+   --------------------------------------------------------------------------
+   بند ۴ بریف: زیر ۱۰۲۴px کپسول Sidebar نباید کوچک شود، باید جانشین شود.
+   دو عنصر جانشین آن هستند: نوار ناوبری پایین (چهار بخش پرکاربرد + دکمه منو)
+   و دراور کامل برای بقیه بخش‌ها.
+
+   نوار پایین عمداً کپسول شناور تیره است، نه نوار سفید چسبیده به لبه:
+   نوار سفید امضای «سایت» است و کپسول شناور امضای «اپ». علاوه بر آن همان
+   گرادیان و همان قاب طلایی Sidebar را تکرار می‌کند تا کاربر موبایل و
+   دسکتاپ یک محصول واحد حس کند، نه دو رابط جدا.
+   ========================================================================== */
+
+/* ---------- ۱۴-الف) نوار ناوبری پایین ---------- */
+/* موبایل‌اول: پیش‌فرض «نمایش» است و از ۱۰۲۴px به بالا خاموش می‌شود. */
+.pnav-bnav {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: calc(10px + var(--safe-bottom, 0px));
+    z-index: 1100;
+    display: flex;
+    justify-content: center;
+    padding-inline: 12px;
+    /* ناحیه‌های خالی دو طرف کپسول نباید کلیک محتوا را بگیرند */
+    pointer-events: none;
+}
+
+.pnav-bnav-list {
+    pointer-events: auto;
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    inline-size: min(100%, 520px);
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    border-radius: var(--sb-bnav-radius);
+    background: var(--sb-bg);
+    border: 1px solid var(--sb-border);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.28), 0 12px 34px rgba(0, 0, 0, 0.42);
+}
+
+/* ---------- یک خانه نوار ----------
+   سطح لمس: کمینه ۴۴ پیکسل ارتفاع سفارش‌دهنده، و اینجا ۵۱ پیکسل درمی‌آید
+   (آیکون ۲۲ + فاصله ۳ + متن ۱۴ + پدینگ ۱۲). */
+.pnav-bnav-cell {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    display: flex;
+}
+
+.pnav-bnav-item {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-block-size: 48px;
+    padding: 6px 4px;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    color: var(--sb-fg-muted);
+    font-family: inherit;
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 180ms var(--sb-ease), background-color 180ms var(--sb-ease);
+}
+
+.pnav-bnav-item:hover { color: var(--sb-fg-hover); }
+
+/* حالت فعال در نوار پایین با بقیه جاها فرق دارد:
+   آنجا قرص عاجی توپر است، اینجا فقط آیکون در حباب طلایی می‌نشیند.
+   دلیل: در نواری که خودش تیره و کوچک است، یک قرص عاجی توپر کل نوار را
+   می‌شکند و چشم را می‌دزدد. */
+.pnav-bnav-item.is-active {
+    color: var(--gold-champagne);
+    background: rgba(198, 164, 106, 0.12);
+}
+
+.pnav-bnav-item:focus-visible {
+    outline: none;
+    box-shadow: var(--sb-focus-ring);
+}
+
+.pnav-bnav-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 24px;
+    block-size: 24px;
+}
+
+.pnav-bnav-label {
+    display: block;
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* عدد اعلان روی گوشه آیکون.
+   در نوار پایین جا برای متن Badge نیست؛ عدد یا نقطه دیده می‌شود و معنایش
+   در aria-label آمده، پس صفحه‌خوان آن را از دست نمی‌دهد. */
+.pnav-bnav-badge {
+    position: absolute;
+    inset-block-start: -5px;
+    inset-inline-end: -8px;
+    display: grid;
+    place-items: center;
+    min-inline-size: 17px;
+    block-size: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--sb-badge-safe);
+    color: var(--sb-badge-fg);
+    font-size: 0.56rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    /* حاشیه هم‌رنگ نوار تا عدد از آیکون جدا دیده شود */
+    border: 1.5px solid var(--sb-bg);
+}
+
+/* ---------- ۱۴-ب) لایه تاریک پشت دراور ---------- */
+.pnav-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1150;
+    background: rgba(20, 17, 15, 0.58);
+    /* اگر مرورگر backdrop-filter نداشته باشد، همین پس‌زمینه نیمه‌شفاف کار را
+       انجام می‌دهد؛ یعنی محو شدن محتوا یک «افکت» است، نه شرط دیده‌شدن. */
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    animation: pnav-scrim-in 180ms var(--sb-ease);
+}
+
+@keyframes pnav-scrim-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ---------- ۱۴-ج) دراور ---------- */
+.pnav-drawer {
+    position: fixed;
+    inset-block: 0;
+    /* RTL: لبه راست صفحه — همان سمتی که Sidebar است، تا مسیر حرکت کاربر
+       همیشه یکی باشد. در LTR خودبه‌خود به لبه چپ می‌رود. */
+    inset-inline-start: 0;
+    inline-size: min(88vw, 336px);
+    z-index: 1160;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: calc(14px + var(--safe-top, 0px)) 12px calc(14px + var(--safe-bottom, 0px));
+
+    background: var(--sb-bg);
+    border: 1px solid var(--sb-border);
+    /* لبه چسبیده به صفحه بدون قاب و بدون گردی */
+    border-inline-start-width: 0;
+    border-start-end-radius: var(--sb-radius-capsule);
+    border-end-end-radius: var(--sb-radius-capsule);
+
+    /* visibility در حالت بسته، عناصر داخل دراور را کامل از دسترس کیبورد و
+       صفحه‌خوان خارج می‌کند. تأخیر زمانی‌اش باعث می‌شود انیمیشن خروج
+       دیده شود و بعد پنهان شود. */
+    visibility: hidden;
+    transform: translateX(var(--sb-drawer-off));
+    transition: transform var(--sb-dur) var(--sb-ease),
+                visibility 0s linear var(--sb-dur);
+}
+
+.pnav-drawer.is-open {
+    visibility: visible;
+    transform: none;
+    transition: transform var(--sb-dur) var(--sb-ease),
+                visibility 0s linear 0s;
+}
+
+/* ---------- سرصفحه دراور ---------- */
+.pnav-drawer-head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 14px;
+    border-block-end: 1px solid rgba(198, 164, 106, 0.16);
+}
+
+.pnav-drawer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-inline-size: 0;
+}
+
+.pnav-drawer-brand strong {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--sb-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pnav-drawer-brand span {
+    font-size: 0.68rem;
+    color: var(--sb-fg-muted);
+}
+
+.pnav-drawer-close {
+    margin-inline-start: auto;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    inline-size: 44px;
+    block-size: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--sb-border);
+    background: var(--sb-surface);
+    color: var(--sb-fg);
+    cursor: pointer;
+    transition: background-color 180ms var(--sb-ease), color 180ms var(--sb-ease);
+}
+
+.pnav-drawer-close:hover {
+    background: var(--sb-surface-hover);
+    color: var(--sb-fg-hover);
+}
+
+.pnav-drawer-close:focus-visible {
+    outline: none;
+    box-shadow: var(--sb-focus-ring);
+}
+
+/* ---------- فهرست دراور ---------- */
+.pnav-drawer-nav {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    /* فقط همین فهرست اسکرول می‌شود؛ سرصفحه و پابرگ سرجایشان می‌مانند */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(198, 164, 106, 0.35) transparent;
+}
+
+.pnav-drawer-nav::-webkit-scrollbar { inline-size: 6px; }
+.pnav-drawer-nav::-webkit-scrollbar-thumb {
+    background: rgba(198, 164, 106, 0.3);
+    border-radius: 999px;
+}
+
+.pnav-drawer-group-title {
+    display: block;
+    padding: 0 10px 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--sb-fg-muted);
+}
+
+/* آیتم‌های دراور همان .pnav-item هستند و هیچ استایل تازه‌ای لازم ندارند؛
+   یعنی ظاهر دراور و Sidebar هرگز از هم جدا نمی‌افتند. فقط اندازه فونت
+   کمی بزرگ‌تر می‌شود چون در موبایل متن ریزتر خوانده می‌شود. */
+.pnav-drawer .pnav-item {
+    font-size: 0.9rem;
+    padding-block: 11px;
+}
+
+/* ---------- ۱۴-د) تبلت افقی: دراور جای خود را به Sidebar می‌دهد ----------
+   بین ۱۰۲۴ و ۱۲۷۹ پیکسل، Sidebar در حالت Rail است. نوار پایین و دراور
+   همان‌جا خاموش می‌شوند و ابزارک‌های لمسی جای خود را به میله‌های فشرده‌تر
+   می‌دهند، چون دیگر با انگشت کار نمی‌شود. */
+@media (min-width: 1024px) and (hover: hover) {
+    .pnav-bnav-item { min-block-size: 40px; }
 }

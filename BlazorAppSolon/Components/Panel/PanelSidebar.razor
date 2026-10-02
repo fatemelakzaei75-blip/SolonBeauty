@@ -183,38 +183,13 @@
     }
 
     // ─────────────── تشخیص آیتم فعال ───────────────
+    // منطق مسیر جاری و تطابق آدرس به PanelNavHelper منتقل شده تا Drawer و
+    // Bottom Navigation هم دقیقاً همین رفتار را داشته باشند. اگر اینجا
+    // می‌ماند، سه نسخه از یک قاعده داشتیم که دیر یا زود از هم جدا می‌افتاد.
 
-    private string CurrentPath
-    {
-        get
-        {
-            try
-            {
-                var rel = Nav.ToBaseRelativePath(Nav.Uri);
-                return rel.Split('?')[0].Split('#')[0].Trim('/');
-            }
-            catch (ArgumentException)
-            {
-                // آدرس خارج از BaseUrl — برای جلوگیری از خطا مسیر خالی برگردانده می‌شود
-                return string.Empty;
-            }
-        }
-    }
+    private string CurrentPath => PanelNavHelper.CurrentPath(Nav);
 
-    /// <summary>
-    /// تشخیص فعال بودن آدرس. برای صفحه‌ی خانه‌ی هر نقش تطابق دقیق لازم است،
-    /// وگرنه تمام زیرصفحه‌ها آن را فعال می‌کنند.
-    /// </summary>
-    private bool IsRouteActive(PanelNavItem item)
-    {
-        var current = CurrentPath;
-        var target = item.Href.Trim('/');
-
-        return item.Exact
-            ? string.Equals(current, target, StringComparison.OrdinalIgnoreCase)
-            : string.Equals(current, target, StringComparison.OrdinalIgnoreCase)
-              || current.StartsWith(target + "/", StringComparison.OrdinalIgnoreCase);
-    }
+    private bool IsRouteActive(PanelNavItem item) => PanelNavHelper.IsRouteActive(item, CurrentPath);
 
     // ─────────────── آکاردئون ───────────────
 
@@ -264,21 +239,11 @@
         </a>
     </li>;
 
-    private int BadgeCount(PanelNavItem item)
-    {
-        if (item.BadgeKey is null || BadgeCounts is null) return 0;
-        return BadgeCounts.TryGetValue(item.BadgeKey, out var n) ? n : 0;
-    }
+    private int BadgeCount(PanelNavItem item) => PanelNavHelper.BadgeCount(item, BadgeCounts);
 
-    private static string FormatCount(int n) => n > 99 ? "۹۹+" : ToPersianDigits(n);
+    private static string FormatCount(int n) => PanelNavHelper.FormatCount(n);
 
-    private static string ToPersianDigits(int n) =>
-        n.ToString().Replace('0', '۰').Replace('1', '۱').Replace('2', '۲').Replace('3', '۳')
-         .Replace('4', '۴').Replace('5', '۵').Replace('6', '۶').Replace('7', '۷')
-         .Replace('8', '۸').Replace('9', '۹');
-
-    private static string AriaFor(PanelNavItem item, int count) =>
-        count > 0 ? $"{item.Label} — {ToPersianDigits(count)} مورد خوانده‌نشده" : item.Label;
+    private static string AriaFor(PanelNavItem item, int count) => PanelNavHelper.AriaFor(item, count);
 
     public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
 }

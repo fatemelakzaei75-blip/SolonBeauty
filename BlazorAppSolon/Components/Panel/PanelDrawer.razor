@@ -1,0 +1,175 @@
+@using BlazorAppSolon.Components.Panel
+@inject NavigationManager Nav
+@implements IDisposable
+
+@* ==========================================================================
+   Drawer موبایل و تبلت عمودی
+   --------------------------------------------------------------------------
+   چرا کامپوننت جدا و نه بازاستفاده از PanelSidebar:
+   کپسول Sidebar برای یک ستون دائمی طراحی شده — ارتفاع ۱۰۰vh، چسبان بودن،
+   دکمه جمع‌کردن و منطق «پل اتصال» که به یک پنل محتوای کنارش نیاز دارد. هیچ‌کدام
+   داخل یک دراور کشویی معنا ندارند. پس اینجا فقط مارک‌آپ آیتم ساخته شده و
+   کلاس‌های ظاهری (.pnav-item و دوستان) عیناً بازاستفاده می‌شوند؛ یعنی صفر
+   تکرار CSS و ظاهر کاملاً یکسان با Sidebar.
+
+   تفاوت عمدی با Sidebar: گروه‌ها آکاردئون نیستند و همه باز نمایش داده
+   می‌شوند. در دراور، اسکرول کردن از میان فهرست ارزان‌تر از باز کردن چند
+   آکاردئون است و یک لمس کمتر می‌خواهد.
+
+   وضعیت باز/بسته با کلاس is-open مدیریت می‌شود، نه با حذف از DOM؛ چون
+   انیمیشن خروج باید دیده شود. کلید دسترس‌پذیری این است که در حالت بسته،
+   عنصر با visibility: hidden از دسترس فوکوس خارج می‌شود (در CSS).
+   ========================================================================== *@
+
+@{ var groups = PanelNavConfig.GroupsFor(UserRole); }
+@{ var path = PanelNavHelper.CurrentPath(Nav); }
+
+@if (Open)
+{
+    @* لایه تاریک پشت دراور — با کلیک روی آن دراور بسته می‌شود *@
+    <div class="pnav-scrim" @onclick="HandleClose" aria-hidden="true"></div>
+}
+
+@* ─────────────── نکته‌ای که باید بدانید ───────────────
+   کامنت رِیزور عمداً بیرون از تگ نوشته شده است. اگر داخل فهرست ویژگی‌های
+   یک تگ بیاید، رِیزور آن را حذف نمی‌کند بلکه به‌عنوان یک ویژگی کمینه به
+   خروجی اضافه می‌کند، و HTML یک ویژگی زباله با متن فارسی می‌گیرد.
+
+   خودِ متن کامنت هم نباید دنباله پایانی‌بخش کامنت را داشته باشد، چون
+   کامنت‌های رِیزور تودرتو نمی‌شوند و کامنت زودتر از موعد بسته می‌شود.
+
+   ویژگی inert عناصر داخل دراور بسته را کامل از دسترس صفحه‌خوان و کیبورد
+   خارج می‌کند. مرورگرهای قدیمی این ویژگی را نادیده می‌گیرند و آنجا
+   visibility: hidden نقش جایگزین را بازی می‌کند. *@
+<aside class="pnav-drawer @(Open ? "is-open" : "")"
+       id="@DomId"
+       role="dialog"
+       aria-modal="true"
+       aria-label="@AriaLabel"
+       aria-hidden="@(!Open)"
+       inert="@(Open ? null : "true")">
+
+    @* ─────────────── سرصفحه: برند + دکمه بستن ─────────────── *@
+    <div class="pnav-drawer-head">
+        <a class="pnav-logo" href="@HomeHref" aria-label="@BrandName — صفحه اصلی پنل" @onclick="HandleClose">
+            @if (!string.IsNullOrWhiteSpace(LogoUrl))
+            {
+                <img class="pnav-logo-img" src="@LogoUrl" alt="" width="38" height="38"
+                     loading="eager" decoding="async" />
+            }
+            else
+            {
+                <span class="pnav-logo-fallback" aria-hidden="true">@FallbackMonogram</span>
+            }
+        </a>
+
+        <span class="pnav-drawer-brand">
+            <strong>@BrandName</strong>
+            @if (!string.IsNullOrWhiteSpace(RoleLabel))
+            {
+                <span>@RoleLabel</span>
+            }
+        </span>
+
+        <button type="button" class="pnav-drawer-close" @onclick="HandleClose" aria-label="بستن منو">
+            <PanelNavIcons Name="close" />
+        </button>
+    </div>
+
+    @* ─────────────── فهرست منو ─────────────── *@
+    <nav class="pnav-drawer-nav" aria-label="@AriaLabel">
+        @foreach (var group in groups)
+        {
+            <div class="pnav-drawer-group">
+                <span class="pnav-drawer-group-title">@group.Title</span>
+
+                <ul class="pnav-group-items">
+                    @foreach (var item in group.Items)
+                    {
+                        var active = PanelNavHelper.IsRouteActive(item, path);
+                        var count = PanelNavHelper.BadgeCount(item, BadgeCounts);
+
+                        <li class="pnav-row">
+                            <a class="pnav-item @(active ? "is-active" : "")"
+                               href="@item.Href"
+                               aria-current="@(active ? "page" : null)"
+                               aria-label="@PanelNavHelper.AriaFor(item, count)"
+                               @onclick="HandleClose">
+
+                                <span class="pnav-icon" aria-hidden="true">
+                                    <PanelNavIcons Name="@item.Icon" />
+                                </span>
+
+                                <span class="pnav-label">@item.Label</span>
+
+                                @if (count > 0)
+                                {
+                                    <span class="pnav-badge" aria-hidden="true">
+                                        @PanelNavHelper.FormatCount(count)
+                                    </span>
+                                }
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </nav>
+
+    @* ─────────────── پابرگ ─────────────── *@
+    <div class="pnav-foot">
+        <button type="button" class="pnav-item pnav-item--logout" @onclick="HandleLogout">
+            <span class="pnav-icon" aria-hidden="true">
+                <PanelNavIcons Name="logout" />
+            </span>
+            <span class="pnav-label">خروج از حساب</span>
+        </button>
+    </div>
+</aside>
+
+@code {
+    // ─────────────── پارامترها ───────────────
+
+    /// <summary>وضعیت باز بودن دراور — از والد کنترل می‌شود</summary>
+    [Parameter] public bool Open { get; set; }
+
+    /// <summary>درخواست بستن (کلیک روی لایه تاریک، دکمه بستن، یا انتخاب یک آیتم)</summary>
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    [Parameter] public string? UserRole { get; set; }
+    [Parameter] public string? LogoUrl { get; set; }
+    [Parameter] public string BrandName { get; set; } = "سالن زیبایی";
+    [Parameter] public string FallbackMonogram { get; set; } = "HB";
+    [Parameter] public string HomeHref { get; set; } = "";
+    [Parameter] public string AriaLabel { get; set; } = "منوی پنل کاربری";
+
+    /// <summary>عنوان نقش برای نمایش زیر نام سالن — «مدیر سالن»، «پرسنل» و ...</summary>
+    [Parameter] public string? RoleLabel { get; set; }
+
+    [Parameter] public IReadOnlyDictionary<string, int>? BadgeCounts { get; set; }
+    [Parameter] public EventCallback OnLogout { get; set; }
+
+    /// <summary>شناسه‌ی DOM — دکمه همبرگری هدر موبایل با aria-controls به همین اشاره می‌کند</summary>
+    [Parameter] public string IdPrefix { get; set; } = "panel-drawer";
+
+    private string DomId => IdPrefix;
+
+    // ─────────────── چرخه عمر ───────────────
+
+    protected override void OnInitialized() => Nav.LocationChanged += OnLocationChanged;
+
+    /// <summary>
+    /// با هر تغییر مسیر رندر می‌شود تا اگر صفحه با ناوبری برنامه عوض شد،
+    /// آیتم فعال دراور هم به‌روز شود.
+    /// </summary>
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+        => StateHasChanged();
+
+    // ─────────────── رویدادها ───────────────
+
+    private async Task HandleClose() => await OnClose.InvokeAsync();
+
+    private async Task HandleLogout() => await OnLogout.InvokeAsync();
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+}

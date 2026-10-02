@@ -1,0 +1,101 @@
+@using BlazorAppSolon.Components.Panel
+@inject NavigationManager Nav
+@implements IDisposable
+
+@* ==========================================================================
+   نوار ناوبری پایین — جانشین Sidebar در موبایل و تبلت عمودی
+   --------------------------------------------------------------------------
+   بند ۴ بریف: در موبایل Sidebar نباید کوچک شود، باید «جانشین» شود.
+   این کامپوننت همان کار را می‌کند: چهار بخش پرکاربرد هر نقش به‌علاوهٔ یک
+   دکمه «منو» که دراور کامل را باز می‌کند.
+
+   چرا کپسول شناور تیره و نه نوار سفید چسبیده به لبه:
+   نوار سفید پایین صفحه، امضای بصری «سایت» است؛ کپسول شناور، امضای «اپ».
+   علاوه بر آن، همان گرادیان و همان قاب طلایی Sidebar را تکرار می‌کند، پس
+   کاربر موبایل و دسکتاپ یک محصول واحد را حس می‌کند، نه دو رابط جدا.
+   فاصله از لبه پایین هم دکمه امن iOS را محترم می‌شمارد.
+
+   آیتم‌ها از PanelNavConfig می‌آیند (InBottomNav)، پس افزودن یک صفحه
+   جدید هرگز باعث نمی‌شود آدرس‌ها در دو جا از هم جدا بیفتند.
+   ========================================================================== *@
+
+@{ var items = PanelNavConfig.BottomNavFor(UserRole); }
+@{ var path = PanelNavHelper.CurrentPath(Nav); }
+
+<nav class="pnav-bnav" aria-label="ناوبری سریع پنل">
+    <ul class="pnav-bnav-list">
+
+        @foreach (var item in items)
+        {
+            var active = PanelNavHelper.IsRouteActive(item, path);
+            var count = PanelNavHelper.BadgeCount(item, BadgeCounts);
+
+            <li class="pnav-bnav-cell">
+                <a class="pnav-bnav-item @(active ? "is-active" : "")"
+                   href="@item.Href"
+                   aria-current="@(active ? "page" : null)"
+                   aria-label="@PanelNavHelper.AriaFor(item, count)">
+
+                    <span class="pnav-bnav-icon" aria-hidden="true">
+                        <PanelNavIcons Name="@item.Icon" />
+
+                        @if (count > 0)
+                        {
+                            @* عدد روی آیکون می‌نشیند. در نوار پایین جا برای
+                               متن Badge نیست، پس فقط عدد یا نقطه دیده می‌شود
+                               و معنایش در aria-label آمده است. *@
+                            <span class="pnav-bnav-badge">@PanelNavHelper.FormatCount(count)</span>
+                        }
+                    </span>
+
+                    <span class="pnav-bnav-label">@item.BottomLabel</span>
+                </a>
+            </li>
+        }
+
+        @* دکمه منو — همیشه آخرین خانه تا جای ثابتی داشته باشد *@
+        <li class="pnav-bnav-cell">
+            <button type="button"
+                    class="pnav-bnav-item @(MenuOpen ? "is-active" : "")"
+                    @onclick="HandleMenuClick"
+                    aria-label="باز کردن منوی کامل"
+                    aria-expanded="@(MenuOpen ? "true" : "false")"
+                    aria-controls="@DrawerId">
+
+                <span class="pnav-bnav-icon" aria-hidden="true">
+                    <PanelNavIcons Name="@(MenuOpen ? "close" : "menu")" />
+                </span>
+
+                <span class="pnav-bnav-label">منو</span>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+@code {
+    // ─────────────── پارامترها ───────────────
+
+    [Parameter] public string? UserRole { get; set; }
+    [Parameter] public IReadOnlyDictionary<string, int>? BadgeCounts { get; set; }
+
+    /// <summary>هم‌گام با وضعیت دراور والد تا آیکون دکمه بین «منو» و «بستن» جابه‌جا شود</summary>
+    [Parameter] public bool MenuOpen { get; set; }
+
+    [Parameter] public EventCallback OnMenuClick { get; set; }
+
+    /// <summary>شناسه دراوری که این دکمه کنترل می‌کند</summary>
+    [Parameter] public string DrawerId { get; set; } = "panel-drawer";
+
+    // ─────────────── چرخه عمر ───────────────
+
+    protected override void OnInitialized() => Nav.LocationChanged += OnLocationChanged;
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+        => StateHasChanged();
+
+    // ─────────────── رویدادها ───────────────
+
+    private async Task HandleMenuClick() => await OnMenuClick.InvokeAsync();
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+}

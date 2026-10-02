@@ -57,76 +57,19 @@
         </AuthorizeView>
     </header>
 
-    <!-- لایه پس‌زمینه دراور در موبایل -->
-    @if (_drawerOpen)
-    {
-        <div class="panel-drawer-backdrop" @onclick="CloseDrawer"></div>
-    }
-
-    <!-- سایدبار پنل (در دسکتاپ ستون کناری و در موبایل کشویی/Drawer) -->
-    <aside class="panel-side @(_drawerOpen ? "drawer-open" : "")"
-           id="panel-drawer"
-           role="dialog"
-           aria-modal="true"
-           aria-label="منوی پنل کاربری"
-           aria-hidden="@(!_drawerOpen)">
-        <div class="panel-side-head">
-            <a class="panel-logo" href="">
-                <span class="monogram">@_monogram</span>
-                <small>@_salonName</small>
-            </a>
-            <button class="panel-drawer-close" @onclick="CloseDrawer" aria-label="بستن منو">✕</button>
-        </div>
-
-        <AuthorizeView Roles="Admin">
-            <nav class="panel-nav">
-                <div class="nav-group">مدیریت کلان سالن</div>
-                <NavLink href="panel/admin" Match="NavLinkMatch.All" @onclick="CloseDrawer">📊 داشبورد و شاخص‌ها</NavLink>
-                <NavLink href="panel/admin/base-data" @onclick="CloseDrawer">🗂 اطلاعات پایه (بند ۱۹)</NavLink>
-
-                <div class="nav-group">نوبت‌دهی و مراجعین</div>
-                <NavLink href="panel/admin/data/reservation" @onclick="CloseDrawer">🗓 مدیریت نوبت‌ها</NavLink>
-                <NavLink href="panel/admin/data/waiting-list" @onclick="CloseDrawer">⏳ لیست انتظار</NavLink>
-                <NavLink href="panel/admin/data/customer" @onclick="CloseDrawer">👥 پرونده مشتریان</NavLink>
-
-                <div class="nav-group">تیم و خدمات</div>
-                <NavLink href="panel/admin/data/personal" @onclick="CloseDrawer">👩‍🎨 پرسنل سالن</NavLink>
-                <NavLink href="panel/admin/data/salon-service" @onclick="CloseDrawer">💅 خدمات و تعرفه‌ها</NavLink>
-                <NavLink href="panel/admin/data/portfolio" @onclick="CloseDrawer">🖼 گالری نمونه‌کارها</NavLink>
-
-                <div class="nav-group">تنظیمات و تعاملات</div>
-                <NavLink href="panel/admin/data/salon-setting" @onclick="CloseDrawer">⚙️ تنظیمات سالن و تم</NavLink>
-                <NavLink href="panel/admin/data/discount" @onclick="CloseDrawer">🏷️ کدهای تخفیف</NavLink>
-                <NavLink href="panel/admin/data/news-day" @onclick="CloseDrawer">📣 اخبار و وبلاگ</NavLink>
-                <NavLink href="panel/admin/data/notification" @onclick="CloseDrawer">🔔 اعلانات سیستم</NavLink>
-            </nav>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="Personnel">
-            <nav class="panel-nav">
-                <div class="nav-group">کارتابل پرسنل</div>
-                <NavLink href="panel/personnel" Match="NavLinkMatch.All" @onclick="CloseDrawer">📊 داشبورد کاری</NavLink>
-                <NavLink href="panel/personnel/schedule" @onclick="CloseDrawer">🗓 کارتابل و نوبت‌ها</NavLink>
-                <NavLink href="panel/personnel/portfolio" @onclick="CloseDrawer">🖼 نمونه کارهای من</NavLink>
-                <NavLink href="panel/personnel/profile" @onclick="CloseDrawer">👤 مشخصات و ساعت کاری</NavLink>
-            </nav>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="Customer">
-            <nav class="panel-nav">
-                <div class="nav-group">حساب کاربری من</div>
-                <NavLink href="panel/customer" Match="NavLinkMatch.All" @onclick="CloseDrawer">📊 خلاصه وضعیت</NavLink>
-                <NavLink href="panel/customer/appointments" @onclick="CloseDrawer">🗓 نوبت‌های رزرو شده</NavLink>
-                <NavLink href="panel/customer/favorites" @onclick="CloseDrawer">❤️ علاقه‌مندی‌ها</NavLink>
-                <NavLink href="panel/customer/profile" @onclick="CloseDrawer">👤 اطلاعات حساب</NavLink>
-            </nav>
-        </AuthorizeView>
-
-        <div class="panel-side-footer">
-            <button class="logout" @onclick="Logout">خروج از حساب</button>
-            <a class="btn-solon ghost sm full-width" href="" style="margin-top:0.5rem; text-align:center;">صفحه اصلی سایت</a>
-        </div>
-    </aside>
+    <!-- ═══ دراور موبایل و تبلت عمودی: جانشین Sidebar زیر ۱۰۲۴px ═══
+         مارک‌آپ قبلی (سه بلوک AuthorizeView با ایموجی) حذف شد؛ حالا از
+         PanelNavConfig تغذیه می‌شود تا آدرس‌ها در دو جا تکرار نشوند. -->
+    <PanelDrawer Open="_drawerOpen"
+                 OnClose="CloseDrawer"
+                 UserRole="@_role"
+                 RoleLabel="@_roleLabel"
+                 LogoUrl="@_logoUrl"
+                 BrandName="@_salonName"
+                 FallbackMonogram="@_monogram"
+                 HomeHref="@_panelHome"
+                 BadgeCounts="_badgeCounts"
+                 OnLogout="Logout" />
 
     <section class="panel-content">
         <header class="panel-top">
@@ -153,77 +96,12 @@
         </div>
     </section>
 
-    <!-- نوار ناوبری پایین صفحه مخصوص پنل در موبایل (Panel Mobile Bottom Nav) -->
-    <div class="panel-bottom-nav">
-        <AuthorizeView Roles="Admin">
-            <NavLink href="panel/admin" Match="NavLinkMatch.All" class="panel-bnav-item">
-                <span class="bnav-icon">📊</span>
-                <span>شاخص‌ها</span>
-            </NavLink>
-            <NavLink href="panel/admin/data/reservation" class="panel-bnav-item">
-                <span class="bnav-icon">🗓</span>
-                <span>نوبت‌ها</span>
-            </NavLink>
-            <NavLink href="panel/admin/base-data" class="panel-bnav-item">
-                <span class="bnav-icon">🗂</span>
-                <span>پایه‌ها</span>
-            </NavLink>
-            <NavLink href="panel/admin/data/notification" class="panel-bnav-item">
-                <span class="bnav-icon">🔔</span>
-                <span>اعلانات</span>
-            </NavLink>
-            <button type="button" class="panel-bnav-item bnav-btn" @onclick="OpenDrawer">
-                <span class="bnav-icon">☰</span>
-                <span>منو</span>
-            </button>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="Personnel">
-            <NavLink href="panel/personnel" Match="NavLinkMatch.All" class="panel-bnav-item">
-                <span class="bnav-icon">📊</span>
-                <span>داشبورد</span>
-            </NavLink>
-            <NavLink href="panel/personnel/schedule" class="panel-bnav-item">
-                <span class="bnav-icon">🗓</span>
-                <span>نوبت‌ها</span>
-            </NavLink>
-            <NavLink href="panel/personnel/portfolio" class="panel-bnav-item">
-                <span class="bnav-icon">🖼</span>
-                <span>نمونه‌کار</span>
-            </NavLink>
-            <NavLink href="panel/personnel/profile" class="panel-bnav-item">
-                <span class="bnav-icon">👤</span>
-                <span>پروفایل</span>
-            </NavLink>
-            <button type="button" class="panel-bnav-item bnav-btn" @onclick="OpenDrawer">
-                <span class="bnav-icon">☰</span>
-                <span>منو</span>
-            </button>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="Customer">
-            <NavLink href="panel/customer" Match="NavLinkMatch.All" class="panel-bnav-item">
-                <span class="bnav-icon">📊</span>
-                <span>داشبورد</span>
-            </NavLink>
-            <NavLink href="panel/customer/appointments" class="panel-bnav-item">
-                <span class="bnav-icon">🗓</span>
-                <span>نوبت‌های من</span>
-            </NavLink>
-            <NavLink href="panel/customer/favorites" class="panel-bnav-item">
-                <span class="bnav-icon">❤️</span>
-                <span>علاقه‌ها</span>
-            </NavLink>
-            <NavLink href="panel/customer/profile" class="panel-bnav-item">
-                <span class="bnav-icon">👤</span>
-                <span>حساب</span>
-            </NavLink>
-            <button type="button" class="panel-bnav-item bnav-btn" @onclick="OpenDrawer">
-                <span class="bnav-icon">☰</span>
-                <span>منو</span>
-            </button>
-        </AuthorizeView>
-    </div>
+    <!-- ═══ نوار ناوبری پایین: جانشین Sidebar در موبایل ═══ -->
+    <PanelBottomNav UserRole="@_role"
+                    BadgeCounts="_badgeCounts"
+                    MenuOpen="_drawerOpen"
+                    OnMenuClick="OpenDrawer"
+                    DrawerId="panel-drawer" />
 </div>
 
 @code {
@@ -242,6 +120,12 @@
 
     /// <summary>آدرس خانه‌ی پنل بر اساس نقش — مقصد کلیک روی لوگو</summary>
     private string _panelHome => AppRoles.PanelUrl(_role ?? AppRoles.Customer);
+
+    /// <summary>
+    /// عنوان فارسی نقش — زیر نام سالن در سرصفحه دراور نمایش داده می‌شود.
+    /// از AppRoles.Persian می‌آید تا با برچسب‌های جای دیگر پنل یکسان بماند.
+    /// </summary>
+    private string _roleLabel => AppRoles.Persian(_role ?? "");
 
     protected override async Task OnInitializedAsync()
     {
@@ -279,6 +163,13 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // هم‌گام‌سازی وضعیت دراور در هر رندر انجام می‌شود، نه فقط رندر اول.
+        // دلیل: باز و بسته شدن دراور از سمت Blazor می‌آید ولی مدیریت فوکوس،
+        // دکمه بازگشت اندروید و قفل اسکرول باید در JS هم دنبالش بیاید.
+        // این فراخوانی خودش می‌فهمد دراور باز است یا بسته و کار درست را
+        // انجام می‌دهد، پس تکرارش بی‌هزینه است.
+        await SafeInvokeAsync("solonUx.syncDrawerState");
+
         if (!firstRender) return;
 
         // اگر کاربر دستگاه را به حالت تبلت/دسکتاپ بچرخاند، منوی کشویی
@@ -354,6 +245,14 @@
     /// <summary>از سمت JS صدا زده می‌شود وقتی Viewport از حد تبلت عبور کرد</summary>
     [JSInvokable]
     public async Task OnViewportBecameDesktop() => await CloseDrawer();
+
+    /// <summary>
+    /// از سمت JS صدا زده می‌شود وقتی کاربر با کلید Escape یا دکمه بازگشت
+    /// اندروید درخواست بستن دراور کرد. وضعیت واقعی دراور در Blazor است، پس
+    /// JS نمی‌تواند خودش آن را ببندد و باید همین‌جا خبر بدهد.
+    /// </summary>
+    [JSInvokable]
+    public async Task OnDrawerCloseRequested() => await CloseDrawer();
 
     private async Task Logout()
     {

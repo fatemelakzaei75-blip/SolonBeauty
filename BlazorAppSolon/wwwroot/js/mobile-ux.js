@@ -161,6 +161,145 @@
     }
 
     /* ======================================================================
+       بستن دراور با Escape و دکمه بازگشت، به‌همراه مدیریت فوکوس
+       ----------------------------------------------------------------------
+       نکته: این بخش در نسخه پیشین فقط در توضیحات بالای فایل ادعا شده بود و
+       هیچ کدی نداشت؛ یعنی دراور با Escape بسته نمی‌شد. حالا واقعاً پیاده
+       شده است.
+
+       چرا فوکوس مهم است: وقتی دراور باز می‌شود، کاربر کیبورد باید داخل آن
+       حرکت کند و وقتی بسته می‌شود، فوکوس باید به همان دکمه‌ای برگردد که
+       دراور را باز کرده. بدون این، فوکوس پشت لایه تاریک گم می‌شود و کاربر
+       کیبورد عملاً در صفحه زندانی می‌ماند.
+
+       چرا یک دکمه تاریخچه اضافه می‌شود: دکمه بازگشت اندروید در مرورگر
+       همان popstate است. با یک pushState هنگام باز شدن، دکمه بازگشت اول
+       دراور را می‌بندد و کاربر از صفحه بیرون نمی‌رود.
+       ====================================================================== */
+    var drawerHistoryPushed = false;
+    var lastFocused = null;
+
+    function drawerEl() { return document.querySelector('.pnav-drawer'); }
+
+    function isDrawerOpen() {
+        var d = drawerEl();
+        return !!(d && d.classList.contains('is-open'));
+    }
+
+    function findDrawerToggle() {
+        return document.querySelector('.pnav-bnav-item[aria-controls="panel-drawer"], .panel-mob-toggle');
+    }
+
+    /**
+     * فوکوس را داخل دراور نگه می‌دارد. بدون این، Tab از انتهای منو بیرون
+     * می‌زند و روی محتوای پشت لایه تاریک می‌چرخد.
+     */
+    function trapFocus(e) {
+        if (e.key !== 'Tab') return;
+
+        var d = drawerEl();
+        if (!d) return;
+
+        var focusables = d.querySelectorAll(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!focusables.length) return;
+
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+        }
+    }
+
+    function onKeyDown(e) {
+        if (e.key === 'Escape' && isDrawerOpen()) {
+            e.preventDefault();
+            closeDrawerFromJs();
+            return;
+        }
+        trapFocus(e);
+    }
+
+    /**
+     * دراور را از سمت JS می‌بندد و به کامپوننت اطلاع می‌دهد.
+     * رویداد سفارشی پل ارتباطی است: کامپوننت Blazor وضعیت خودش را دارد و
+     * JS نمی‌تواند مستقیماً آن را عوض کند.
+     */
+    function closeDrawerFromJs() {
+        // همان ارجاع Blazor که watchViewport گرفته، استفاده می‌شود؛ لازم نیست
+        // دو کانال ارتباطی موازی داشته باشیم.
+        if (viewportRef) {
+            try {
+                viewportRef.invokeMethodAsync('OnDrawerCloseRequested');
+                return;
+            } catch (err) {
+                // کامپوننت آزاد شده یا ارتباط قطع است — مسیر جایگزین پایین
+            }
+        }
+
+        // مسیر جایگزین: در محیطی که ارجاع Blazor نیست (مثل پیش‌نمایش مستقل
+        // یا اتصال قطع‌شده)، کلاس را مستقیم از DOM برمی‌داریم تا دراور
+        // همچنان بسته شود و کاربر گیر نکند.
+        var d = drawerEl();
+        if (d) d.classList.remove('is-open');
+    }
+
+    function onPopState() {
+        if (isDrawerOpen()) closeDrawerFromJs();
+    }
+
+    /**
+     * باید پس از هر رندر از سمت Blazor صدا زده شود. تغییر وضعیت دراور را
+     * از DOM می‌خواند و کارهای مربوط به فوکوس و تاریخچه را هم‌گام می‌کند.
+     */
+    function syncDrawerState() {
+        var open = isDrawerOpen();
+
+        if (open && !window.__solonDrawerBound) {
+            document.addEventListener('keydown', onKeyDown);
+            window.addEventListener('popstate', onPopState);
+            window.__solonDrawerBound = true;
+
+            lastFocused = document.activeElement;
+            if (!history.state || !history.state.solonDrawer) {
+                history.pushState({ solonDrawer: true }, '');
+                drawerHistoryPushed = true;
+            }
+
+            // فوکوس روی اولین کنترل دراور تا کاربر کیبورد بلافاصله داخلش باشد
+            var d = drawerEl();
+            var target = d && d.querySelector('.pnav-drawer-close');
+            if (target) {
+                // تأخیر تا انیمیشن شروع شود و پرش فوکوس دیده نشود
+                setTimeout(function () { try { target.focus(); } catch (e) { } }, 60);
+            }
+        } else if (!open && window.__solonDrawerBound) {
+            document.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('popstate', onPopState);
+            window.__solonDrawerBound = false;
+
+            if (drawerHistoryPushed) {
+                drawerHistoryPushed = false;
+                // فقط اگر همان ورودی تاریخچه خودمان بالای پشته باشد برمی‌گردیم
+                if (history.state && history.state.solonDrawer) history.back();
+            }
+
+            if (lastFocused && document.contains(lastFocused)) {
+                try { lastFocused.focus(); } catch (e) { }
+            } else {
+                var toggle = findDrawerToggle();
+                if (toggle) { try { toggle.focus(); } catch (e) { } }
+            }
+            lastFocused = null;
+        }
+    }
+
+    /* ======================================================================
        پل اتصال قرص فعال به پنل محتوا
        ----------------------------------------------------------------------
        چرا این کار با JS انجام می‌شود و نه CSS خالص:
@@ -311,6 +450,7 @@
         isSidebarCapable: isSidebarCapable,
         clearSidebarState: clearSidebarState,
         initActiveBridge: initActiveBridge,
-        syncActiveBridge: syncActiveBridge
+        syncActiveBridge: syncActiveBridge,
+        syncDrawerState: syncDrawerState
     };
 })();
