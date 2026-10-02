@@ -2761,3 +2761,200 @@ img, svg, video {
         to { transform: translateY(0); }
     }
 }
+
+/* ==========================================================================
+   لایه «تجربه موبایل اپلیکیشنی» — رفع اشکالات بحرانی موبایل (Mobile-First)
+   ==========================================================================
+   برخلاف بخش‌های قبلی، Base Rules این لایه برای *موبایل* نوشته شده‌اند و
+   سپس برای صفحه‌های بزرگ‌تر گسترش می‌یابند؛ نه برعکس.
+   -------------------------------------------------------------------------- */
+
+/* ---------- ۰) توکن‌های طراحی سیال و نقاط شکست (Design Tokens) ---------- */
+:root {
+    /* نقاط شکست استاندارد پروژه:
+       xs: 0-479   (موبایل کوچک)   sm: 480-767  (موبایل استاندارد/بزرگ)
+       md: 768-1023 (تبلت)          lg: 1024-1279 (لپ‌تاپ)
+       xl: 1280+    (دسکتاپ و واید) 
+       در تمام کامپوننت‌های جدید از همین توکن‌ها استفاده کنید. */
+    --bp-sm: 480px;
+    --bp-md: 768px;
+    --bp-lg: 1024px;
+    --bp-xl: 1280px;
+
+    /* دکمه‌های امن دستگاه‌های ناچ‌دار (iPhone X+, اندروید با نوار حرکتی) */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+
+    /* ارتفاع نوار ناوبری پایین + حداقل سطح لمس استاندارد */
+    --bottom-nav-h: 64px;
+    --touch-min: 44px;
+    --panel-bnav-h: 60px;
+}
+
+/* ---------- ۱) رفتار لمسی درست روی دستگاه‌های لمسی ----------
+   حذف تأخیر ۳۰۰ میلی‌ثانیه‌ای و فلش خاکستری مرورگر روی لمس
+   تا حس «اپلیکیشن نیتیو» ایجاد شود. */
+a, button, .btn-solon, [role="button"], .mob-nav-item, .panel-bnav-item,
+.select-trigger, .quick-chips button, .time-slot-btn, .day-btn, .fav-btn {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* ---------- ۲) جلوگیری از زوم خودکار iOS روی فیلدهای فرم ----------
+   سافاری آیفون اگر font-size فیلد کمتر از ۱۶px باشد، هنگام فوکوس
+   کل صفحه را زوم می‌کند و کاربر باید دستی برگرداند؛ کاربر بعد از هر
+   لمس باید صفحه را با دو انگشت جمع کند. این باگ تمام تجربه
+   «شبیه اپلیکیشن» را از بین می‌برد.
+   نکته: فقط روی دستگاه‌های لمسی اعمال می‌شود تا چیدمان فشرده
+   پنل مدیریت در دسکتاپ دست‌نخورده بماند. */
+@media (pointer: coarse) {
+    input, select, textarea, .panel-input, .search-input, .quick-select,
+    .select-trigger, .select-search-input, .newsletter-form input, .cal-select,
+    .shamsi-input-box, .upload-drop input {
+        font-size: 16px;
+    }
+    /* ارتفاع فیلد متناسب با فونت بزرگ‌تر بازتنظیم می‌شود */
+    .panel-input, .quick-select, .select-trigger {
+        padding-top: .62rem;
+        padding-bottom: .62rem;
+    }
+}
+
+/* ---------- ۳) درخشش بصری هنگام لمس (Active Feedback) ----------
+   جایگزین hover برای دستگاه‌های لمسی. */
+@media (hover: none) {
+    .btn-solon:active { opacity: .9; transform: scale(.97); }
+    .mob-nav-item:active, .panel-bnav-item:active { opacity: .62; }
+    .center-cta-circle:active { transform: scale(.9); }
+    .service-page-card:active, .work-card:active, .blog-card:active,
+    .work-showcase-card:active, .entity-feature-card:active,
+    .portfolio-card:active {
+        transform: scale(.985);
+        transition: transform .12s ease;
+    }
+    /* خنثی‌سازی hover چسبنده (Sticky Hover) روی لمس */
+    .service-page-card, .work-card, .blog-card, .work-showcase-card,
+    .entity-feature-card, .footer-social-link, .btn-solon {
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+}
+
+/* ---------- ۴) قفل اسکرول پس‌زمینه هنگام باز بودن Drawer/مودال ----------
+   بدون این مورد، کاربر در موبایل پشت منوی کشویی هم اسکرول می‌کند
+   (Scroll Chaining) که حس اپلیکیشن بودن را کامل از بین می‌برد. */
+html.ux-scroll-locked,
+body.ux-scroll-locked {
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* ---------- ۵) جلوگیری از سرریز اسکرول به عناصر زیرین ---------- */
+.panel-side, .mobile-drawer-panel, .modal-box, .search-modal,
+.select-dropdown, .select-options-list, .panel-nav {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- ۶) دکمه‌های امن iOS: نوارهای چسبیده به لبه پایین ----------
+   روی آیفون‌های ناچ‌دار، نوار ناوبری پایین دقیقاً زیر نوار Home
+   قرار می‌گرفت و غیرقابل لمس بود. */
+.mobile-bottom-nav {
+    height: calc(var(--bottom-nav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    padding-left: calc(6px + var(--safe-left));
+    padding-right: calc(6px + var(--safe-right));
+}
+.panel-bottom-nav {
+    height: calc(var(--panel-bnav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+}
+
+/* محتوای اصلی باید هم ارتفاع نوار و هم دکمه امن را جبران کند */
+@media (max-width: 900px) {
+    .main-content-flow {
+        padding-bottom: calc(75px + var(--safe-bottom)) !important;
+    }
+    .panel-body {
+        padding-bottom: calc(75px + var(--safe-bottom)) !important;
+    }
+    /* نوار چسبان رزرو باید «بالای» نوار ناوبری پایین بنشیند، نه روی آن */
+    .mobile-sticky-action-bar {
+        bottom: calc(var(--bottom-nav-h) + var(--safe-bottom));
+        padding-bottom: 10px;
+    }
+    /* دراور پنل: احترام به دکمه امن پایین */
+    .panel-side {
+        padding-bottom: var(--safe-bottom);
+    }
+}
+
+/* ---------- ۷) سطح لمس حداقل ۴۴×۴۴ پیکسل ----------
+   استاندارد اپل/گوگل؛ برخی دکمه‌های پروژه ۴۰ و ۴۲ پیکسل بودند. */
+.select-trigger { min-height: var(--touch-min); }
+.sticky-action-btn button { min-height: var(--touch-min); }
+.search-close-btn { min-height: var(--touch-min); min-width: var(--touch-min); }
+.panel-mob-toggle { min-width: var(--touch-min); min-height: var(--touch-min); }
+.mob-nav-item { min-height: var(--touch-min); }
+.panel-bnav-item { min-height: var(--touch-min); }
+.panel-nav a, .dropdown-item, .search-result-item, .quick-chips button {
+    min-height: var(--touch-min);
+    display: flex;
+    align-items: center;
+}
+
+/* در تبلت و دسکتاپ سطح لمس می‌تواند فشرده‌تر باشد (کارایی بالاتر) */
+@media (min-width: 1024px) and (hover: hover) {
+    .panel-nav a, .dropdown-item { min-height: 38px; }
+}
+
+/* ---------- ۸) نوارهای ناوبری پایین فقط در موبایل/تبلت ----------
+   Mobile-First: پیش‌فرض «نمایش»، و از تبلت افقی به بالا «مخفی». */
+@media (min-width: 1024px) {
+    .mobile-bottom-nav,
+    .panel-bottom-nav { display: none; }
+    .main-content-flow,
+    .panel-body { padding-bottom: 0 !important; }
+}
+
+/* ---------- ۹) دراور موبایل: ساختار اپلیکیشنی و دسترس‌پذیر ---------- */
+@media (max-width: 900px) {
+    .panel-side {
+        width: min(88vw, 320px);
+        max-width: 88vw;
+    }
+    /* نشانگر دیداری برای کاربر که منوی کشویی باز است */
+    .panel-drawer-backdrop { animation: uxFade .18s ease-out; }
+}
+@keyframes uxFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- ۱۰) فرم‌ها: کیبورد و رفتار ورودی مناسب موبایل ---------- */
+input, select, textarea {
+    font-family: var(--font-body);
+}
+/* کیبورد عددی روی موبایل برای فیلدهای عددی/تلفن */
+input[type="number"], input[inputmode="numeric"], input[inputmode="decimal"] {
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ---------- ۱۱) احترام به تنظیمات دسترس‌پذیری کاربر ---------- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------- ۱۲) اسکرول افقی: فقط داخل خودِ عنصر، نه کل صفحه ---------- */
+.table-responsive, .panel-card {
+    overscroll-behavior-x: contain;
+}
+

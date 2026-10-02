@@ -46,7 +46,7 @@
                             <td>
                                 @if (IsImageField(p.Name) && p.GetValue(item) is string img && !string.IsNullOrWhiteSpace(img))
                                 {
-                                    <img class="cell-thumb" src="@img" alt="" />
+                                    <img class="cell-thumb" src="@img" alt="" width="40" height="40" loading="lazy" decoding="async" />
                                 }
                                 else
                                 {

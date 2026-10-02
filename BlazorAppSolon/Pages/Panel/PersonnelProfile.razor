@@ -44,11 +44,11 @@
     <div class="form-grid">
         <div class="form-field">
             <label>نام</label>
-            <input class="panel-input" @bind="_firstName" />
+            <input class="panel-input" type="text" autocomplete="given-name" enterkeyhint="next" @bind="_firstName" />
         </div>
         <div class="form-field">
             <label>نام خانوادگی</label>
-            <input class="panel-input" @bind="_lastName" />
+            <input class="panel-input" type="text" autocomplete="family-name" enterkeyhint="next" @bind="_lastName" />
         </div>
         <div class="form-field">
             <label>کد پرسنلی</label>
@@ -56,7 +56,7 @@
         </div>
         <div class="form-field">
             <label>شماره موبایل</label>
-            <input class="panel-input" dir="ltr" @bind="_mobile" />
+            <input class="panel-input" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" dir="ltr" @bind="_mobile" />
         </div>
         <div class="form-field">
             <label>لاین تخصصی سالن</label>
@@ -74,7 +74,7 @@
         </div>
         <div class="form-field">
             <label>سابقه کار (سال)</label>
-            <input type="number" class="panel-input" @bind="_exp" />
+            <input type="number" inputmode="numeric" class="panel-input" @bind="_exp" />
         </div>
         <div class="form-field">
             <label>روزهای کاری فعال</label>

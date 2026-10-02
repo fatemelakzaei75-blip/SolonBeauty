@@ -38,14 +38,14 @@
                 <div class="login-form-block">
                     <div class="form-field">
                         <label>شماره موبایل</label>
-                        <input class="panel-input" type="tel" inputmode="tel" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
+                        <input class="panel-input" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
                     </div>
 
                     @if (_codeSent)
                     {
                         <div class="form-field">
                             <label>کد تأیید پیامک شده</label>
-                            <input class="panel-input" type="text" inputmode="numeric" dir="ltr" placeholder="کد ۵ رقمی (کد تستی: 12345)" @bind="_code" />
+                            <input class="panel-input" type="text" inputmode="numeric" autocomplete="one-time-code" enterkeyhint="done" dir="ltr" placeholder="کد ۵ رقمی (کد تستی: 12345)" @bind="_code" />
                         </div>
                     }
 
@@ -80,12 +80,12 @@
                 <div class="login-form-block">
                     <div class="form-field">
                         <label>شماره موبایل</label>
-                        <input class="panel-input" type="tel" inputmode="tel" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
+                        <input class="panel-input" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" dir="ltr" placeholder="09xxxxxxxxx" @bind="_mobile" />
                     </div>
 
                     <div class="form-field">
                         <label>رمز عبور</label>
-                        <input type="password" class="panel-input" dir="ltr" placeholder="رمز عبور خود را وارد کنید" @bind="_password" />
+                        <input type="password" class="panel-input" autocomplete="current-password" enterkeyhint="done" dir="ltr" placeholder="رمز عبور خود را وارد کنید" @bind="_password" />
                         <div class="field-hint">رمز عبور پیش‌فرض محیط آزمایشی: <code>123456</code></div>
                     </div>
 

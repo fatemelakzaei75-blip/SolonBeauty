@@ -2,6 +2,7 @@
 @using BlazorAppSolon.Auth
 @inject IDataStore Store
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <header class="solon-header">
     <!-- نوار بالایی: تماس، ساعت کاری و شبکه‌های اجتماعی -->
@@ -53,7 +54,7 @@
     <div class="main-navbar">
         <div class="container navbar-container">
             <!-- دکمه همبرگری موبایل جهت باز کردن دراور کشویی -->
-            <button class="mobile-menu-toggle" @onclick="@(() => _mobileMenuOpen = true)" aria-label="منوی دسترسی سریع">
+            <button class="mobile-menu-toggle" @onclick="OpenMobileMenu" aria-label="منوی دسترسی سریع">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -100,7 +101,7 @@
             <!-- ابزارهای سمت چپ: جستجو، سبد خرید، رزرو وقت -->
             <div class="navbar-actions">
                 <!-- دکمه جستجو -->
-                <button class="nav-action-btn search-trigger" @onclick="@(() => _searchOpen = true)" title="جستجو در تمام صفحات">
+                <button class="nav-action-btn search-trigger" @onclick="OpenSearch" title="جستجو در تمام صفحات">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -128,7 +129,7 @@
 <!-- منوی کشویی موبایل (Off-canvas Mobile Drawer) با استانداردهای بومی وب‌اپلیکیشن -->
 @if (_mobileMenuOpen)
 {
-    <div class="mobile-drawer-backdrop" @onclick="@(() => _mobileMenuOpen = false)"></div>
+    <div class="mobile-drawer-backdrop" @onclick="CloseMobileMenu"></div>
     <div class="mobile-drawer-sheet @(_mobileMenuOpen ? "open" : "")">
         <div class="drawer-header">
             <div class="drawer-brand">
@@ -138,7 +139,7 @@
                     <small>تجربه لوکس و مدرن</small>
                 </div>
             </div>
-            <button class="drawer-close-btn" @onclick="@(() => _mobileMenuOpen = false)">✕</button>
+            <button class="drawer-close-btn" @onclick="CloseMobileMenu">✕</button>
         </div>
 
         <div class="drawer-user-card">
@@ -156,13 +157,13 @@
                     <a href="@AppRoles.PanelUrl(context.User.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? "")"
                        class="btn-solon red full-width sm"
                        style="margin-top:0.6rem"
-                       @onclick="@(() => _mobileMenuOpen = false)">
+                       @onclick="CloseMobileMenu">
                         ورود به پنل کاربری
                     </a>
                 </Authorized>
                 <NotAuthorized>
                     <p style="font-size:0.85rem; margin-bottom:0.6rem; color:#666;">برای دسترسی به سوابق و رزروها وارد شوید:</p>
-                    <a href="login" class="btn-solon red full-width sm" @onclick="@(() => _mobileMenuOpen = false)">
+                    <a href="login" class="btn-solon red full-width sm" @onclick="CloseMobileMenu">
                         ورود / ثبت‌نام در سامانه
                     </a>
                 </NotAuthorized>
@@ -170,38 +171,38 @@
         </div>
 
         <nav class="drawer-nav-list">
-            <NavLink href="" Match="NavLinkMatch.All" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="" Match="NavLinkMatch.All" class="drawer-nav-item" @onclick="CloseMobileMenu">
                 <span>🏠 صفحه اصلی</span>
             </NavLink>
-            <NavLink href="services" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="services" class="drawer-nav-item" @onclick="CloseMobileMenu">
                 <span>💅 خدمات تخصصی سالن</span>
             </NavLink>
 
             <div class="drawer-sublinks">
                 @foreach (var s in PortfolioCatalog.Services)
                 {
-                    <a href="@($"services/{s.Slug}")" class="drawer-sublink-item" @onclick="@(() => _mobileMenuOpen = false)">
+                    <a href="@($"services/{s.Slug}")" class="drawer-sublink-item" @onclick="CloseMobileMenu">
                         <span>▪ @s.Title</span>
                     </a>
                 }
             </div>
 
-            <NavLink href="reserve" class="drawer-nav-item highlight" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="reserve" class="drawer-nav-item highlight" @onclick="CloseMobileMenu">
                 <span>🗓 رزرو آنلاین نوبت</span>
             </NavLink>
-            <NavLink href="gallery" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="gallery" class="drawer-nav-item" @onclick="CloseMobileMenu">
                 <span>🖼 آلبوم نمونه‌کارها و تصاویر سالن</span>
             </NavLink>
-            <NavLink href="blog" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="blog" class="drawer-nav-item" @onclick="CloseMobileMenu">
                 <span>📖 وبلاگ و مقالات آموزشی</span>
             </NavLink>
-            <NavLink href="about" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="about" class="drawer-nav-item" @onclick="CloseMobileMenu">
                 <span>ℹ️ درباره ما و کادر سالن</span>
             </NavLink>
-            <NavLink href="contact" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="contact" class="drawer-nav-item" @onclick="CloseMobileMenu">
                 <span>📞 تماس با ما و موقعیت مکانی</span>
             </NavLink>
-            <NavLink href="terms" class="drawer-nav-item" @onclick="@(() => _mobileMenuOpen = false)">
+            <NavLink href="terms" class="drawer-nav-item" @onclick="CloseMobileMenu">
                 <span>📜 قوانین و شرایط نوبت‌دهی</span>
             </NavLink>
         </nav>
@@ -219,10 +220,54 @@
 
 @code {
     private bool _showCatMenu = false;
-    private bool _searchOpen = false;
     private bool _mobileMenuOpen = false;
     private string _instagram = "https://instagram.com/hadisbeauty.salon";
     private string _telegram = "https://t.me/hadisbeauty";
+
+    // قفل اسکرول پس‌زمینه هنگام باز بودن منوی کشویی یا مودال جستجو،
+    // تا کاربر موبایل پشت لایه باز شده هم اسکرول نکند.
+    private bool _searchOpenField;
+    private bool _searchOpen
+    {
+        get => _searchOpenField;
+        set
+        {
+            if (_searchOpenField == value) return;
+            _searchOpenField = value;
+            _ = SyncScrollLockAsync();
+        }
+    }
+
+    private async Task OpenMobileMenu()
+    {
+        _mobileMenuOpen = true;
+        await SyncScrollLockAsync();
+    }
+
+    private async Task CloseMobileMenu()
+    {
+        if (!_mobileMenuOpen) return;
+        _mobileMenuOpen = false;
+        await SyncScrollLockAsync();
+    }
+
+    private Task OpenSearch()
+    {
+        _searchOpen = true;
+        return Task.CompletedTask;
+    }
+
+    /// <summary>وضعیت قفل اسکرول را با وضعیت باز بودن لایه‌های روی صفحه هم‌گام می‌کند</summary>
+    private async Task SyncScrollLockAsync()
+    {
+        var anyOverlayOpen = _mobileMenuOpen || _searchOpen;
+        try
+        {
+            await JS.InvokeVoidAsync("solonUx.setScrollLock", anyOverlayOpen);
+        }
+        catch (JSDisconnectedException) { /* اتصال قطع شده است */ }
+        catch (InvalidOperationException) { /* JS در دسترس نیست */ }
+    }
 
     protected override async Task OnInitializedAsync()
     {

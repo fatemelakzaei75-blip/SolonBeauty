@@ -36,7 +36,7 @@
                     {
                         <div class="work-showcase-card">
                             <div class="work-showcase-img">
-                                <img src="@work.Image" alt="@work.Title" />
+                                <img src="@work.Image" alt="@work.Title" width="340" height="340" loading="lazy" decoding="async" />
                                 <span class="work-price-chip">@work.Price.ToString("#,0") تومان</span>
                             </div>
                             <div class="work-showcase-content">
@@ -71,7 +71,7 @@
                     @foreach (var s in GetFilteredServices())
                     {
                         <div class="service-page-card modern">
-                            <img src="@s.HeroImage" alt="@s.Title" loading="lazy" />
+                            <img src="@s.HeroImage" alt="@s.Title" width="330" height="420" loading="lazy" decoding="async" />
                             <div class="service-page-card-body">
                                 <h3>@s.Title</h3>
                                 <p>@s.Intro</p>

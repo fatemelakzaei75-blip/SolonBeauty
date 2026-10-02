@@ -52,7 +52,7 @@
                 @if (_selectedWork is not null)
                 {
                     <div class="selected-work-preview">
-                        <img src="@_selectedWork.Image" alt="@_selectedWork.Title" />
+                        <img src="@_selectedWork.Image" alt="@_selectedWork.Title" width="120" height="120" loading="lazy" decoding="async" />
                         <div>
                             <span class="work-chip">نمونه کار انتخابی</span>
                             <h4>@_selectedWork.Title</h4>
@@ -80,7 +80,7 @@
                             {
                                 var isSel = (_selectedStaffTc == staff.Tc);
                                 <div class="staff-choice-card @(isSel ? "selected" : "")" @onclick="@(() => SelectStaff(staff))">
-                                    <img src="@(string.IsNullOrWhiteSpace(staff.Avatar) ? "img/hero.jpg" : staff.Avatar)" alt="@staff.FullName" />
+                                    <img src="@(string.IsNullOrWhiteSpace(staff.Avatar) ? "img/hero.jpg" : staff.Avatar)" alt="@staff.FullName" width="64" height="64" loading="lazy" decoding="async" />
                                     <div class="staff-choice-info">
                                         <div class="staff-choice-name">@staff.FullName</div>
                                         <div class="staff-choice-specialty">@staff.Specialty</div>
@@ -94,12 +94,12 @@
 
                     <div class="form-field">
                         <label>نام و نام خانوادگی مراجع <span class="req">*</span></label>
-                        <input class="panel-input" @bind="_customerName" placeholder="مثال: نگار رضایی" />
+                        <input class="panel-input" type="text" autocomplete="name" enterkeyhint="next" @bind="_customerName" placeholder="مثال: نگار رضایی" />
                     </div>
 
                     <div class="form-field">
                         <label>شماره موبایل جهت هماهنگی و پیامک <span class="req">*</span></label>
-                        <input class="panel-input" dir="ltr" @bind="_mobileNumber" placeholder="09xxxxxxxxx" />
+                        <input class="panel-input" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" dir="ltr" @bind="_mobileNumber" placeholder="09xxxxxxxxx" />
                     </div>
                 </div>
 
@@ -127,7 +127,7 @@
                 </div>
 
                 <div class="staff-summary-pill">
-                    <img src="@(string.IsNullOrWhiteSpace(_selectedStaff?.Avatar) ? "img/hero.jpg" : _selectedStaff.Avatar)" alt="پرسنل" />
+                    <img src="@(string.IsNullOrWhiteSpace(_selectedStaff?.Avatar) ? "img/hero.jpg" : _selectedStaff.Avatar)" alt="پرسنل" width="72" height="72" loading="lazy" decoding="async" />
                     <div>
                         <strong>خدمت:</strong> @_selectedServiceName &nbsp;|&nbsp;
                         <strong>پرسنل:</strong> @_selectedStaffName (@_selectedStaff?.Specialty)
@@ -222,7 +222,7 @@
                 <div class="discount-input-group">
                     <label>کد تخفیف دارید؟</label>
                     <div class="discount-controls">
-                        <input class="panel-input" placeholder="مثال: HADIS20" @bind="_discountCodeInput" />
+                        <input class="panel-input" type="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done" placeholder="مثال: HADIS20" @bind="_discountCodeInput" />
                         <button class="btn-solon" @onclick="ApplyDiscount" disabled="@_discountBusy">
                             @(_discountBusy ? "بررسی..." : "اعمال کد تخفیف")
                         </button>
@@ -457,11 +457,11 @@
                 <div class="form-grid">
                     <div class="form-field">
                         <label>نام متقاضی:</label>
-                        <input class="panel-input" @bind="_customerName" />
+                        <input class="panel-input" type="text" autocomplete="name" enterkeyhint="next" @bind="_customerName" />
                     </div>
                     <div class="form-field">
                         <label>شماره موبایل جهت پیامک:</label>
-                        <input class="panel-input" dir="ltr" @bind="_mobileNumber" />
+                        <input class="panel-input" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" dir="ltr" @bind="_mobileNumber" />
                     </div>
                     <div class="form-field" style="grid-column:1/-1">
                         <label>ساعت ترجیحی:</label>

@@ -37,11 +37,11 @@
                     <div class="form-grid">
                         <div class="form-field">
                             <label>نام و نام خانوادگی <span class="req">*</span></label>
-                            <input class="panel-input" @bind="_name" placeholder="مثال: سارا کمالی" />
+                            <input class="panel-input" type="text" autocomplete="name" enterkeyhint="next" @bind="_name" placeholder="مثال: سارا کمالی" />
                         </div>
                         <div class="form-field">
                             <label>شماره تماس <span class="req">*</span></label>
-                            <input class="panel-input" dir="ltr" @bind="_mobile" placeholder="09xxxxxxxxx" />
+                            <input class="panel-input" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" dir="ltr" @bind="_mobile" placeholder="09xxxxxxxxx" />
                         </div>
                         <div class="form-field" style="grid-column:1/-1">
                             <label>موضوع پیام</label>
@@ -54,7 +54,7 @@
                         </div>
                         <div class="form-field" style="grid-column:1/-1">
                             <label>متن پیام <span class="req">*</span></label>
-                            <textarea class="panel-input" rows="5" @bind="_message" placeholder="پیام یا نظر خود را اینجا بنویسید..."></textarea>
+                            <textarea class="panel-input" rows="5" enterkeyhint="send" @bind="_message" placeholder="پیام یا نظر خود را اینجا بنویسید..."></textarea>
                         </div>
                     </div>
 

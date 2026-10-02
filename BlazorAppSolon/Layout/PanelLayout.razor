@@ -3,9 +3,11 @@
 @using BlazorAppSolon.Auth
 @using BlazorAppSolon.Data
 @using DataLayer.Entity
+@implements IAsyncDisposable
 @inject AuthService Auth
 @inject IDataStore Store
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <HeadContent>
     <meta name="robots" content="noindex, nofollow" />
@@ -14,7 +16,8 @@
 <div class="panel-shell">
     <!-- هدر مخصوص موبایل با دکمه همبرگری جهت باز کردن سایدبار به صورت Drawer -->
     <header class="panel-mobile-header">
-        <button class="panel-mob-toggle" @onclick="@(() => _drawerOpen = true)" aria-label="منوی پنل">
+        <button class="panel-mob-toggle" @onclick="OpenDrawer"
+                aria-label="منوی پنل" aria-expanded="@_drawerOpen" aria-controls="panel-drawer">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -41,60 +44,65 @@
     <!-- لایه پس‌زمینه دراور در موبایل -->
     @if (_drawerOpen)
     {
-        <div class="panel-drawer-backdrop" @onclick="@(() => _drawerOpen = false)"></div>
+        <div class="panel-drawer-backdrop" @onclick="CloseDrawer"></div>
     }
 
     <!-- سایدبار پنل (در دسکتاپ ستون کناری و در موبایل کشویی/Drawer) -->
-    <aside class="panel-side @(_drawerOpen ? "drawer-open" : "")">
+    <aside class="panel-side @(_drawerOpen ? "drawer-open" : "")"
+           id="panel-drawer"
+           role="dialog"
+           aria-modal="true"
+           aria-label="منوی پنل کاربری"
+           aria-hidden="@(!_drawerOpen)">
         <div class="panel-side-head">
             <a class="panel-logo" href="">
                 <span class="monogram">HB</span>
                 <small>HADIS BEAUTY</small>
             </a>
-            <button class="panel-drawer-close" @onclick="@(() => _drawerOpen = false)">✕</button>
+            <button class="panel-drawer-close" @onclick="CloseDrawer" aria-label="بستن منو">✕</button>
         </div>
 
         <AuthorizeView Roles="Admin">
             <nav class="panel-nav">
                 <div class="nav-group">مدیریت کلان سالن</div>
-                <NavLink href="panel/admin" Match="NavLinkMatch.All" @onclick="@(() => _drawerOpen = false)">📊 داشبورد و شاخص‌ها</NavLink>
-                <NavLink href="panel/admin/base-data" @onclick="@(() => _drawerOpen = false)">🗂 اطلاعات پایه (بند ۱۹)</NavLink>
+                <NavLink href="panel/admin" Match="NavLinkMatch.All" @onclick="CloseDrawer">📊 داشبورد و شاخص‌ها</NavLink>
+                <NavLink href="panel/admin/base-data" @onclick="CloseDrawer">🗂 اطلاعات پایه (بند ۱۹)</NavLink>
 
                 <div class="nav-group">نوبت‌دهی و مراجعین</div>
-                <NavLink href="panel/admin/data/reservation" @onclick="@(() => _drawerOpen = false)">🗓 مدیریت نوبت‌ها</NavLink>
-                <NavLink href="panel/admin/data/waiting-list" @onclick="@(() => _drawerOpen = false)">⏳ لیست انتظار</NavLink>
-                <NavLink href="panel/admin/data/customer" @onclick="@(() => _drawerOpen = false)">👥 پرونده مشتریان</NavLink>
+                <NavLink href="panel/admin/data/reservation" @onclick="CloseDrawer">🗓 مدیریت نوبت‌ها</NavLink>
+                <NavLink href="panel/admin/data/waiting-list" @onclick="CloseDrawer">⏳ لیست انتظار</NavLink>
+                <NavLink href="panel/admin/data/customer" @onclick="CloseDrawer">👥 پرونده مشتریان</NavLink>
 
                 <div class="nav-group">تیم و خدمات</div>
-                <NavLink href="panel/admin/data/personal" @onclick="@(() => _drawerOpen = false)">👩‍🎨 پرسنل سالن</NavLink>
-                <NavLink href="panel/admin/data/salon-service" @onclick="@(() => _drawerOpen = false)">💅 خدمات و تعرفه‌ها</NavLink>
-                <NavLink href="panel/admin/data/portfolio" @onclick="@(() => _drawerOpen = false)">🖼 گالری نمونه‌کارها</NavLink>
+                <NavLink href="panel/admin/data/personal" @onclick="CloseDrawer">👩‍🎨 پرسنل سالن</NavLink>
+                <NavLink href="panel/admin/data/salon-service" @onclick="CloseDrawer">💅 خدمات و تعرفه‌ها</NavLink>
+                <NavLink href="panel/admin/data/portfolio" @onclick="CloseDrawer">🖼 گالری نمونه‌کارها</NavLink>
 
                 <div class="nav-group">تنظیمات و تعاملات</div>
-                <NavLink href="panel/admin/data/salon-setting" @onclick="@(() => _drawerOpen = false)">⚙️ تنظیمات سالن و تم</NavLink>
-                <NavLink href="panel/admin/data/discount" @onclick="@(() => _drawerOpen = false)">🏷️ کدهای تخفیف</NavLink>
-                <NavLink href="panel/admin/data/news-day" @onclick="@(() => _drawerOpen = false)">📣 اخبار و وبلاگ</NavLink>
-                <NavLink href="panel/admin/data/notification" @onclick="@(() => _drawerOpen = false)">🔔 اعلانات سیستم</NavLink>
+                <NavLink href="panel/admin/data/salon-setting" @onclick="CloseDrawer">⚙️ تنظیمات سالن و تم</NavLink>
+                <NavLink href="panel/admin/data/discount" @onclick="CloseDrawer">🏷️ کدهای تخفیف</NavLink>
+                <NavLink href="panel/admin/data/news-day" @onclick="CloseDrawer">📣 اخبار و وبلاگ</NavLink>
+                <NavLink href="panel/admin/data/notification" @onclick="CloseDrawer">🔔 اعلانات سیستم</NavLink>
             </nav>
         </AuthorizeView>
 
         <AuthorizeView Roles="Personnel">
             <nav class="panel-nav">
                 <div class="nav-group">کارتابل پرسنل</div>
-                <NavLink href="panel/personnel" Match="NavLinkMatch.All" @onclick="@(() => _drawerOpen = false)">📊 داشبورد کاری</NavLink>
-                <NavLink href="panel/personnel/schedule" @onclick="@(() => _drawerOpen = false)">🗓 کارتابل و نوبت‌ها</NavLink>
-                <NavLink href="panel/personnel/portfolio" @onclick="@(() => _drawerOpen = false)">🖼 نمونه کارهای من</NavLink>
-                <NavLink href="panel/personnel/profile" @onclick="@(() => _drawerOpen = false)">👤 مشخصات و ساعت کاری</NavLink>
+                <NavLink href="panel/personnel" Match="NavLinkMatch.All" @onclick="CloseDrawer">📊 داشبورد کاری</NavLink>
+                <NavLink href="panel/personnel/schedule" @onclick="CloseDrawer">🗓 کارتابل و نوبت‌ها</NavLink>
+                <NavLink href="panel/personnel/portfolio" @onclick="CloseDrawer">🖼 نمونه کارهای من</NavLink>
+                <NavLink href="panel/personnel/profile" @onclick="CloseDrawer">👤 مشخصات و ساعت کاری</NavLink>
             </nav>
         </AuthorizeView>
 
         <AuthorizeView Roles="Customer">
             <nav class="panel-nav">
                 <div class="nav-group">حساب کاربری من</div>
-                <NavLink href="panel/customer" Match="NavLinkMatch.All" @onclick="@(() => _drawerOpen = false)">📊 خلاصه وضعیت</NavLink>
-                <NavLink href="panel/customer/appointments" @onclick="@(() => _drawerOpen = false)">🗓 نوبت‌های رزرو شده</NavLink>
-                <NavLink href="panel/customer/favorites" @onclick="@(() => _drawerOpen = false)">❤️ علاقه‌مندی‌ها</NavLink>
-                <NavLink href="panel/customer/profile" @onclick="@(() => _drawerOpen = false)">👤 اطلاعات حساب</NavLink>
+                <NavLink href="panel/customer" Match="NavLinkMatch.All" @onclick="CloseDrawer">📊 خلاصه وضعیت</NavLink>
+                <NavLink href="panel/customer/appointments" @onclick="CloseDrawer">🗓 نوبت‌های رزرو شده</NavLink>
+                <NavLink href="panel/customer/favorites" @onclick="CloseDrawer">❤️ علاقه‌مندی‌ها</NavLink>
+                <NavLink href="panel/customer/profile" @onclick="CloseDrawer">👤 اطلاعات حساب</NavLink>
             </nav>
         </AuthorizeView>
 
@@ -148,7 +156,7 @@
                 <span class="bnav-icon">🔔</span>
                 <span>اعلانات</span>
             </NavLink>
-            <button type="button" class="panel-bnav-item bnav-btn" @onclick="@(() => _drawerOpen = true)">
+            <button type="button" class="panel-bnav-item bnav-btn" @onclick="OpenDrawer">
                 <span class="bnav-icon">☰</span>
                 <span>منو</span>
             </button>
@@ -171,7 +179,7 @@
                 <span class="bnav-icon">👤</span>
                 <span>پروفایل</span>
             </NavLink>
-            <button type="button" class="panel-bnav-item bnav-btn" @onclick="@(() => _drawerOpen = true)">
+            <button type="button" class="panel-bnav-item bnav-btn" @onclick="OpenDrawer">
                 <span class="bnav-icon">☰</span>
                 <span>منو</span>
             </button>
@@ -194,7 +202,7 @@
                 <span class="bnav-icon">👤</span>
                 <span>حساب</span>
             </NavLink>
-            <button type="button" class="panel-bnav-item bnav-btn" @onclick="@(() => _drawerOpen = true)">
+            <button type="button" class="panel-bnav-item bnav-btn" @onclick="OpenDrawer">
                 <span class="bnav-icon">☰</span>
                 <span>منو</span>
             </button>
@@ -204,10 +212,69 @@
 
 @code {
     private bool _drawerOpen = false;
+    private bool _scrollLocked;
+    private DotNetObjectReference<PanelLayout>? _selfRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // اگر کاربر دستگاه را به حالت تبلت/دسکتاپ بچرخاند، منوی کشویی
+        // نباید روی صفحه بزرگ «گیر» کند.
+        _selfRef = DotNetObjectReference.Create(this);
+        await SafeInvokeAsync("solonUx.watchViewport", _selfRef);
+    }
+
+    /// <summary>باز کردن منوی کشویی پنل + قفل اسکرول پس‌زمینه</summary>
+    private async Task OpenDrawer()
+    {
+        _drawerOpen = true;
+        if (!_scrollLocked)
+        {
+            _scrollLocked = true;
+            await SafeInvokeAsync("solonUx.setScrollLock", true);
+        }
+    }
+
+    /// <summary>بستن منوی کشویی پنل + آزادسازی اسکرول پس‌زمینه</summary>
+    private async Task CloseDrawer()
+    {
+        if (!_drawerOpen) return;
+        _drawerOpen = false;
+        if (_scrollLocked)
+        {
+            _scrollLocked = false;
+            await SafeInvokeAsync("solonUx.setScrollLock", false);
+        }
+    }
+
+    /// <summary>فراخوانی امن JS — خطاهای قطع اتصال باعث کرش کامپوننت نشوند</summary>
+    private async Task SafeInvokeAsync(string identifier, params object?[] args)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync(identifier, args);
+        }
+        catch (JSDisconnectedException) { /* اتصال قطع شده است */ }
+        catch (InvalidOperationException) { /* JS در دسترس نیست */ }
+    }
+
+    /// <summary>از سمت JS صدا زده می‌شود وقتی Viewport از حد تبلت عبور کرد</summary>
+    [JSInvokable]
+    public async Task OnViewportBecameDesktop() => await CloseDrawer();
 
     private async Task Logout()
     {
+        await CloseDrawer();
         await Auth.LogoutAsync();
         Nav.NavigateTo("", forceLoad: false);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_scrollLocked) await SafeInvokeAsync("solonUx.setScrollLock", false);
+
+        await SafeInvokeAsync("solonUx.unwatchViewport");
+        _selfRef?.Dispose();
     }
 }

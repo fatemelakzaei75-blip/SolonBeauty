@@ -27,7 +27,7 @@
         @if (Featured is not null && string.IsNullOrEmpty(_cat))
         {
             <a class="blog-featured" href="@($"blog/{Featured.Slug}")">
-                <img src="@Featured.Image" alt="@Featured.Title" />
+                <img src="@Featured.Image" alt="@Featured.Title" width="760" height="430" fetchpriority="high" decoding="async" />
                 <div>
                     <span class="work-chip">@Featured.Category</span>
                     <h3>@Featured.Title</h3>
@@ -41,7 +41,7 @@
             @foreach (var post in Posts)
             {
                 <a class="blog-card" href="@($"blog/{post.Slug}")">
-                    <img src="@post.Image" alt="@post.Title" loading="lazy" />
+                    <img src="@post.Image" alt="@post.Title" width="380" height="240" loading="lazy" decoding="async" />
                     <div>
                         <span class="work-chip">@post.Category</span>
                         <h3>@post.Title</h3>
