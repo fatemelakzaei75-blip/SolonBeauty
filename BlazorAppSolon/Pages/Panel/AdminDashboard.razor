@@ -150,11 +150,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>کاشت و طراحی ناخن</td><td>۲۸</td><td>۵۳,۲۰۰,۰۰۰ تومان</td><td>۳۸٪</td></tr>
-                        <tr><td>رنگ و بالیاژ مو</td><td>۱۹</td><td>۶۱,۵۰۰,۰۰۰ تومان</td><td>۲۶٪</td></tr>
-                        <tr><td>میکاپ و شنیون عروس</td><td>۸</td><td>۵۸,۰۰۰,۰۰۰ تومان</td><td>۱۵٪</td></tr>
-                        <tr><td>فیشال و پاکسازی پوست</td><td>۱۵</td><td>۲۱,۰۰۰,۰۰۰ تومان</td><td>۱۴٪</td></tr>
-                        <tr><td>اکستنشن مژه</td><td>۱۱</td><td>۱۳,۲۰۰,۰۰۰ تومان</td><td>۷٪</td></tr>
+                        <tr><td data-primary="true">کاشت و طراحی ناخن</td><td data-label="تعداد رزرو">۲۸</td><td data-label="مجموع درآمد">۵۳,۲۰۰,۰۰۰ تومان</td><td data-label="درصد محبوبیت">۳۸٪</td></tr>
+                        <tr><td data-primary="true">رنگ و بالیاژ مو</td><td data-label="تعداد رزرو">۱۹</td><td data-label="مجموع درآمد">۶۱,۵۰۰,۰۰۰ تومان</td><td data-label="درصد محبوبیت">۲۶٪</td></tr>
+                        <tr><td data-primary="true">میکاپ و شنیون عروس</td><td data-label="تعداد رزرو">۸</td><td data-label="مجموع درآمد">۵۸,۰۰۰,۰۰۰ تومان</td><td data-label="درصد محبوبیت">۱۵٪</td></tr>
+                        <tr><td data-primary="true">فیشال و پاکسازی پوست</td><td data-label="تعداد رزرو">۱۵</td><td data-label="مجموع درآمد">۲۱,۰۰۰,۰۰۰ تومان</td><td data-label="درصد محبوبیت">۱۴٪</td></tr>
+                        <tr><td data-primary="true">اکستنشن مژه</td><td data-label="تعداد رزرو">۱۱</td><td data-label="مجموع درآمد">۱۳,۲۰۰,۰۰۰ تومان</td><td data-label="درصد محبوبیت">۷٪</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -174,10 +174,10 @@
                         @foreach (var staff in _staffList.Take(4))
                         {
                             <tr>
-                                <td><strong>@staff.FullName</strong></td>
-                                <td>@staff.Specialty</td>
-                                <td>@(staff.Line == "ناخن" ? "۲۸" : staff.Line == "مو" ? "۱۹" : "۱۲") نوبت</td>
-                                <td>⭐ ۵.۰</td>
+                                <td data-primary="true"><strong>@staff.FullName</strong></td>
+                                <td data-label="تخصص">@staff.Specialty</td>
+                                <td data-label="نوبت‌های ثبت‌شده">@(staff.Line == "ناخن" ? "۲۸" : staff.Line == "مو" ? "۱۹" : "۱۲") نوبت</td>
+                                <td data-label="رضایت">⭐ ۵.۰</td>
                             </tr>
                         }
                     </tbody>
@@ -196,7 +196,7 @@
             </div>
         </div>
 
-        <div style="overflow-x:auto">
+        <div class="panel-table-wrap">
             <table class="panel-table">
                 <thead>
                     <tr>
@@ -216,19 +216,19 @@
                     @foreach (var rsv in FilteredReservations())
                     {
                         <tr>
-                            <td><code>@rsv.TrackingCode</code></td>
-                            <td><strong>@rsv.CustomerName</strong></td>
-                            <td>@rsv.ServiceName</td>
-                            <td>@(string.IsNullOrWhiteSpace(rsv.PersonalName) ? "-" : rsv.PersonalName)</td>
-                            <td>@PersianDateHelper.ToShamsi(rsv.ReserveDate)</td>
-                            <td>@rsv.ReserveTime.ToString(@"hh\:mm")</td>
-                            <td>@((rsv.PayableAmount > 0 ? rsv.PayableAmount : rsv.Price).ToString("#,0")) تومان</td>
-                            <td>
+                            <td data-label="کد پیگیری"><code>@rsv.TrackingCode</code></td>
+                            <td data-primary="true"><strong>@rsv.CustomerName</strong></td>
+                            <td data-label="خدمت">@rsv.ServiceName</td>
+                            <td data-label="پرسنل">@(string.IsNullOrWhiteSpace(rsv.PersonalName) ? "-" : rsv.PersonalName)</td>
+                            <td data-label="تاریخ">@PersianDateHelper.ToShamsi(rsv.ReserveDate)</td>
+                            <td data-label="ساعت">@rsv.ReserveTime.ToString(@"hh\:mm")</td>
+                            <td data-label="مبلغ نهایی">@((rsv.PayableAmount > 0 ? rsv.PayableAmount : rsv.Price).ToString("#,0")) تومان</td>
+                            <td data-label="نوع رزرو">
                                 <span class="badge @(rsv.ReservationType == ReservationType.InPerson ? "inp" : "onl")">
                                     @(rsv.ReservationType == ReservationType.InPerson ? "حضوری" : "آنلاین")
                                 </span>
                             </td>
-                            <td>
+                            <td data-label="وضعیت نوبت">
                                 <span class="badge @ReservationClient.StatusCss(rsv.Status)">
                                     @ReservationClient.StatusLabel(rsv.Status)
                                 </span>
@@ -237,7 +237,7 @@
                                     <small class="refund-badge">استرداد: @rsv.RefundAmount.ToString("#,0")</small>
                                 }
                             </td>
-                            <td class="row-actions">
+                            <td class="row-actions" data-label="عملیات">
                                 @if (rsv.Status != ReservationStatus.Confirmed && rsv.Status != ReservationStatus.Done)
                                 {
                                     <button class="mini ok" @onclick="@(() => ConfirmRsv(rsv.Tc))">تأیید</button>

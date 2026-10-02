@@ -21,7 +21,7 @@
         <div class="panel-alert">@_message</div>
     }
 
-    <div style="overflow-x:auto;">
+    <div class="panel-table-wrap">
         <table class="panel-table">
             <thead>
                 <tr>
@@ -40,10 +40,11 @@
                 @foreach (var item in rows)
                 {
                     <tr>
-                        <td>@(i++)</td>
+                        <td data-index>@(i++)</td>
+                        @{ var ci = 0; var pIdx = PrimaryColumnIndex(); }
                         @foreach (var p in Columns)
                         {
-                            <td>
+                            <td data-label="@Label(p)" data-primary="@(ci++ == pIdx ? "true" : null)">
                                 @if (IsImageField(p.Name) && p.GetValue(item) is string img && !string.IsNullOrWhiteSpace(img))
                                 {
                                     <img class="cell-thumb" src="@img" alt="" width="40" height="40" loading="lazy" decoding="async" />
@@ -54,11 +55,11 @@
                                 }
                             </td>
                         }
-                        <td>
+                        <td data-label="وضعیت">
                             <span class="badge @(item.IsActive ? "ok" : "off")">@(item.IsActive ? "فعال" : "غیرفعال")</span>
                         </td>
-                        <td>@PersianDateHelper.ToShamsi(item.RegisterData)</td>
-                        <td class="row-actions">
+                        <td data-label="تاریخ ثبت">@PersianDateHelper.ToShamsi(item.RegisterData)</td>
+                        <td class="row-actions" data-label="عملیات">
                             <button class="mini" @onclick="() => StartEdit(item)">ویرایش</button>
                             <button class="mini danger" @onclick="async () => await Remove(item)">حذف</button>
                         </td>
@@ -132,6 +133,19 @@
     private List<PropertyInfo> Columns => AllProps.Take(5).ToList();
 
     private static readonly string[] ImageKeywords = { "pic", "image", "logo", "photo", "sample", "avatar" };
+
+    /// <summary>
+    /// ایندکس ستونی که در حالت کارت موبایل به عنوان تیتر کارت نمایش داده می‌شود.
+    /// اولین ستون غیرتصویری انتخاب می‌شود تا تیتر کارت متن باشد نه تصویر خالی.
+    /// </summary>
+    private int PrimaryColumnIndex()
+    {
+        for (var k = 0; k < Columns.Count; k++)
+        {
+            if (!IsImageField(Columns[k].Name)) return k;
+        }
+        return 0;
+    }
 
     private static bool IsImageField(string name)
         => ImageKeywords.Any(k => name.Contains(k, StringComparison.OrdinalIgnoreCase));

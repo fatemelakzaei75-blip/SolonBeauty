@@ -31,15 +31,15 @@
             @foreach (var a in _items)
             {
                 <tr>
-                    <td><code>@(string.IsNullOrWhiteSpace(a.TrackingCode) ? a.Tc.ToString()[..8] : a.TrackingCode)</code></td>
-                    <td><strong>@a.CustomerName</strong></td>
-                    <td dir="ltr">@a.MobileNumber</td>
-                    <td>@a.ServiceName</td>
-                    <td>@PersianDateHelper.ToShamsi(a.ReserveDate)</td>
-                    <td>@a.ReserveTime.ToString(@"hh\:mm")</td>
-                    <td style="max-width:180px">@(string.IsNullOrWhiteSpace(a.CustomerNote) ? "-" : a.CustomerNote)</td>
-                    <td><span class="badge @ReservationClient.StatusCss(a.Status)">@ReservationClient.StatusLabel(a.Status)</span></td>
-                    <td class="row-actions">
+                    <td data-label="کد پیگیری"><code>@(string.IsNullOrWhiteSpace(a.TrackingCode) ? a.Tc.ToString()[..8] : a.TrackingCode)</code></td>
+                    <td data-primary="true"><strong>@a.CustomerName</strong></td>
+                    <td data-label="موبایل">@a.MobileNumber</td>
+                    <td data-label="خدمت">@a.ServiceName</td>
+                    <td data-label="تاریخ">@PersianDateHelper.ToShamsi(a.ReserveDate)</td>
+                    <td data-label="ساعت">@a.ReserveTime.ToString(@"hh\:mm")</td>
+                    <td data-label="یادداشت">@(string.IsNullOrWhiteSpace(a.CustomerNote) ? "-" : a.CustomerNote)</td>
+                    <td data-label="وضعیت"><span class="badge @ReservationClient.StatusCss(a.Status)">@ReservationClient.StatusLabel(a.Status)</span></td>
+                    <td class="row-actions" data-label="عملیات">
                         @if (a.Status == ReservationStatus.Pending || a.Status == ReservationStatus.PendingPayment)
                         {
                             <button class="mini ok" @onclick="() => SetStatus(a, ReservationStatus.Confirmed)">تأیید نوبت</button>

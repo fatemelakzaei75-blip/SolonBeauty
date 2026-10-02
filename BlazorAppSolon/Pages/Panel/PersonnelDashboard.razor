@@ -52,7 +52,7 @@
         <a class="btn-solon ghost sm" href="panel/personnel/schedule">مشاهده برنامه هفتگی</a>
     </div>
 
-    <div style="overflow-x:auto">
+    <div class="panel-table-wrap">
         <table class="panel-table">
             <thead>
                 <tr>
@@ -68,12 +68,12 @@
                 @foreach (var rsv in _myReservations.Take(5))
                 {
                     <tr>
-                        <td><code>@rsv.TrackingCode</code></td>
-                        <td><strong>@rsv.CustomerName</strong></td>
-                        <td>@rsv.ServiceName</td>
-                        <td>@PersianDateHelper.ToShamsi(rsv.ReserveDate)</td>
-                        <td>@rsv.ReserveTime.ToString(@"hh\:mm")</td>
-                        <td><span class="badge @ReservationClient.StatusCss(rsv.Status)">@ReservationClient.StatusLabel(rsv.Status)</span></td>
+                        <td data-label="کد رهگیری"><code>@rsv.TrackingCode</code></td>
+                        <td data-primary="true"><strong>@rsv.CustomerName</strong></td>
+                        <td data-label="خدمت">@rsv.ServiceName</td>
+                        <td data-label="تاریخ">@PersianDateHelper.ToShamsi(rsv.ReserveDate)</td>
+                        <td data-label="ساعت">@rsv.ReserveTime.ToString(@"hh\:mm")</td>
+                        <td data-label="وضعیت"><span class="badge @ReservationClient.StatusCss(rsv.Status)">@ReservationClient.StatusLabel(rsv.Status)</span></td>
                     </tr>
                 }
             </tbody>

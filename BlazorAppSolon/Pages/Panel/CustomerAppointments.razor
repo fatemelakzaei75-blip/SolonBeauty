@@ -52,13 +52,13 @@
             @foreach (var a in _items)
             {
                 <tr>
-                    <td><code>@(string.IsNullOrWhiteSpace(a.TrackingCode) ? a.Tc.ToString()[..8] : a.TrackingCode)</code></td>
-                    <td><strong>@a.ServiceName</strong></td>
-                    <td>@PersianDateHelper.ToShamsi(a.ReserveDate)</td>
-                    <td>@a.ReserveTime.ToString(@"hh\:mm")</td>
-                    <td>@((a.PayableAmount > 0 ? a.PayableAmount : a.Price).ToString("#,0")) تومان</td>
-                    <td><span class="badge @ReservationClient.StatusCss(a.Status)">@ReservationClient.StatusLabel(a.Status)</span></td>
-                    <td class="row-actions">
+                    <td data-label="کد رهگیری"><code>@(string.IsNullOrWhiteSpace(a.TrackingCode) ? a.Tc.ToString()[..8] : a.TrackingCode)</code></td>
+                    <td data-primary="true"><strong>@a.ServiceName</strong></td>
+                    <td data-label="تاریخ">@PersianDateHelper.ToShamsi(a.ReserveDate)</td>
+                    <td data-label="ساعت">@a.ReserveTime.ToString(@"hh\:mm")</td>
+                    <td data-label="هزینه نهایی">@((a.PayableAmount > 0 ? a.PayableAmount : a.Price).ToString("#,0")) تومان</td>
+                    <td data-label="وضعیت"><span class="badge @ReservationClient.StatusCss(a.Status)">@ReservationClient.StatusLabel(a.Status)</span></td>
+                    <td class="row-actions" data-label="عملیات">
                         @if (a.Status is ReservationStatus.Pending or ReservationStatus.PendingPayment or ReservationStatus.Confirmed)
                         {
                             <button class="mini danger" @onclick="() => Cancel(a)">لغو نوبت</button>

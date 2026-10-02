@@ -2958,3 +2958,147 @@ input[type="number"]::-webkit-inner-spin-button {
     overscroll-behavior-x: contain;
 }
 
+/* ==========================================================================
+   جدول‌های پنل: تبدیل سطر به کارت در موبایل
+   --------------------------------------------------------------------------
+   روی موبایل، جدول‌های ۹ تا ۱۰ ستونه پنل اجباراً ۶۰۰px عرض می‌گرفتند و
+   کاربر باید افقی اسکرول می‌کرد — که در یک اپ موبایلی پذیرفته نیست.
+   اینجا هر «سطر» به یک «کارت مستقل» تبدیل می‌شود، هر «سلول» به یک ردیف
+   «برچسب / مقدار»، و دکمه‌های عملیات به دکمه‌های تمام‌عرض و لمس‌پذیر.
+
+   پیاده‌سازی با data-label و data-primary در markup انجام شده تا دسکتاپ
+   کاملاً دست‌نخورده بماند و هیچ منطق C#ای تغییر نکند.
+   ========================================================================== */
+
+/* ---------- نمای دسکتاپ: کانتینر اسکرول افقی ---------- */
+.panel-table-wrap { width: 100%; }
+@media (min-width: 901px) {
+    .panel-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+}
+
+@media (max-width: 900px) {
+
+    /* در حالت کارت، اسکرول افقی نباید وجود داشته باشد.
+       نکته: قاعده قدیمی‌ترِ `.panel-table { min-width: 600px }` باید
+       خنثی شود، وگرنه کارت‌ها روی موبایل ۶۰۰px عرض می‌گیرند. */
+    .panel-table-wrap { overflow-x: visible; }
+    .panel-table { min-width: 0; }
+    /* overflow-x:auto روی کارت، سایه کارت‌ها را می‌بُرد */
+    .panel-card { overflow-x: visible; }
+
+    .panel-table,
+    .panel-table tbody,
+    .panel-table tr,
+    .panel-table td {
+        display: block;
+        width: 100%;
+    }
+
+    /* سطر عنوان جدول در موبایل بی‌معناست (برچسب هر خانه کنارش نمایش داده می‌شود) */
+    .panel-table thead { display: none; }
+
+    /* ---------- هر سطر = یک کارت ---------- */
+    .panel-table tr {
+        position: relative;
+        background: #FFFFFF;
+        border: 1px solid #EFE6DA;
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(26, 20, 12, 0.05);
+        transition: box-shadow .15s ease, transform .15s ease;
+    }
+    .panel-table tr:last-child { margin-bottom: 0; }
+    /* در حالت کارت، هاور سطر بی‌اثر است */
+    .panel-table tbody tr:hover { background: #FFFFFF; }
+    .panel-table tbody tr:active { box-shadow: 0 1px 6px rgba(26, 20, 12, 0.09); }
+
+    /* ---------- هر سلول = ردیف «برچسب / مقدار» ---------- */
+    .panel-table td {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 14px;
+        padding: 7px 0;
+        border-bottom: 1px dashed #F1EAE0;
+        text-align: right;
+        font-size: .92rem;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+    .panel-table td:last-child { border-bottom: none; }
+
+    .panel-table td[data-label] { justify-content: space-between; }
+
+    .panel-table td[data-label]::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        font-size: .78rem;
+        font-weight: 600;
+        color: #8A8177;
+    }
+
+    /* مقدار سلول نباید از عرض کارت بیرون بزند */
+    .panel-table td > * { min-width: 0; }
+
+    /* ---------- تیتر کارت (ستون شناسه اصلی) ---------- */
+    .panel-table td[data-primary] {
+        display: block;
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: #1A1A1A;
+        padding: 0 0 10px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #F0E7DA;
+    }
+    .panel-table td[data-primary]::before { content: none; }
+    .panel-table td[data-primary] .cell-thumb {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+    }
+
+    /* ---------- ستون ردیف در حالت کارت حذف می‌شود ---------- */
+    .panel-table td[data-index] { display: none; }
+
+    /* ---------- عملیات: دکمه‌های تمام‌عرض با سطح لمس استاندارد ---------- */
+    .panel-table td.row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 0 0;
+        margin-top: 4px;
+        border-top: 1px solid #F0E7DA;
+        border-bottom: none;
+    }
+    .panel-table td.row-actions::before { content: none; }
+    .panel-table td.row-actions .mini {
+        flex: 1 1 auto;
+        min-height: var(--touch-min);
+        padding: 8px 14px;
+        font-size: .88rem;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    /* ---------- نشان «استرداد» در کارت، زیر برچسب وضعیت ---------- */
+    .panel-table td .refund-badge { display: block; margin-top: 2px; }
+
+    /* ---------- جدول‌های داخل جعبه‌های گزارش کمی فشرده‌تر ---------- */
+    .report-table-box .panel-table tr { padding: 12px 14px; }
+
+    /* ---------- نبود رکورد: کارت خالی هم شکل بقیه کارت‌ها ---------- */
+    .panel-table td[colspan] {
+        justify-content: center;
+        text-align: center;
+        border-bottom: none;
+        padding: 14px 0;
+    }
+}
