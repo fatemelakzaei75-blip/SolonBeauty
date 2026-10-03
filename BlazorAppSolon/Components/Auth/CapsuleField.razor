@@ -1,0 +1,145 @@
+@* ==========================================================================
+   CapsuleField — فیلد کپسولی پایه صفحه ورود
+   --------------------------------------------------------------------------
+   ساختار: برچسب بیرون از کپسول، و کپسول شامل آیکون اختیاری، ورودی و
+   اختیاراً هر محتوای دیگری (دکمه نمایش رمز در PasswordField).
+
+   چرا برچسب بیرون از کپسول است:
+   برچسب باید همیشه دیده شود. اگر داخل کپسول و به‌جای placeholder بگذاریم،
+   به محض تایپ ناپدید می‌شود و کاربر یادش نمی‌ماند چه چیزی را پر می‌کند.
+   (اگر برچسب شناور ترجیح داده شود، تغییرش یک قاعده CSS است.)
+
+   چرا ویژگی required به input داده نشده:
+   اعتبارسنجی این فرم فارسی و سفارشی است. اگر required مرورگر را هم روشن
+   کنیم، مرورگر با پیام انگلیسی خودش جلوی ارسال را می‌گیرد و با پیام‌های ما
+   تعارض پیدا می‌کند. به‌جایش aria-required می‌دهیم: صفحه‌خوان می‌فهمد،
+   ولی مرورگر دخالت نمی‌کند.
+   ========================================================================== *@
+
+<div class="lg-field @CssClass @(Error is not null ? "is-invalid" : null) @(Disabled ? "is-disabled" : null)">
+    <label class="lg-field__label" for="@Id">
+        @Label
+        @if (Required)
+        {
+            @* ستاره فقط تزئینی است؛ چیزی که صفحه‌خوان می‌خواند aria-required است *@
+            <span class="lg-field__req" aria-hidden="true">*</span>
+        }
+    </label>
+
+    <div class="lg-field__box">
+        @if (!string.IsNullOrEmpty(IconName))
+        {
+            <AuthIcons Name="@IconName" Class="lg-field__icon" />
+        }
+
+        <input id="@Id"
+               @ref="_inputRef"
+               class="lg-field__input"
+               type="@Type"
+               name="@Name"
+               value="@Value"
+               @oninput="OnInput"
+               placeholder="@Placeholder"
+               inputmode="@InputMode"
+               autocomplete="@Autocomplete"
+               enterkeyhint="@EnterKeyHint"
+               dir="@Dir"
+               maxlength="@MaxLength"
+               disabled="@Disabled"
+               aria-invalid="@(Error is not null ? "true" : null)"
+               aria-required="@(Required ? "true" : null)"
+               aria-describedby="@DescribedBy" />
+
+        @ChildContent
+    </div>
+
+    @if (Error is not null)
+    {
+        @* role=alert: پیام خطا در لحظه ظاهر شدن اعلام می‌شود. aria-live جداگانه
+           لازم نیست چون role=alert خودش یک ناحیه زنده است و برای خطای فرم
+           الگوی استاندارد به شمار می‌رود. *@
+        <p class="lg-field__error" id="@($"{Id}-err")" role="alert">
+            <AuthIcons Name="alert" Class="lg-field__error-icon" />
+            <span>@Error</span>
+        </p>
+    }
+    else if (!string.IsNullOrEmpty(Hint))
+    {
+        <p class="lg-field__hint" id="@($"{Id}-hint")">@Hint</p>
+    }
+</div>
+
+@code {
+    /// <summary>شناسه ورودی. برای وصل شدن برچسب به فیلد اجباری است.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    /// <summary>متن برچسب</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+
+    /// <summary>نوع ورودی: text | tel | password | email</summary>
+    [Parameter] public string Type { get; set; } = "text";
+
+    /// <summary>مقدار فیلد (دو‌طرفه با ValueChanged)</summary>
+    [Parameter] public string? Value { get; set; }
+
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter] public string? Placeholder { get; set; }
+
+    /// <summary>صفحه‌کلید مناسب موبایل: tel | numeric | email | text</summary>
+    [Parameter] public string? InputMode { get; set; }
+
+    [Parameter] public string? Autocomplete { get; set; }
+
+    [Parameter] public string? EnterKeyHint { get; set; }
+
+    /// <summary>جهت متن داخل فیلد. برای موبایل و رمز عبور «ltr» می‌دهیم.</summary>
+    [Parameter] public string? Dir { get; set; }
+
+    [Parameter] public string? Name { get; set; }
+
+    [Parameter] public int? MaxLength { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public bool Required { get; set; }
+
+    /// <summary>نام آیکون از AuthIcons</summary>
+    [Parameter] public string? IconName { get; set; }
+
+    /// <summary>متن راهنما. وقتی خطا هست، خطا جای راهنما را می‌گیرد تا زیر فیلد شلوغ نشود.</summary>
+    [Parameter] public string? Hint { get; set; }
+
+    /// <summary>پیام خطا. پر بودنش یعنی فیلد نامعتبر است.</summary>
+    [Parameter] public string? Error { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    /// <summary>محتوای اضافی داخل کپسول، بعد از ورودی (مثلاً دکمه نمایش رمز)</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// فوکوس برنامه‌ای روی خود ورودی.
+    /// چرا لازم است: وقتی برگه بازیابی رمز باز می‌شود، کاربر صفحه‌کلید/صفحه‌خوان
+    /// باید داخل همان برگه باشد. ElementReference.FocusAsync خود Blazor است،
+    /// پس هیچ جاوااسکریپت سفارشی‌ای لازم نیست.
+    /// </summary>
+    public ValueTask FocusAsync() => _inputRef.FocusAsync();
+
+    private ElementReference _inputRef;
+
+    /// <summary>
+    /// شناسه متنی که فیلد را توضیح می‌دهد.
+    /// فقط به عنصری اشاره می‌کند که واقعاً در DOM هست؛ اگر خطا هست به پیام خطا
+    /// و اگر نیست به راهنما. اشاره به شناسه ناموجود، صفحه‌خوان را گیج می‌کند.
+    /// </summary>
+    private string? DescribedBy =>
+        Error is not null ? $"{Id}-err"
+        : !string.IsNullOrEmpty(Hint) ? $"{Id}-hint"
+        : null;
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        await ValueChanged.InvokeAsync(e.Value?.ToString());
+    }
+}

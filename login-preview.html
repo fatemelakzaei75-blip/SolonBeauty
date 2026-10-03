@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>مرحله ۲ — کامپوننت‌های پایه صفحه ورود | SolonBeauty</title>
+<style>
+/* ==========================================================================
+   SolonBeauty — صفحه ورود
+   --------------------------------------------------------------------------
+   فایل خودبسنده برای صفحه ورود: توکن‌های رنگ + کامپوننت‌های پایه (فیلد
+   کپسولی، دکمه‌ها، پیام خطا).
+
+   چرا فایل جدا و چرا دامنه‌دار روی .lg:
+   app.css حدود ۲۹۸۶ خط است و توکن‌هایش (--bg-light و…) در سراسر سایت استفاده
+   می‌شوند. اگر رنگ‌های این صفحه را داخل :root می‌ریختیم، عوض کردنشان کل سایت
+   را جابه‌جا می‌کرد. پس همه چیز روی .lg (ریشه صفحه ورود) دامنه دارد — همان
+   الگویی که در splash.css جواب داد. هیچ قاعده‌ای به بیرون درز نمی‌کند.
+
+   چرا تمام رنگ‌ها فقط در بلوک .lg زندگی می‌کنند:
+   بریف صریح گفته «بدون کدرنگ پراکنده». هر رنگی که پایین‌تر در فایل می‌بینید
+   با var() خوانده می‌شود. اگر روزی طلایی برند عوض شود، فقط همین یک بلوک
+   تغییر می‌کند. tools/test-login.js این را ماشینی بررسی می‌کند: هیچ کدرنگ
+   شش‌رقمی بیرون از بلوک توکن مجاز نیست.
+
+   چیدمان و موج SVG در مرحله‌های بعد به همین فایل اضافه می‌شوند.
+   ========================================================================== */
+
+/* ==========================================================================
+   ۱) توکن‌های رنگ — حالت روشن
+   ========================================================================== */
+.lg {
+    /* ---------- پس‌زمینه صفحه (همیشه تیره) ----------
+       صفحه ورود مستقل از حالت روشن/تیره، پس‌زمینه تیره دارد؛ چون کارت روی
+       آن می‌نشیند و کنتراست را تأمین می‌کند. */
+    --lg-page-1: #2A221B;                       /* مرکز گرادیان */
+    --lg-page-2: #14110F;                       /* لبه گرادیان */
+
+    /* ---------- سطح فرم ---------- */
+    --lg-surface: #F7F2EA;                      /* عاجی — سطح فرم */
+    --lg-surface-2: #F1EAE0;                    /* سطح فرعی (بلوک راهنما) */
+
+    /* ---------- لایه‌های موج، از تیره (کنار تصویر) به روشن (هم‌رنگ فرم) ---------- */
+    --lg-wave-1: #B49560;                       /* طلایی تیره — همسایه تصویر */
+    --lg-wave-2: #CDB88F;                       /* شامپاینی */
+    --lg-wave-3: #DBCBAF;                       /* حد وسط */
+    --lg-wave-4: #E9DFD0;                       /* کرم */
+    --lg-wave-5: #F7F2EA;                       /* عاجی — همسایه فرم */
+
+    /* ---------- ناحیه تصویر ----------
+       رنگ زمینه دقیقاً هم‌رنگ پس‌زمینه ایلوستریشن تا درز دیده نشود.
+       در مرحله ۷ این مقدار از تنظیمات سالن می‌آید. */
+    --lg-photo-bg: #D8CCBE;
+
+    /* ---------- طلایی برند ---------- */
+    --lg-gold: #C6A46A;
+    --lg-gold-dark: #A8854B;
+
+    /* طلایی عمیق برای متن روی سطح عاجی.
+       چرا لازم است — این عدد از محاسبه کنتراست آمده، نه از سلیقه:
+       #C6A46A روی #F7F2EA فقط ۲٫۱۱:۱ می‌دهد و #A8854B هم ۳٫۰۸:۱.
+       هیچ‌کدام حد ۴٫۵:۱ بریف را رد نمی‌کنند. اما #7A5A22 روی همان سطح
+       ۵٫۶۹:۱ می‌دهد. این رنگ خودش از گرادیان ورق طلای بریف آمده، پس
+       هم‌خانواده است و از پالت بیرون نیست. */
+    --lg-gold-deep: #7A5A22;
+
+    /* زمینه‌های نیمه‌شفاف طلایی (برای hover و حلقه فوکوس) */
+    --lg-gold-tint: rgba(198, 164, 106, 0.12);
+    --lg-gold-ring: rgba(198, 164, 106, 0.30);
+
+    /* ---------- متن ---------- */
+    --lg-text: #2A2420;
+    --lg-text-dim: #6F655B;
+    --lg-text-on-dark: #EDE6DA;
+
+    /* ---------- فیلد کپسولی ---------- */
+    --lg-field-bg: #FFFDFA;
+    --lg-field-border: #E6DCCE;
+    --lg-field-border-strong: #D8CAB6;
+
+    /* ---------- وضعیت‌ها ----------
+       قرمز خطا روشن انتخاب نشده؛ باید روی سطح عاجی حد ۴٫۵ را رد کند.
+       #B3261E روی #F7F2EA برابر ۵٫۸۷:۱ است. */
+    --lg-danger: #B3261E;
+    --lg-danger-tint: rgba(179, 38, 30, 0.10);
+
+    /* ---------- دکمه اصلی ---------- */
+    --lg-btn-bg: #14110F;
+    --lg-btn-bg-hover: #241E19;
+    --lg-btn-text: #C6A46A;
+
+    /* ---------- خط جداکننده ---------- */
+    --lg-divider: #E0D5C5;
+
+    /* ---------- اندازه‌ها ----------
+       همه اهداف لمس حداقل ۴۴ پیکسل — معیار بریف و توکن موجود پروژه. */
+    --lg-touch: 44px;
+    --lg-field-h: 52px;
+    --lg-btn-h: 52px;
+    --lg-radius: 999px;                         /* کپسولی */
+    --lg-ring-w: 3px;
+
+    /* ---------- چیدمان کارت (مرحله ۳) ---------- */
+    --lg-card-max: 1000px;                      /* حد بالای عرض کارت */
+    --lg-card-min: 600px;                       /* حد پایین ارتفاع کارت در دسکتاپ */
+    --lg-card-radius: 34px;
+    --lg-card-shadow: 0 44px 90px -34px rgba(0, 0, 0, 0.72);
+
+    /* سهم ستون فرم از عرض کارت.
+       نسبت ستون‌ها 1fr / 1.3fr است؛ ۱۰۰ ÷ (۱ + ۱٫۳) = ۴۳٫۴۷۸.
+       همین عدد مبنای جای‌گذاری موج است: موج باید دقیقاً روی مرز دو ستون
+       بنشیند. آزمون بررسی می‌کند که این عدد با نسبت ستون‌ها هم‌خوان باشد. */
+    --lg-form-share: 43.478%;
+
+    --lg-wave-w: 240px;                         /* پهنای کل موج در دسکتاپ */
+    --lg-wave-h: 96px;                          /* ارتفاع موج در موبایل */
+    --lg-media-h: clamp(280px, 44svh, 400px);   /* ارتفاع ناحیه تصویر در موبایل */
+    --lg-card-overlap: 30px;                    /* هم‌پوشانی کارت شیشه‌ای با لبه موج */
+
+    /* کارت شیشه‌ای موبایل.
+       چرا گرادیان و نه یک آلفای ثابت: زیر کارت پس‌زمینه تیره صفحه است و
+       متن‌های کم‌رنگ روی ترکیب نیمه‌شفاف به ۴٫۱:۱ می‌رسیدند — زیر حد بریف.
+       پس کارت فقط در نوار بالایی شیشه‌ای است (همان‌جا که روی موج می‌افتد و
+       بلور دیده می‌شود) و تا ۱۴۰ پیکسل به سطح مات می‌رسد؛ آن‌جا برچسب‌ها و
+       فیلدها می‌نشینند و کنتراست کامل دارند. یعنی هم حس شیشه می‌دهد، هم
+       خوانایی‌اش قربانی نمی‌شود. */
+    --lg-glass-bg: rgba(247, 242, 234, 0.92);
+    --lg-glass-blur: 18px;
+    --lg-glass-solid-at: 140px;                 /* نقطه‌ای که کارت کاملاً مات می‌شود */
+
+    --lg-photo-pos: 50% 24%;                    /* تمرکز تصویر: ناحیه صورت */
+    --lg-form-pad-start: 44px;                  /* فاصله محتوا از لبه گرد کارت */
+    --lg-form-pad-end: 72px;                    /* فاصله از سمت موج */
+
+    /* پدینگ عمودی سیّال: در لپ‌تاپ کم‌ارتفاع فرم فشرده می‌شود تا کل کارت
+       در دید جا شود و نیازی به اسکرول نباشد، و در ارتفاع بلند نفس می‌کشد. */
+    --lg-form-pad-block: clamp(28px, 5vh, 54px);
+
+    /* سایه لایه‌های موج.
+       دو توکن: یکی برای نوار باریک هر لایه روی لایه زیرین، یکی برای سایه
+       بیرونی کل موج (جانشین سافاری وقتی drop-shadow هر لایه پشتیبانی نشود). */
+    --lg-wave-shadow: rgba(42, 34, 27, 0.30);
+    --lg-wave-shadow-soft: rgba(42, 34, 27, 0.22);
+}
+
+/* ==========================================================================
+   ۲) توکن‌های رنگ — حالت تیره
+   --------------------------------------------------------------------------
+   حالت تیره از همان قرارداد پروژه می‌آید: صفت data-theme="dark" روی ریشه سند
+   (همان چیزی که پنل ادمین ست می‌کند). کلاس .lg--dark هم گذاشته شده تا بتوان
+   روی خود صفحه ورود حالت تیره را اجباری کرد — برای تست و پیش‌نمایش.
+   ========================================================================== */
+[data-theme="dark"] .lg,
+.lg--dark {
+    --lg-surface: #1D1916;
+    --lg-surface-2: #241F1B;
+
+    /* لایه‌های موج در حالت تیره به سمت سطح تیره می‌روند، نه عاجی */
+    --lg-wave-1: #B49560;
+    --lg-wave-2: #8A7048;
+    --lg-wave-3: #5E4C36;
+    --lg-wave-4: #3A3026;
+    --lg-wave-5: #1D1916;
+
+    --lg-gold-deep: #E0C48A;                    /* روی سطح تیره، طلایی روشن */
+
+    --lg-text: #EDE6DA;
+    --lg-text-dim: #A89F93;
+    --lg-text-on-dark: #EDE6DA;
+
+    --lg-field-bg: #262220;
+    --lg-field-border: #3A332C;
+    --lg-field-border-strong: #4A4238;
+
+    --lg-danger: #F0A9A2;
+    --lg-danger-tint: rgba(240, 169, 162, 0.12);
+
+    /* دکمه اصلی در حالت تیره معکوس می‌شود.
+       چرا: پس‌زمینه تیره روی سطح تیره عملاً ناپدید می‌شد. این تنها راهی است
+       که دکمه اصلی در هر دو حالت «اصلی» خوانده شود. کنتراست در هر دو حالت
+       یکسان و ۸٫۰۸:۱ است، چون متن و زمینه جایشان را عوض می‌کنند. */
+    --lg-btn-bg: #C6A46A;
+    --lg-btn-bg-hover: #F1DDAE;
+    --lg-btn-text: #14110F;
+
+    --lg-divider: #3A332C;
+
+    /* کارت شیشه‌ای و سایه‌ها در حالت تیره.
+       سایه لایه‌ها پررنگ‌تر می‌شود چون روی زمینه تیره باید دیده شود. */
+    --lg-glass-bg: rgba(29, 25, 22, 0.90);
+    --lg-wave-shadow: rgba(0, 0, 0, 0.55);
+    --lg-wave-shadow-soft: rgba(0, 0, 0, 0.40);
+    --lg-card-shadow: 0 44px 90px -34px rgba(0, 0, 0, 0.85);
+}
+
+/* ==========================================================================
+   ۳) پایه صفحه ورود
+   ========================================================================== */
+.lg {
+    /* Safe area دستگاه‌های ناچ‌دار. max یعنی هرکدام بزرگ‌تر بود برنده است:
+       روی گوشی معمولی ۱۶ پیکسل، روی آیفون ناچ‌دار مقدار درست. */
+    padding-block: max(16px, env(safe-area-inset-top))
+                   max(16px, env(safe-area-inset-bottom));
+    padding-inline: max(16px, env(safe-area-inset-right))
+                    max(16px, env(safe-area-inset-left));
+    color: var(--lg-text);
+    font-family: Vazirmatn, Tahoma, system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* حذف حاشیه پیش‌فرض فقط داخل خود کامپوننت، نه سراسری */
+.lg *,
+.lg *::before,
+.lg *::after {
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   ۴) فیلد کپسولی
+   --------------------------------------------------------------------------
+   ساختار: برچسب بیرون از کپسول (برای خوانایی و دسترس‌پذیری) و کپسول شامل
+   آیکون اختیاری، ورودی و دکمه اختیاری.
+   ========================================================================== */
+.lg-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-inline-size: 0;                         /* جلوگیری از سرریز در گرید */
+}
+
+.lg-field__label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--lg-text-dim);
+    padding-inline-start: 20px;                 /* هم‌تراز با متن داخل کپسول */
+    line-height: 1.6;
+}
+
+.lg-field__req {
+    color: var(--lg-danger);
+    margin-inline-start: 3px;
+}
+
+/* ---------- کپسول ---------- */
+.lg-field__box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-block-size: var(--lg-field-h);
+    padding-inline: 20px 18px;
+    border: 1.5px solid var(--lg-field-border);
+    border-radius: var(--lg-radius);
+    background: var(--lg-field-bg);
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.lg-field__icon {
+    flex: none;
+    inline-size: 20px;
+    block-size: 20px;
+    color: var(--lg-text-dim);
+    opacity: 0.85;
+}
+
+.lg-field__input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    block-size: calc(var(--lg-field-h) - 4px);
+    border: 0;
+    background: transparent;
+    color: var(--lg-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.lg-field__input:focus {
+    outline: none;                              /* حلقه فوکوس روی کپسول می‌آید */
+}
+
+.lg-field__input::placeholder {
+    color: var(--lg-text-dim);
+    opacity: 0.72;
+}
+
+/* ورودی‌های عددی در راست‌به‌چپ: لاتین و چپ‌چین، چون شماره موبایل و رمز
+   عبور همیشه لاتین‌اند و راست‌چین شدنشان خواندن را سخت می‌کند. */
+.lg-field__input[dir="ltr"] {
+    /* start در عنصر با dir=ltr یعنی چپ. ویژگی منطقی انتخاب شده تا اگر روزی
+       جهت عوض شد، قاعده همچنان درست بماند. */
+    text-align: start;
+}
+
+/* بازخورد اشاره‌گر: بدون این، کاربر ماوس‌دار نمی‌فهمد کادر قابل کلیک است،
+   چون کادر دور فیلد است نه خود متن. */
+.lg-field__box:hover {
+    border-color: var(--lg-field-border-strong);
+}
+
+/* ---------- حالت فوکوس ----------
+   حلقه دور کل کپسول می‌آید، نه دور خود input. چرا: کاربر کادر کپسولی را
+   می‌بیند و حلقه باید همان چیزی را تأیید کند که می‌بیند. */
+.lg-field__box:focus-within {
+    border-color: var(--lg-gold);
+    box-shadow: 0 0 0 var(--lg-ring-w) var(--lg-gold-ring);
+}
+
+.lg-field__box:focus-within .lg-field__icon {
+    color: var(--lg-gold-deep);
+    opacity: 1;
+}
+
+/* ---------- حالت خطا ---------- */
+.lg-field.is-invalid .lg-field__box {
+    border-color: var(--lg-danger);
+    background: var(--lg-danger-tint);
+}
+
+.lg-field.is-invalid .lg-field__box:focus-within {
+    box-shadow: 0 0 0 var(--lg-ring-w) var(--lg-danger-tint);
+}
+
+.lg-field.is-invalid .lg-field__icon {
+    color: var(--lg-danger);
+}
+
+/* ---------- حالت غیرفعال ---------- */
+.lg-field.is-disabled .lg-field__box {
+    background: var(--lg-surface-2);
+    border-color: var(--lg-field-border);
+    opacity: 0.72;
+}
+
+.lg-field.is-disabled .lg-field__input {
+    cursor: not-allowed;
+}
+
+/* ---------- پر شدن خودکار مرورگر ----------
+   بدون این قاعده، مرورگر پس‌زمینه فیلد را زرد می‌کند و کپسول از پالت
+   بیرون می‌زند. ترفند: کشیدن سایه داخلی به اندازه کل کپسول. */
+.lg-field__input:-webkit-autofill,
+.lg-field__input:-webkit-autofill:hover,
+.lg-field__input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--lg-text);
+    -webkit-box-shadow: 0 0 0 60px var(--lg-field-bg) inset;
+    caret-color: var(--lg-text);
+}
+
+/* ---------- متن راهنما و خطا ---------- */
+.lg-field__hint {
+    font-size: 0.76rem;
+    line-height: 1.75;
+    color: var(--lg-text-dim);
+    padding-inline-start: 20px;
+}
+
+.lg-field__error {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.76rem;
+    line-height: 1.75;
+    color: var(--lg-danger);
+    padding-inline-start: 20px;
+}
+
+.lg-field__error-icon {
+    flex: none;
+    inline-size: 15px;
+    block-size: 15px;
+    margin-block-start: 3px;
+}
+
+/* ==========================================================================
+   ۵) دکمه نمایش/پنهان‌سازی رمز
+   --------------------------------------------------------------------------
+   دکمه‌ای داخل کپسول. هدف لمسش باید ۴۴ پیکسل باشد، ولی نباید کپسول را
+   بلند کند؛ پس با margin منفی از ارتفاع کپسول بیرون نمی‌زند.
+   ========================================================================== */
+.lg-field__eye {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--lg-touch);
+    block-size: var(--lg-touch);
+    margin-inline-end: -12px;                   /* جبران پدینگ کپسول */
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--lg-text-dim);
+    cursor: pointer;
+    transition: color 150ms ease, background-color 150ms ease;
+}
+
+.lg-field__eye:hover {
+    color: var(--lg-gold-deep);
+    background: var(--lg-gold-tint);
+}
+
+.lg-field__eye:focus-visible {
+    outline: 2px solid var(--lg-gold);
+    outline-offset: -2px;
+}
+
+/* دو آیکون نمایش/پنهان کردن روی هم می‌نشینند و یکی‌شان پنهان است.
+   با grid در یک خانه، هیچ‌کدام چیدمان را جابه‌جا نمی‌کند. */
+.lg-field__eye {
+    display: inline-grid;
+    place-items: center;
+}
+
+.lg-field__eye > * {
+    grid-area: 1 / 1;
+}
+
+.lg-field__eye svg {
+    inline-size: 20px;
+    block-size: 20px;
+}
+
+.lg-field__eye [hidden] {
+    display: none;
+}
+
+/* ==========================================================================
+   ۶) دکمه‌ها
+   ========================================================================== */
+.lg-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-block-size: var(--lg-btn-h);
+    padding-inline: 28px;
+    border: 1.5px solid transparent;
+    border-radius: var(--lg-radius);
+    font-family: inherit;
+    font-size: 0.97rem;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 170ms ease, border-color 170ms ease,
+                color 170ms ease, transform 140ms ease;
+}
+
+.lg-btn--block {
+    inline-size: 100%;
+}
+
+.lg-btn:focus-visible {
+    outline: 2px solid var(--lg-gold);
+    outline-offset: 3px;
+}
+
+.lg-btn:active:not(:disabled) {
+    transform: scale(0.985);
+}
+
+/* ---------- دکمه اصلی ---------- */
+.lg-btn--primary {
+    background: var(--lg-btn-bg);
+    color: var(--lg-btn-text);
+}
+
+.lg-btn--primary:hover:not(:disabled) {
+    background: var(--lg-btn-bg-hover);
+}
+
+/* ---------- دکمه ثانویه ----------
+   زمینه شفاف با حاشیه طلایی، طبق بریف. متنش طلایی عمیق است نه طلایی برند،
+   چون طلایی برند روی سطح عاجی حد ۴٫۵:۱ را رد نمی‌کند (محاسبه در بالای فایل). */
+.lg-btn--ghost {
+    background: transparent;
+    border-color: var(--lg-gold);
+    color: var(--lg-gold-deep);
+}
+
+.lg-btn--ghost:hover:not(:disabled) {
+    background: var(--lg-gold-tint);
+    border-color: var(--lg-gold-dark);
+}
+
+/* ---------- حالت غیرفعال ---------- */
+.lg-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ---------- حالت بارگذاری ----------
+   دکمه غیرفعال می‌ماند (تا دوباره زده نشود) ولی شفافیتش کم نمی‌شود، چون
+   کم‌رنگ شدن وسط انتظار شبیه خرابی دیده می‌شود. */
+.lg-btn.is-loading {
+    cursor: progress;
+    opacity: 1;
+}
+
+.lg-btn__spinner {
+    flex: none;
+    inline-size: 18px;
+    block-size: 18px;
+    border: 2px solid currentColor;
+    border-block-start-color: transparent;
+    border-radius: 50%;
+    animation: lg-spin 700ms linear infinite;
+}
+
+@keyframes lg-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* آیکون داخل دکمه (مثلاً دکمه ورود با کد یکبار مصرف) */
+.lg-btn__icon {
+    flex: none;
+    inline-size: 19px;
+    block-size: 19px;
+}
+
+/* ==========================================================================
+   ۷) خط جداکننده «یا»
+   ========================================================================== */
+.lg-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--lg-text-dim);
+    font-size: 0.8rem;
+}
+
+.lg-divider::before,
+.lg-divider::after {
+    content: "";
+    flex: 1 1 auto;
+    block-size: 1px;
+    background: var(--lg-divider);
+}
+
+/* ==========================================================================
+   ۸) پیوند متنی
+   --------------------------------------------------------------------------
+   حداقل ارتفاع ۴۴ پیکسل دارد تا هدف لمس کافی باشد، ولی به‌صورت بصری فقط
+   متن دیده می‌شود (ناحیه کلیک بزرگ‌تر از چیزی است که چشم می‌بیند).
+   ========================================================================== */
+.lg-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--lg-touch);
+    padding-inline: 10px;
+    border: 0;
+    background: transparent;
+    color: var(--lg-gold-deep);
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: color 150ms ease, background-color 150ms ease;
+}
+
+.lg-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.lg-link:focus-visible {
+    outline: 2px solid var(--lg-gold);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   ۹) پیام سطح فرم
+   --------------------------------------------------------------------------
+   برای خطای کلی ورود (مثلاً «شماره یا رمز نادرست است») که به یک فیلد خاص
+   وصل نیست.
+   ========================================================================== */
+.lg-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-size: 0.82rem;
+    line-height: 1.8;
+}
+
+.lg-alert--error {
+    background: var(--lg-danger-tint);
+    color: var(--lg-danger);
+}
+
+.lg-alert--ok {
+    background: var(--lg-gold-tint);
+    color: var(--lg-gold-deep);
+}
+
+.lg-alert__icon {
+    flex: none;
+    inline-size: 17px;
+    block-size: 17px;
+    margin-block-start: 4px;
+}
+
+/* متن فقط برای صفحه‌خوان */
+.lg-sr {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ==========================================================================
+   ۱۱) صفحه ورود و قالب آن
+   --------------------------------------------------------------------------
+   قالب با flex و margin:auto وسط‌چین می‌شود، نه با justify-content:center.
+   دلیل: اگر محتوا از ارتفاع دید بلندتر شود، وسط‌چین کردن با justify-content
+   لبه بالای کارت را می‌برد و کاربر به آن دسترسی ندارد. با margin:auto
+   هرگز بریده نمی‌شود و صفحه همان‌قدر که لازم است اسکرول می‌شود.
+   ========================================================================== */
+.lg {
+    min-block-size: 100svh;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(120% 90% at 50% 0%,
+                                var(--lg-page-1) 0%, var(--lg-page-2) 70%);
+}
+
+.lg-shell {
+    margin: auto;                               /* وسط افقی + عمودی، بی‌برش */
+    inline-size: 100%;
+    display: grid;
+    gap: 20px;
+    justify-items: center;
+}
+
+/* خط پایانی زیر کارت — روی پس‌زمینه تیره صفحه */
+.lg-shell__foot {
+    margin: 0;
+    color: var(--lg-text-on-dark);
+    font-size: 0.78rem;
+    opacity: 0.75;
+}
+
+/* ==========================================================================
+   ۱۲) کارت
+   --------------------------------------------------------------------------
+   موبایل: یک ستون — تصویر بالا، فرم پایین به شکل کارت شیشه‌ای که کمی روی
+   لبه موج می‌افتد.
+   دسکتاپ: دو ستون 1fr فرم / 1.3fr تصویر.
+
+   ترتیب DOM: فرم اول، تصویر دوم. چون صفحه راست‌به‌چپ است، فرم در ستون
+   اول یعنی سمت راست می‌نشیند و تصویر سمت چپ — دقیقاً آینه نمونه انگلیسی.
+   (این ترتیب برای صفحه‌خوان هم بهتر است: عنوان و فیلدها اول خوانده می‌شوند.)
+   ========================================================================== */
+.lg-card {
+    position: relative;
+    isolation: isolate;                         /* لایه‌بندی موج به بیرون درز نکند */
+    inline-size: 100%;
+    max-inline-size: var(--lg-card-max);
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    background: var(--lg-surface);
+    border-radius: 0;                           /* موبایل: تمام‌عرض، بدون گردی */
+    overflow: hidden;                           /* گوشه گرد و مهار سایه موج */
+    box-shadow: var(--lg-card-shadow);
+}
+
+/* ---------- ستون فرم ---------- */
+.lg-card__form {
+    position: relative;
+    z-index: 3;                                 /* روی موج و تصویر */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 26px;
+    margin-block-start: calc(-1 * var(--lg-card-overlap));
+    margin-inline: 12px;
+    padding-block: 30px 34px;
+    padding-inline: 20px;
+    border-radius: var(--lg-card-radius);
+
+    /* کارت شیشه‌ای موبایل: نیمه‌شفاف در بالا، مات در محل متن (بالا توضیح داده شد).
+       اگر مرورگر backdrop-filter نداشته باشد، قاعده @supports پایین‌تر
+       سطح را کاملاً مات می‌کند تا خوانایی از دست نرود. */
+    background: linear-gradient(180deg,
+                                var(--lg-glass-bg) 0,
+                                var(--lg-glass-bg) 44px,
+                                var(--lg-surface) var(--lg-glass-solid-at));
+    -webkit-backdrop-filter: blur(var(--lg-glass-blur)) saturate(1.15);
+    backdrop-filter: blur(var(--lg-glass-blur)) saturate(1.15);
+
+    /* سایه به سمت بالا روی موج می‌افتد، تا کارت از نوار موج جدا خوانده شود */
+    box-shadow: 0 -20px 44px -26px var(--lg-wave-shadow);
+}
+
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    .lg-card__form {
+        background: var(--lg-surface);          /* جانشین مات */
+    }
+}
+
+/* ---------- ناحیه تصویر ---------- */
+.lg-card__media {
+    position: relative;
+    z-index: 1;                                 /* عمیق‌ترین لایه — زیر موج */
+    block-size: var(--lg-media-h);
+    background: var(--lg-photo-bg);             /* هم‌رنگ پس‌زمینه تصویرسازی */
+    overflow: hidden;
+}
+
+.lg-card__media picture {
+    display: block;
+    block-size: 100%;
+}
+
+.lg-photo {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: var(--lg-photo-pos);
+}
+
+/* ==========================================================================
+   ۱۳) موج چندلایه
+   --------------------------------------------------------------------------
+   شکل موج در SVG است (کامپوننت WaveDivider) و اینجا فقط رنگ و سایه‌اش
+   تعریف می‌شود. بریف خواسته بود هیچ کدرنگی بیرون از بلوک توکن نباشد، پس
+   fill هر لایه از var(--lg-wave-N) می‌آید.
+
+   سایه هر لایه به سمت تصویر می‌افتد — در دسکتاپ به چپ، در موبایل به بالا.
+   چون هر لایه روی لایه قبلی کشیده می‌شود، سایه روی نوار نازکِ دیده‌شده
+   لایه زیرین می‌افتد: همان «ورق‌های بریده‌شده روی هم» که مهم‌ترین جزئیات
+   این صفحه است.
+   ========================================================================== */
+.lg-card__wave {
+    position: absolute;
+    z-index: 2;                                 /* روی تصویر، زیر کارت فرم */
+    pointer-events: none;                       /* هیچ‌وقت جلوی لمس را نمی‌گیرد */
+    filter: drop-shadow(0 16px 26px var(--lg-wave-shadow-soft));
+}
+
+/* موج افقی موبایل — پایه.
+   چرا روی خود svg مطلق می‌نشیند و به اندازه هم‌پوشانی کارت پایین‌تر از لبه
+   تصویر: نوارهای طلایی نازک بالای لبه کارت دیده می‌شوند و ادامه‌شان از پشت
+   شیشه مات کارت رد می‌شود — همان «کارت شیشه‌ای که کمی روی موج می‌افتد» که
+   بریف خواسته. هیچ پیکسلی از خودِ تصویر پوشیده نمی‌شود. */
+.lg-card__wave--mobile {
+    inset-block-start: calc(var(--lg-media-h) - var(--lg-wave-h) + var(--lg-card-overlap));
+    inset-inline: 0;
+    inline-size: 100%;
+    block-size: var(--lg-wave-h);
+}
+
+/* موج عمودی دسکتاپ در موبایل در DOM می‌ماند ولی رندر نمی‌شود */
+.lg-card__wave--desktop {
+    display: none;
+}
+
+.lg-wave {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+}
+
+.lg-wave__layer--1 { fill: var(--lg-wave-1); }
+.lg-wave__layer--2 { fill: var(--lg-wave-2); }
+.lg-wave__layer--3 { fill: var(--lg-wave-3); }
+.lg-wave__layer--4 { fill: var(--lg-wave-4); }
+.lg-wave__layer--5 { fill: var(--lg-wave-5); }
+
+.lg-wave--vertical .lg-wave__layer {
+    filter: drop-shadow(-4px 2px 10px var(--lg-wave-shadow));
+}
+
+.lg-wave--horizontal .lg-wave__layer {
+    filter: drop-shadow(2px -4px 8px var(--lg-wave-shadow));
+}
+
+/* اگر روزی جهت سند چپ‌به‌راست شود، هندسه موج باید آینه شود تا دوباره
+   سمت تصویر بیفتد. در حالت راست‌به‌چپ نیازی نیست: هندسه از ابتدا برای
+   «تصویر چپ، فرم راست» ساخته شده. */
+[dir="ltr"] .lg-wave {
+    transform: scaleX(-1);
+}
+
+/* ==========================================================================
+   ۱۴) برند و تیتر
+   --------------------------------------------------------------------------
+   نشان برند در مرحله ۷ از تنظیمات سالن می‌آید؛ تا آن روز (و اگر لوگو
+   نبود) نشان گرادیانی با آیکون برند نمایش داده می‌شود.
+   ========================================================================== */
+.lg-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lg-brand__mark,
+.lg-brand__logo {
+    flex: none;
+    inline-size: 46px;
+    block-size: 46px;
+    border-radius: 15px;
+}
+
+.lg-brand__mark {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--lg-gold) 0%, var(--lg-gold-dark) 100%);
+    color: var(--lg-btn-bg);                    /* نقش روی طلایی: تیره */
+}
+
+.lg-brand__glyph {
+    inline-size: 24px;
+    block-size: 24px;
+}
+
+.lg-brand__name {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--lg-text);
+}
+
+.lg-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.5;
+    color: var(--lg-text);
+}
+
+/* ==========================================================================
+   ۱۵) فرم
+   ========================================================================== */
+.lg-form {
+    display: grid;
+    gap: 16px;
+}
+
+.lg-form__fields {
+    display: grid;
+    gap: 16px;
+}
+
+/* پیوند فراموشی رمز وسط‌چین می‌شود ولی هدف لمس ۴۴ پیکسلی‌اش می‌ماند */
+.lg-form .lg-link {
+    justify-self: center;
+}
+
+/* ==========================================================================
+   ۱۶) دسکتاپ — از ۹۰۰ پیکسل به بالا
+   --------------------------------------------------------------------------
+   چرا ۹۰۰: همان مرزی که در کل پروژه برای گذار «موبایل/دسکتاپ» استفاده شده
+   (شکستن جدول‌ها به کارت هم روی همین عدد است). تبلت عمودی هم مثل موبایل
+   رفتار می‌کند — هیچ‌وقت نسخه کوچک‌شده دسکتاپ نمی‌شود.
+   ========================================================================== */
+@media (min-width: 900px) {
+    .lg {
+        padding-inline: max(24px, env(safe-area-inset-right))
+                        max(24px, env(safe-area-inset-left));
+    }
+
+    .lg-card {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+        border-radius: var(--lg-card-radius);
+        min-block-size: min(var(--lg-card-min), 92svh);
+    }
+
+    .lg-card__form {
+        margin: 0;
+        padding-block: var(--lg-form-pad-block);
+        padding-inline: var(--lg-form-pad-start) var(--lg-form-pad-end);
+        background: var(--lg-surface);          /* دسکتاپ: سطح عاجی، بدون شیشه */
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+
+    .lg-card__media {
+        block-size: auto;                       /* تا ارتفاع کارت کشیده شود */
+        --lg-photo-pos: 50% 30%;                /* تمرکز روی صورت */
+    }
+
+    /* موج: عمودی، تمام‌قد، دقیقاً روی مرز دو ستون.
+       inset-inline-start در راست‌به‌چپ یعنی فاصله از لبه راست کارت؛ چون
+       فرم ستون اول است، «سهم فرم منهای نصف موج» همان مرز است — و همین
+       رابطه در چپ‌به‌راست هم درست می‌ماند، بدون تکرار کد. */
+    .lg-card__wave--desktop {
+        display: block;
+        inset-block: 0;
+        inset-inline: auto;
+        inset-inline-start: calc(var(--lg-form-share) - var(--lg-wave-w) / 2);
+        inline-size: var(--lg-wave-w);
+        block-size: 100%;
+    }
+
+    /* موج افقی موبایل در دسکتاپ رندر نمی‌شود */
+    .lg-card__wave--mobile {
+        display: none;
+    }
+}
+
+/* موبایل: تصویر تا لبه‌های صفحه و بدون حاشیه بالا */
+@media (max-width: 899px) {
+    .lg {
+        padding-inline: 0;
+        padding-block-start: env(safe-area-inset-top);
+    }
+}
+
+/* ==========================================================================
+   ۱۷) احترام به prefers-reduced-motion
+   --------------------------------------------------------------------------
+   همه گذارها و چرخش اسپینر خاموش می‌شوند. اسپینر به‌جای چرخیدن، ثابت
+   می‌ماند — ولی متن دکمه («در حال ورود…») همچنان وضعیت را می‌رساند، پس
+   اطلاعاتی از دست نمی‌رود.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .lg-field__box,
+    .lg-field__eye,
+    .lg-btn,
+    .lg-link {
+        transition: none;
+    }
+
+    .lg-btn:active:not(:disabled) {
+        transform: none;
+    }
+
+    .lg-btn__spinner {
+        animation: none;
+        border-block-start-color: currentColor;
+        opacity: 0.65;
+    }
+}
+
+
+/* ==========================================================================
+   چیدمان خودِ صفحه پیش‌نمایش — بخشی از اپ نیست
+   ========================================================================== */
+body {
+    margin: 0;
+    background: radial-gradient(120% 90% at 50% 0%, #2A221B 0%, #14110F 70%);
+    min-block-size: 100vh;
+    color: #EDE6DA;
+    font-family: Vazirmatn, Tahoma, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.pv-wrap { max-inline-size: 1120px; margin: 0 auto; padding: 28px 24px 64px; }
+
+.pv-note {
+    font-size: .82rem; line-height: 2; color: rgba(237,230,218,.7);
+    margin-block-end: 30px;
+}
+.pv-note h1 { margin: 0 0 12px; font-size: 1.1rem; color: #F7F2EA; font-weight: 800; }
+.pv-note h2 { margin: 22px 0 7px; font-size: .9rem; color: #C6A46A; font-weight: 700; }
+.pv-note strong { color: #C6A46A; }
+.pv-note code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: rgba(237,230,218,.09); padding: 1px 6px; border-radius: 5px; font-size: .9em;
+}
+.pv-note ul { margin: 6px 0 0; padding-inline-start: 20px; }
+.pv-note li { margin-block-end: 4px; }
+
+/* دو ستون: روشن و تیره */
+.pv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 22px;
+    align-items: start;
+}
+
+.pv-panel {
+    border-radius: 26px;
+    padding: 26px 22px 30px;
+    border: 1px solid rgba(198,164,106,.18);
+}
+.pv-panel--light { background: #F7F2EA; }
+.pv-panel--dark  { background: #1D1916; }
+.pv-panel--tokens { background: rgba(237,230,218,.04); }
+
+.pv-panel__title {
+    font-size: .78rem; font-weight: 800; letter-spacing: .02em;
+    margin: 0 0 20px; display: flex; align-items: center; gap: 8px;
+}
+.pv-panel--light .pv-panel__title { color: #6F655B; }
+.pv-panel--dark  .pv-panel__title { color: #A89F93; }
+.pv-panel--tokens .pv-panel__title { color: #A89F93; }
+
+.pv-stack { display: flex; flex-direction: column; gap: 18px; }
+.pv-row { display: flex; flex-direction: column; gap: 10px; }
+.pv-label {
+    font-size: .72rem; font-weight: 700; opacity: .6;
+}
+.pv-panel--light .pv-label { color: #2A2420; }
+.pv-panel--dark .pv-label, .pv-panel--tokens .pv-label { color: #EDE6DA; }
+
+/* جدول رنگ‌ها */
+.pv-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.pv-swatch {
+    border-radius: 14px; overflow: hidden; border: 1px solid rgba(237,230,218,.12);
+}
+.pv-swatch__chip { block-size: 54px; }
+.pv-swatch__meta {
+    padding: 8px 11px; font-size: .68rem; line-height: 1.7;
+    background: rgba(237,230,218,.05);
+}
+.pv-swatch__meta b { display: block; font-family: ui-monospace, monospace; font-size: .72rem; }
+.pv-swatch__meta span { color: rgba(237,230,218,.6); }
+</style>
+</head>
+<body>
+<div class="pv-wrap">
+
+<div class="pv-note">
+    <h1>مرحله ۲ — توکن‌های رنگ و کامپوننت‌های پایه</h1>
+    <p>
+        این فایل از <strong>CSS واقعی پروژه</strong> ساخته شده (<code>login.css</code>) و
+        آیکون‌هایش از منبع مشترک <code>tools/login_markup.py</code> می‌آیند — همان مسیرهایی
+        که در <code>AuthIcons.razor</code> هستند. پس هر چه اینجا می‌بینید، همان چیزی است
+        که در اپ رندر می‌شود.
+    </p>
+
+    <h2>چه چیزی را بررسی کنید</h2>
+    <ul>
+        <li><strong>کپسولی بودن:</strong> هر دو انتهای فیلد و دکمه کاملاً گرد باشند.</li>
+        <li><strong>حلقه فوکوس:</strong> داخل هر فیلد کلیک کنید — حلقه طلایی باید دور
+        <em>کل کپسول</em> بیفتد، نه فقط دور متن.</li>
+        <li><strong>دکمه چشم:</strong> روی آیکون چشم در فیلد رمز کلیک کنید؛ باید بین
+        نمایش و پنهان کردن سوئیچ شود و آیکون هم عوض شود.</li>
+        <li><strong>دکمه ثانویه:</strong> متنش باید طلاییِ <em>عمیق</em> باشد نه طلایی روشن
+        برند — چون طلایی روشن روی سطح عاجی حد کنتراست ۴٫۵ را رد نمی‌کند.</li>
+        <li><strong>حالت تیره:</strong> دکمه اصلی در حالت تیره معکوس شده
+        (پس‌زمینه طلایی، متن تیره). اگر این را نمی‌خواهید بگویید.</li>
+        <li><strong>پر شدن خودکار:</strong> اگر مرورگر فرم را پر کند، فیلد نباید زرد شود.</li>
+    </ul>
+
+    <h2>نکته‌ای که هنوز ساخته نشده</h2>
+    <p>
+        چیدمان کارت، موج SVG چندلایه و خط طلایی دوگانه در مرحله‌های ۳ تا ۵ می‌آیند.
+        اینجا فقط مصالح پایه است: رنگ‌ها، فیلد و دکمه.
+    </p>
+</div>
+
+<div class="pv-panel pv-panel--tokens">
+    <p class="pv-panel__title">پالت — همه از توکن‌های <code>.lg</code> می‌آیند</p>
+    <div class="pv-swatches"><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#2A221B"></div><div class="pv-swatch__meta"><b>#2A221B</b><span>مرکز گرادیان صفحه</span><span style="opacity:.55">--lg-page-1</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#14110F"></div><div class="pv-swatch__meta"><b>#14110F</b><span>لبه گرادیان صفحه</span><span style="opacity:.55">--lg-page-2</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#F7F2EA"></div><div class="pv-swatch__meta"><b>#F7F2EA</b><span>سطح فرم (عاجی)</span><span style="opacity:.55">--lg-surface</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#D8CCBE"></div><div class="pv-swatch__meta"><b>#D8CCBE</b><span>زمینه ناحیه تصویر</span><span style="opacity:.55">--lg-photo-bg</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#B49560"></div><div class="pv-swatch__meta"><b>#B49560</b><span>لایه موج — طلایی تیره</span><span style="opacity:.55">--lg-wave-1</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#CDB88F"></div><div class="pv-swatch__meta"><b>#CDB88F</b><span>لایه موج — شامپاینی</span><span style="opacity:.55">--lg-wave-2</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#DBCBAF"></div><div class="pv-swatch__meta"><b>#DBCBAF</b><span>لایه موج — حد وسط</span><span style="opacity:.55">--lg-wave-3</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#E9DFD0"></div><div class="pv-swatch__meta"><b>#E9DFD0</b><span>لایه موج — کرم</span><span style="opacity:.55">--lg-wave-4</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#F7F2EA"></div><div class="pv-swatch__meta"><b>#F7F2EA</b><span>لایه موج — عاجی</span><span style="opacity:.55">--lg-wave-5</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#C6A46A"></div><div class="pv-swatch__meta"><b>#C6A46A</b><span>طلایی برند</span><span style="opacity:.55">--lg-gold</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#A8854B"></div><div class="pv-swatch__meta"><b>#A8854B</b><span>طلایی تیره برند</span><span style="opacity:.55">--lg-gold-dark</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#7A5A22"></div><div class="pv-swatch__meta"><b>#7A5A22</b><span>طلایی عمیق (برای متن روی عاجی)</span><span style="opacity:.55">--lg-gold-deep</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#2A2420"></div><div class="pv-swatch__meta"><b>#2A2420</b><span>متن اصلی</span><span style="opacity:.55">--lg-text</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#6F655B"></div><div class="pv-swatch__meta"><b>#6F655B</b><span>متن کم‌رنگ</span><span style="opacity:.55">--lg-text-dim</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#FFFDFA"></div><div class="pv-swatch__meta"><b>#FFFDFA</b><span>زمینه فیلد</span><span style="opacity:.55">--lg-field-bg</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#B3261E"></div><div class="pv-swatch__meta"><b>#B3261E</b><span>قرمز خطا</span><span style="opacity:.55">--lg-danger</span></div></div><div class="pv-swatch"><div class="pv-swatch__chip" style="background:#14110F"></div><div class="pv-swatch__meta"><b>#14110F</b><span>دکمه اصلی — زمینه</span><span style="opacity:.55">--lg-btn-bg</span></div></div></div>
+</div>
+
+<div class="pv-grid">
+
+    <div class="pv-panel pv-panel--light">
+        <p class="pv-panel__title">حالت روشن — سطح عاجی</p>
+        <div class="lg">
+            <div class="pv-stack">
+                <div class="pv-row">
+                    <span class="pv-label">فیلد خالی با آیکون</span>
+                    <div class="lg-field">
+    <label class="lg-field__label" for="pv-mobile">شماره موبایل <span class="lg-field__req" aria-hidden="true">*</span></label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg>
+      <input id="pv-mobile" class="lg-field__input" type="tel" value="" placeholder="09xxxxxxxxx" dir="ltr" aria-required="true" />
+    </div>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">فیلد پر شده</span>
+                    <div class="lg-field">
+    <label class="lg-field__label" for="pv-mobile-2">شماره موبایل</label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg>
+      <input id="pv-mobile-2" class="lg-field__input" type="tel" value="09120000003" dir="ltr" />
+    </div>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">فیلد با راهنما</span>
+                    <div class="lg-field">
+    <label class="lg-field__label" for="pv-mobile-3">شماره موبایل</label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg>
+      <input id="pv-mobile-3" class="lg-field__input" type="tel" value="09120000003" dir="ltr" aria-describedby="pv-mobile-3-hint" />
+    </div>
+    <p class="lg-field__hint" id="pv-mobile-3-hint">کد تأیید به همین شماره پیامک می‌شود.</p>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">فیلد نامعتبر با پیام خطا</span>
+                    <div class="lg-field is-invalid">
+    <label class="lg-field__label" for="pv-mobile-4">شماره موبایل</label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg>
+      <input id="pv-mobile-4" class="lg-field__input" type="tel" value="0912000" dir="ltr" aria-invalid="true" aria-describedby="pv-mobile-4-err" />
+    </div>
+    <p class="lg-field__error" id="pv-mobile-4-err" role="alert"><svg class="lg-field__error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.7v5.1" />
+    <circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none" />
+</svg><span>شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.</span></p>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">فیلد غیرفعال</span>
+                    <div class="lg-field is-disabled">
+    <label class="lg-field__label" for="pv-mobile-5">شماره موبایل</label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg>
+      <input id="pv-mobile-5" class="lg-field__input" type="tel" value="09120000003" dir="ltr" disabled />
+    </div>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">رمز عبور با دکمه نمایش (روی چشم کلیک کنید)</span>
+                    <div class="lg-field">
+    <label class="lg-field__label" for="pv-pass">رمز عبور</label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="4.6" y="10" width="14.8" height="10.4" rx="3" />
+    <path d="M8.2 10V7.5a3.8 3.8 0 0 1 7.6 0V10" />
+    <path d="M12 14.1v2.3" />
+</svg>
+      <input id="pv-pass" class="lg-field__input" type="password" value="123456" dir="ltr" />
+      <button type="button" class="lg-field__eye" aria-label="نمایش رمز عبور" aria-pressed="false" aria-controls="pv-pass" data-eye><span data-icon-show><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <path d="M2.3 12S5.7 5.7 12 5.7 21.7 12 21.7 12 18.3 18.3 12 18.3 2.3 12 2.3 12Z" />
+    <circle cx="12" cy="12" r="3.1" />
+</svg></span><span data-icon-hide hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <path d="M4 4l16 16" />
+    <path d="M9.8 5.95A9.6 9.6 0 0 1 12 5.7c6.3 0 9.7 6.3 9.7 6.3a17.3 17.3 0 0 1-3.4 4.2" />
+    <path d="M6.4 7.75A17.5 17.5 0 0 0 2.3 12S5.7 18.3 12 18.3c1.25 0 2.36-.19 3.35-.53" />
+    <path d="M10.05 10.15a3.1 3.1 0 0 0 4.3 4.3" />
+</svg></span></button>
+    </div>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">دکمه اصلی</span>
+                    <button type="button" class="lg-btn lg-btn--primary lg-btn--block"><span>ورود</span></button>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">دکمه اصلی در حالت بارگذاری</span>
+                    <button type="button" class="lg-btn lg-btn--primary lg-btn--block is-loading" disabled aria-busy="true"><span class="lg-btn__spinner" aria-hidden="true"></span><span>در حال ورود…</span></button>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">دکمه ثانویه و غیرفعال</span>
+                    <div class="pv-stack"><button type="button" class="lg-btn lg-btn--ghost lg-btn--block"><svg class="lg-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg><span>ورود با کد یکبار مصرف</span></button><button type="button" class="lg-btn lg-btn--primary lg-btn--block" disabled><span>ورود</span></button></div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">جداکننده، پیوند و پیام‌ها</span>
+                    <div class="pv-stack"><div class="lg-divider">یا</div><div style="text-align:center"><a class="lg-link" href="#" onclick="return false">رمز عبور را فراموش کرده‌اید؟</a></div><div class="lg-alert lg-alert--error"><svg class="lg-alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.7v5.1" />
+    <circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none" />
+</svg><span>شماره موبایل یا رمز عبور نادرست است.</span></div><div class="lg-alert lg-alert--ok"><svg class="lg-alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8.2 12.3l2.6 2.6 5-5.2" />
+</svg><span>کد تأیید ارسال شد.</span></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pv-panel pv-panel--dark">
+        <p class="pv-panel__title">حالت تیره — سطح #1D1916</p>
+        <div class="lg lg--dark">
+            <div class="pv-stack">
+                <div class="pv-row">
+                    <span class="pv-label">فیلد خالی با آیکون</span>
+                    <div class="lg-field">
+    <label class="lg-field__label" for="pv-d-mobile">شماره موبایل <span class="lg-field__req" aria-hidden="true">*</span></label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg>
+      <input id="pv-d-mobile" class="lg-field__input" type="tel" value="" placeholder="09xxxxxxxxx" dir="ltr" aria-required="true" />
+    </div>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">فیلد نامعتبر</span>
+                    <div class="lg-field is-invalid">
+    <label class="lg-field__label" for="pv-d-mobile-2">شماره موبایل</label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg>
+      <input id="pv-d-mobile-2" class="lg-field__input" type="tel" value="0912000" dir="ltr" aria-invalid="true" aria-describedby="pv-d-mobile-2-err" />
+    </div>
+    <p class="lg-field__error" id="pv-d-mobile-2-err" role="alert"><svg class="lg-field__error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.7v5.1" />
+    <circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none" />
+</svg><span>شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.</span></p>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">رمز عبور</span>
+                    <div class="lg-field">
+    <label class="lg-field__label" for="pv-d-pass">رمز عبور</label>
+    <div class="lg-field__box">
+      <svg class="lg-field__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="4.6" y="10" width="14.8" height="10.4" rx="3" />
+    <path d="M8.2 10V7.5a3.8 3.8 0 0 1 7.6 0V10" />
+    <path d="M12 14.1v2.3" />
+</svg>
+      <input id="pv-d-pass" class="lg-field__input" type="password" value="123456" dir="ltr" />
+      <button type="button" class="lg-field__eye" aria-label="نمایش رمز عبور" aria-pressed="false" aria-controls="pv-d-pass" data-eye><span data-icon-show><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <path d="M2.3 12S5.7 5.7 12 5.7 21.7 12 21.7 12 18.3 18.3 12 18.3 2.3 12 2.3 12Z" />
+    <circle cx="12" cy="12" r="3.1" />
+</svg></span><span data-icon-hide hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <path d="M4 4l16 16" />
+    <path d="M9.8 5.95A9.6 9.6 0 0 1 12 5.7c6.3 0 9.7 6.3 9.7 6.3a17.3 17.3 0 0 1-3.4 4.2" />
+    <path d="M6.4 7.75A17.5 17.5 0 0 0 2.3 12S5.7 18.3 12 18.3c1.25 0 2.36-.19 3.35-.53" />
+    <path d="M10.05 10.15a3.1 3.1 0 0 0 4.3 4.3" />
+</svg></span></button>
+    </div>
+  </div>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">دکمه اصلی (معکوس‌شده)</span>
+                    <button type="button" class="lg-btn lg-btn--primary lg-btn--block"><span>ورود</span></button>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">دکمه ثانویه</span>
+                    <button type="button" class="lg-btn lg-btn--ghost lg-btn--block"><svg class="lg-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.6" />
+    <path d="M10.6 5.3h2.8" />
+    <path d="M11.2 18.6h1.6" />
+</svg><span>ورود با کد یکبار مصرف</span></button>
+                </div>
+                <div class="pv-row">
+                    <span class="pv-label">جداکننده و پیام</span>
+                    <div class="pv-stack"><div class="lg-divider">یا</div><div class="lg-alert lg-alert--error"><svg class="lg-alert__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+     aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.7v5.1" />
+    <circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none" />
+</svg><span>شماره موبایل یا رمز عبور نادرست است.</span></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script>
+/* فقط برای پیش‌نمایش: سوئیچ نمایش رمز. در اپ، PasswordField.razor همین کار را
+   با حالت داخلی خودش انجام می‌دهد. */
+document.querySelectorAll('[data-eye]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var input = document.getElementById(btn.getAttribute('aria-controls'));
+        if (!input) return;
+
+        var nowShown = input.type === 'password';
+        input.type = nowShown ? 'text' : 'password';
+
+        btn.setAttribute('aria-pressed', nowShown ? 'true' : 'false');
+        btn.setAttribute('aria-label', nowShown ? 'پنهان کردن رمز عبور' : 'نمایش رمز عبور');
+
+        var show = btn.querySelector('[data-icon-show]');
+        var hide = btn.querySelector('[data-icon-hide]');
+        if (show) show.hidden = nowShown;
+        if (hide) hide.hidden = !nowShown;
+    });
+});
+</script>
+</body>
+</html>

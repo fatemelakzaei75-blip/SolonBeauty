@@ -1,0 +1,277 @@
+@* ==========================================================================
+   LoginCard — کارت اصلی صفحه ورود
+   --------------------------------------------------------------------------
+   چیدمان دو حالتهٔ بریف در همین یک ساختار است:
+     موبایل : تصویر بالا، فرم پایین به شکل کارت شیشه‌ای روی لبه موج
+     دسکتاپ: دو ستون — فرم (1fr) و تصویر (1.3fr) با مرز موج چندلایه
+
+   ترتیب DOM عمدی است: فرم اول می‌آید، تصویر دوم.
+   صفحه راست‌به‌چپ است، پس فرم ستون اول یعنی سمت راست می‌نشیند و تصویر
+   سمت چپ — دقیقاً آینهٔ نمونهٔ انگلیسی. در دسکتاپ هم همین ترتیب باعث
+   می‌شود صفحه‌خوان اول تیتر و فیلدها را بخواند، بعد تصویر تزئینی را.
+   برای راست‌به‌چپ بودن هیچ کد اضافه‌ای لازم نیست: همه‌جا ویژگی منطقی
+   (inline/block) به‌کار رفته و مرورگر خودش آینه می‌کند.
+
+   دو موج در DOM هستند (عمودی و افقی) و CSS یکی را نشان می‌دهد.
+   چرا به‌جای رندر شرطی: با تغییر اندازه پنجره، موج درست بدون رندر دوباره
+   ظاهر می‌شود و هیچ پرشی ندارد.
+
+   دو گام (مرحله ۶):
+   - password: شماره موبایل + رمز عبور → «ورود»
+   - otp     : شماره موبایل + کد پیامکی → «تأیید و ورود»
+   گام در همین کارت عوض می‌شود و پوسته (برند، تیتر، تصویر، موج) ثابت
+   می‌ماند؛ پس کاربر جابه‌جایی چیدمان نمی‌بیند.
+
+   کامپوننت بی‌حالت است: مقدارها، خطاها و رویدادها همه از صفحه ورود می‌آیند.
+   چرا: اعتبارسنجی فارسی و فراخوانی API باید در یک جا (صفحه) باشد تا دو
+   مسیر موازی برای یک کار نداشته باشیم. آزمون هم همین را بررسی می‌کند.
+   ========================================================================== *@
+
+<div class="lg-card">
+
+    @* ---------- ستون فرم ---------- *@
+    <section class="lg-card__form" aria-labelledby="lg-title">
+
+        <div class="lg-brand">
+            @if (!string.IsNullOrEmpty(LogoUrl))
+            {
+                <img class="lg-brand__logo" src="@LogoUrl" alt="" aria-hidden="true"
+                     width="46" height="46" decoding="async" />
+            }
+            else
+            {
+                @* نشان جانشین: گرادیان برند + نقش برند. تا وقتی لوگو از
+                   تنظیمات سالن نیامده (مرحله ۷) همین نمایش داده می‌شود. *@
+                <span class="lg-brand__mark" aria-hidden="true">
+                    <AuthIcons Name="sparkle" Class="lg-brand__glyph" />
+                </span>
+            }
+            <span class="lg-brand__name">@SalonName</span>
+        </div>
+
+        <form class="lg-form" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+
+            <h1 class="lg-title" id="lg-title">ورود به حساب</h1>
+
+            @if (IsOtp)
+            {
+                @* ---------- گام کد یکبار مصرف ---------- *@
+                <div class="lg-form__fields">
+                    <CapsuleField Id="lg-mobile-otp"
+                                  Label="شماره موبایل"
+                                  Type="tel"
+                                  @bind-Value="Mobile"
+                                  Placeholder="09xxxxxxxxx"
+                                  InputMode="tel"
+                                  Autocomplete="tel"
+                                  EnterKeyHint="next"
+                                  MaxLength="11"
+                                  Dir="ltr"
+                                  IconName="phone"
+                                  Required="true"
+                                  Hint="کد تأیید به همین شماره پیامک می‌شود."
+                                  Error="@MobileError" />
+
+                    <CapsuleField Id="lg-code"
+                                  Label="کد تأیید پیامکی"
+                                  Type="text"
+                                  @bind-Value="Code"
+                                  Placeholder="۱۲۳۴۵"
+                                  InputMode="numeric"
+                                  Autocomplete="one-time-code"
+                                  EnterKeyHint="done"
+                                  MaxLength="5"
+                                  Dir="ltr"
+                                  IconName="key"
+                                  Required="true"
+                                  Error="@CodeError" />
+                </div>
+
+                <AuthAlert Message="@Message" Kind="@MessageKind" />
+
+                <AuthButton Text="تأیید و ورود"
+                            Type="submit"
+                            Block="true"
+                            Loading="@Loading"
+                            LoadingText="در حال بررسی…" />
+
+                <div class="lg-divider">یا</div>
+
+                <AuthButton Text="ورود با رمز عبور"
+                            Variant="ghost"
+                            Block="true"
+                            IconName="lock"
+                            Disabled="@Loading"
+                            OnClick="BackToPasswordAsync" />
+            }
+            else
+            {
+                @* ---------- گام رمز عبور ---------- *@
+                <div class="lg-form__fields">
+                    <CapsuleField Id="lg-mobile"
+                                  Label="شماره موبایل"
+                                  Type="tel"
+                                  @bind-Value="Mobile"
+                                  Placeholder="09xxxxxxxxx"
+                                  InputMode="tel"
+                                  Autocomplete="username"
+                                  EnterKeyHint="next"
+                                  MaxLength="11"
+                                  Dir="ltr"
+                                  IconName="phone"
+                                  Required="true"
+                                  Error="@MobileError" />
+
+                    <PasswordField Id="lg-password"
+                                   Label="رمز عبور"
+                                   @bind-Value="Password"
+                                   Placeholder="••••••••"
+                                   EnterKeyHint="done"
+                                   Required="true"
+                                   Error="@PasswordError" />
+                </div>
+
+                <AuthAlert Message="@Message" Kind="@MessageKind" />
+
+                <AuthButton Text="ورود"
+                            Type="submit"
+                            Block="true"
+                            Loading="@Loading"
+                            LoadingText="در حال ورود…" />
+
+                <div class="lg-divider">یا</div>
+
+                @* دکمه دوم در حین ارسال کد، حالت بارگذاری خودش را نشان می‌دهد:
+                   کاربر باید بفهمد منتظر پیامک است، نه اینکه دکمه بی‌واکنش مانده. *@
+                <AuthButton Text="ورود با کد یکبار مصرف"
+                            Variant="ghost"
+                            Block="true"
+                            IconName="phone"
+                            Disabled="@(Loading || SendingCode)"
+                            Loading="@SendingCode"
+                            LoadingText="در حال ارسال کد…"
+                            OnClick="OtpAsync" />
+            }
+        </form>
+
+        @* پیوندهای زیر فرم.
+           بیرون از فرم‌اند چون دکمه بدون type پیش‌فرض submit می‌شد و Enter در
+           فیلدها را خراب می‌کرد؛ اینجا هر دو type="button" دارند. *@
+        <div class="lg-form__links">
+            @if (IsOtp)
+            {
+                <button type="button" class="lg-link"
+                        disabled="@(Loading || SendingCode)"
+                        @onclick="ResendAsync">ارسال دوباره کد</button>
+            }
+            else
+            {
+                <button type="button" class="lg-link"
+                        @onclick="ForgotAsync">رمز عبور را فراموش کرده‌اید؟</button>
+            }
+        </div>
+    </section>
+
+    @* ---------- ناحیه تصویر ----------
+       تزئینی است، پس از دید صفحه‌خوان پنهان می‌شود: alt خالی برای تصویر و
+       aria-hidden روی خودِ عنصر. متن جایگزین لازم نیست چون هیچ اطلاعاتی
+       از این تصویر به کاربر منتقل نمی‌شود. *@
+    <div class="lg-card__media">
+        @if (!string.IsNullOrEmpty(IllustrationUrl))
+        {
+            @* تصویر از تنظیمات سالن (مرحله ۷). نسخه‌های بهینه‌شدهٔ پیش‌فرض
+               فقط برای فایل خودمان معنا دارند، پس اینجا یک تصویر ساده می‌گذاریم. *@
+            <img class="lg-photo" src="@IllustrationUrl" alt="" aria-hidden="true"
+                 width="@IllustrationWidth" height="@IllustrationHeight" decoding="async" />
+        }
+        else
+        {
+            @* پیش‌فرض: نسخه‌های بهینه‌شده + ابعاد ثابت (بدون جابه‌جایی چیدمان).
+               ترتیب منبع‌ها مهم است: مرورگر اولی را که پشتیبانی کند برمی‌دارد. *@
+            <picture>
+                <source srcset="img/login-illustration.avif" type="image/avif" />
+                <source srcset="img/login-illustration.webp" type="image/webp" />
+                <img class="lg-photo" src="img/login-illustration.jpg" alt="" aria-hidden="true"
+                     width="736" height="983" decoding="async" fetchpriority="high" />
+            </picture>
+        }
+    </div>
+
+    @* ---------- موج‌ها ----------
+       هر دو در DOM می‌مانند؛ CSS بر اساس اندازهٔ صفحه یکی را نشان می‌دهد.
+       کلاس lg-card__wave جای‌گذاری را می‌دهد و Orientation جهتِ موج. *@
+    <WaveDivider Orientation="vertical" Class="lg-card__wave lg-card__wave--desktop" />
+    <WaveDivider Orientation="horizontal" Class="lg-card__wave lg-card__wave--mobile" />
+
+</div>
+
+@code {
+    /// <summary>نام سالن برای نشان بالای فرم. در مرحله ۷ از تنظیمات می‌آید.</summary>
+    [Parameter] public string SalonName { get; set; } = "سالن زیبایی حدیث";
+
+    /// <summary>نشانی لوگو از تنظیمات. خالی باشد، نشان گرادیانی جانشین می‌شود.</summary>
+    [Parameter] public string? LogoUrl { get; set; }
+
+    /// <summary>تصویرسازی از تنظیمات. خالی باشد، تصویر پیش‌فرض بهینه‌شده می‌آید.</summary>
+    [Parameter] public string? IllustrationUrl { get; set; }
+
+    [Parameter] public int IllustrationWidth { get; set; } = 736;
+
+    [Parameter] public int IllustrationHeight { get; set; } = 983;
+
+    /// <summary>گام جاری: password | otp</summary>
+    [Parameter] public string Step { get; set; } = "password";
+
+    [Parameter] public string? Mobile { get; set; }
+
+    [Parameter] public EventCallback<string?> MobileChanged { get; set; }
+
+    [Parameter] public string? Password { get; set; }
+
+    [Parameter] public EventCallback<string?> PasswordChanged { get; set; }
+
+    [Parameter] public string? Code { get; set; }
+
+    [Parameter] public EventCallback<string?> CodeChanged { get; set; }
+
+    /// <summary>پیام خطای فارسی زیر فیلد شماره موبایل</summary>
+    [Parameter] public string? MobileError { get; set; }
+
+    [Parameter] public string? PasswordError { get; set; }
+
+    [Parameter] public string? CodeError { get; set; }
+
+    /// <summary>پیام کلی فرم (خطای ورود یا اطلاع ارسال کد)</summary>
+    [Parameter] public string? Message { get; set; }
+
+    /// <summary>ok | error</summary>
+    [Parameter] public string MessageKind { get; set; } = "error";
+
+    /// <summary>ورود در جریان است (دکمه اصلی)</summary>
+    [Parameter] public bool Loading { get; set; }
+
+    /// <summary>ارسال کد در جریان است (دکمه کد یکبار مصرف)</summary>
+    [Parameter] public bool SendingCode { get; set; }
+
+    [Parameter] public EventCallback OnSubmit { get; set; }
+
+    [Parameter] public EventCallback OnOtp { get; set; }
+
+    [Parameter] public EventCallback OnResend { get; set; }
+
+    [Parameter] public EventCallback OnBackToPassword { get; set; }
+
+    [Parameter] public EventCallback OnForgotPassword { get; set; }
+
+    private bool IsOtp => Step == "otp";
+
+    private async Task SubmitAsync() => await OnSubmit.InvokeAsync();
+
+    private async Task OtpAsync() => await OnOtp.InvokeAsync();
+
+    private async Task ResendAsync() => await OnResend.InvokeAsync();
+
+    private async Task BackToPasswordAsync() => await OnBackToPassword.InvokeAsync();
+
+    private async Task ForgotAsync() => await OnForgotPassword.InvokeAsync();
+}

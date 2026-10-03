@@ -1,0 +1,57 @@
+@* ==========================================================================
+   AuthButton — دکمه‌های صفحه ورود
+   --------------------------------------------------------------------------
+   دو گونه دارد: primary (پس‌زمینه تیره، متن طلایی) و ghost (حاشیه طلایی،
+   زمینه شفاف) — دقیقاً همان دو چیزی که بریف خواسته.
+
+   چرا حالت بارگذاری اینجا مدیریت می‌شود:
+   دکمه در حالت انتظار باید چهار کار هم‌زمان بکند: غیرفعال شود تا دوباره
+   زده نشود، اسپینر نشان دهد، متن وضعیت را عوض کند، و aria-busy بدهد تا
+   صفحه‌خوان بفهمد کاری در جریان است. اگر این‌ها در صفحه ورود پخش شوند،
+   دیر یا زود یکی جا می‌ماند.
+   ========================================================================== *@
+
+<button type="@Type"
+        class="lg-btn lg-btn--@Variant @(Block ? "lg-btn--block" : null) @(Loading ? "is-loading" : null) @CssClass"
+        disabled="@(Disabled || Loading)"
+        aria-busy="@(Loading ? "true" : null)"
+        @onclick="OnClick">
+
+    @if (Loading)
+    {
+        @* اسپینر تزئینی است؛ وضعیت واقعی از aria-busy و متن می‌آید. *@
+        <span class="lg-btn__spinner" aria-hidden="true"></span>
+    }
+    else if (!string.IsNullOrEmpty(IconName))
+    {
+        <AuthIcons Name="@IconName" Class="lg-btn__icon" />
+    }
+
+    <span>@(Loading && !string.IsNullOrEmpty(LoadingText) ? LoadingText : Text)</span>
+</button>
+
+@code {
+    /// <summary>متن دکمه</summary>
+    [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
+
+    /// <summary>متن جایگزین در حالت بارگذاری (مثلاً «در حال ورود…»)</summary>
+    [Parameter] public string? LoadingText { get; set; }
+
+    /// <summary>primary | ghost</summary>
+    [Parameter] public string Variant { get; set; } = "primary";
+
+    /// <summary>submit داخل فرم، button در بقیه جاها</summary>
+    [Parameter] public string Type { get; set; } = "button";
+
+    [Parameter] public bool Block { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public bool Loading { get; set; }
+
+    [Parameter] public string? IconName { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+}
