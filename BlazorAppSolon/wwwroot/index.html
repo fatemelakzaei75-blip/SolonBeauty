@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>سالن زیبایی حدیث | Hadis Beauty Salon</title>
     <meta name="description" content="سالن زیبایی حدیث — خدمات لوکس و حرفه‌ای زیبایی، میکاپ عروس، سلامت مو، پوست و کاشت ناخن در زعفرانیه تهران." />
     <meta name="keywords" content="سالن زیبایی, آرایشگاه زنانه, کاشت ناخن, رنگ و لایت, میکاپ عروس, فیشال پوست, سالن زیبایی حدیث" />
@@ -32,6 +32,7 @@
 
     <link rel="stylesheet" href="css/app.css" />
     <link rel="stylesheet" href="css/panel-sidebar.css" />
+    <link rel="stylesheet" href="css/splash.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="BlazorAppSolon.styles.css" rel="stylesheet" />
     <link href="manifest.webmanifest" rel="manifest" />
@@ -40,27 +41,102 @@
 </head>
 
 <body>
-    <div id="app">
-        <!-- لودر هماهنگ و یکپارچه با تم طلایی لوکس سالن بدون پرش یا بهم‌ریختگی ظاهری -->
-        <div style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#FAF7F2; color:#333; font-family:Vazirmatn,system-ui,sans-serif;">
-            <div style="font-family:'Playfair Display',serif; font-size:2.4rem; color:#C6A46A; font-weight:700; letter-spacing:2px; margin-bottom:.5rem;">HB</div>
-            <div style="font-size:1.1rem; font-weight:600; color:#1A1A1A; margin-bottom:1.5rem;">سالن زیبایی حدیث</div>
-            <svg class="loading-progress" aria-label="در حال بارگذاری" style="width:42px; height:42px;">
-                <circle r="40%" cx="50%" cy="50%" style="stroke:#E8DFD3; stroke-width:3px; fill:none;" />
-                <circle r="40%" cx="50%" cy="50%" style="stroke:#C6A46A; stroke-width:3px; stroke-dasharray:120; stroke-dashoffset:50; fill:none;" />
-            </svg>
-            <div class="loading-progress-text" style="font-size:.85rem; color:#888; margin-top:1rem;">در حال بارگذاری...</div>
+    <!--
+      ══════════════════════════════════════════════════════════════════════
+      صفحه آغاز (Splash) با نماد بی‌نهایت
+      ---------------------------------------------------------------------
+      چرا اینجا و بیرون از #app: Blazor با نخستین رندر، محتوای #app را دور
+      می‌ریزد. اگر این صفحه داخلش بود، همان لحظه ناپدید می‌شد و کاربر پرشی
+      کوتاه می‌دید. با نشستن به‌عنوان خواهرِ #app، از اولین فریم تا پایان
+      کار پیوسته می‌ماند و بعد با محو شدن نرم کنار می‌رود.
 
-            <!-- ساختار معنایی جهت خزش موتورهای جستجو (خارج از دید مزاحم کاربر) -->
-            <noscript>
-                <div style="padding:2rem; text-align:center;">
-                    <h1>سالن تخصصی زیبایی حدیث — تهران، زعفرانیه</h1>
-                    <p>ارائه‌دهنده خدمات تخصصی کاشت ناخن، رنگ و لایت، میکاپ عروس، فیشال و کراتین مو.</p>
-                    <p>تلفن: ۰۲۱-۱۲۳۴۵۶۷۸ | ۰۹۱۲۰۰۰۰۰۰۱</p>
-                </div>
-            </noscript>
-        </div>
+      نکته برای نگهداری: بخش بین دو نشانگر زیر توسط
+      tools/sync-splash-markup.py تولید می‌شود. مارک‌آپ را دستی ویرایش نکنید؛
+      تغییر را در سازنده بدهید و ابزار را اجرا کنید تا با splash.css و
+      splash.js هم‌گام بماند.
+      ══════════════════════════════════════════════════════════════════════
+    -->
+    <!-- SOLON-SPLASH:START -->
+    <div class="s-splash" id="solon-splash">
+  <svg class="s-splash__defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <!-- تنها تعریف هندسه در کل سند. هر سه لایه با use به همین ارجاع می‌دهند.
+           pathLength="1" یعنی dasharray و dashoffset در بازه ۰ تا ۱ کار می‌کنند
+           و هیچ عدد جادویی طول مسیر در CSS نمی‌آید. -->
+      <path class="s-inf__geom" id="solon-inf-path" pathLength="1" fill="none" d="M160 90 C190 28 286 20 286 90 C286 160 190 152 160 90 C130 28 34 20 34 90 C34 160 130 152 160 90" />
+
+      <linearGradient id="solon-inf-grad" x1="0" y1="0" x2="1" y2="0">
+        <!-- رنگ‌ها از CSS می‌آیند تا هیچ کدرنگ خامی در مارک‌آپ نماند -->
+        <stop class="s-inf__stop-a" offset="0" />
+        <stop class="s-inf__stop-b" offset=".5" />
+        <stop class="s-inf__stop-c" offset="1" />
+      </linearGradient>
+
+      <filter id="solon-inf-soft" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- تزئینی: هاله نفس‌کش و ذرات. aria-hidden چون هیچ اطلاعاتی حمل نمی‌کنند -->
+  <div class="s-splash__glow" aria-hidden="true"></div>
+  <div class="s-splash__particles" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="s-splash__stage">
+    <div class="s-splash__brand">
+      <!-- لوگو از Tbl_SalonSetting.LogoUrl می‌آید. تا وقتی تصویر واقعاً بار
+           نشده hidden است، پس هرگز کادر خالی دیده نمی‌شود. -->
+      <img class="s-splash__brand-logo" data-logo alt="" hidden />
+      <span class="s-splash__brand-latin" data-brand-latin>HADIS BEAUTY</span>
+      <span class="s-splash__brand-name" data-brand>سالن زیبایی حدیث</span>
     </div>
+
+    <svg class="s-inf" viewBox="0 0 320 180" role="presentation" aria-hidden="true" focusable="false">
+      <use class="s-inf__track" href="#solon-inf-path" />
+      <use class="s-inf__glow" href="#solon-inf-path" />
+      <use class="s-inf__fill" href="#solon-inf-path" />
+      <!-- نقطه شروع همان مرکز تقاطع ست شده تا پیش از اجرای جاوااسکریپت در
+           گوشه ۰٬۰ (بیرون نماد) دیده نشود. -->
+      <g class="s-inf__head" style="transform: translate(160px, 90px)">
+        <circle class="s-inf__head-halo" r="13" cx="0" cy="0" />
+        <circle class="s-inf__head-core" r="4.6" cx="0" cy="0" />
+      </g>
+    </svg>
+
+    <!-- role=status + aria-live: متن و درصد به‌عنوان یک وضعیت زنده اعلام می‌شوند.
+         عدد دیده‌شدنی aria-hidden است چون صدها بار بازنویسی می‌شود؛ اعلام‌ها از
+         عنصر پنهان s-splash__sr می‌آید که فقط سر هر ۱۰ درصد عوض می‌شود. -->
+    <div class="s-splash__status" role="status" aria-live="polite">
+      <p class="s-splash__loading">در حال بارگذاری نرم‌افزار<i class="s-splash__dots" aria-hidden="true"><b></b><b></b><b></b></i></p>
+      <p class="s-splash__pct" aria-hidden="true"><span data-pct>۰٪</span></p>
+      <span class="s-splash__sr" data-sr></span>
+    </div>
+
+    <div class="s-splash__error" data-error hidden>
+      <p class="s-splash__error-msg" data-error-msg>بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.</p>
+      <button type="button" class="s-splash__retry" data-retry>تلاش دوباره</button>
+    </div>
+  </div>
+</div>
+    <!-- SOLON-SPLASH:END -->
+
+    <!-- برنامه Blazor اینجا سوار می‌شود. عمداً خالی می‌ماند تا محتوایش با
+         نخستین رندر ساخته شود و چیزی برای دور ریختن وجود نداشته باشد. -->
+    <div id="app"></div>
+
+    <!-- با خاموش بودن جاوااسکریپت، Blazor هرگز سوار نمی‌شود و صفحه آغاز برای
+         همیشه روی صفحه می‌ماند و محتوا را می‌پوشاند. این قاعده آن را کنار
+         می‌زند و این بلوک، محتوای قابل خزش را نشان می‌دهد. -->
+    <noscript>
+        <style>
+            .s-splash { display: none !important; }
+        </style>
+        <div style="padding:2rem; text-align:center; font-family:Vazirmatn,system-ui,sans-serif;">
+            <h1>سالن تخصصی زیبایی حدیث — تهران، زعفرانیه</h1>
+            <p>ارائه‌دهنده خدمات تخصصی کاشت ناخن، رنگ و لایت، میکاپ عروس، فیشال و کراتین مو.</p>
+            <p>تلفن: ۰۲۱-۱۲۳۴۵۶۷۸ | ۰۹۱۲۰۰۰۰۰۰۱</p>
+        </div>
+    </noscript>
 
     <div id="blazor-error-ui">
         خطایی رخ داده است.
@@ -70,6 +146,10 @@
 
     <!-- هلپر تجربه کاربری موبایل: قفل اسکرول، تشخیص دستگاه لمسی و مدیریت Viewport -->
     <script src="js/mobile-ux.js"></script>
+    <!-- موتور صفحه آغاز. باید پیش از blazor.webassembly.js بیاید: فاز اول
+         نوار پیشرفت، همان متغیری است که آن اسکریپت هنگام دانلود فایل‌ها
+         می‌نویسد و باید از قبل رصد شده باشد. -->
+    <script src="js/splash.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>

@@ -320,11 +320,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ---------- Blazor error ui ---------- */
-.loading-progress { position: relative; display: block; width: 8rem; height: 8rem; margin: 20vh auto 1rem; }
-.loading-progress circle { fill: none; stroke: #E4D9CC; stroke-width: .6rem; transform-origin: 50% 50%; transform: rotate(-90deg); }
-.loading-progress circle:last-child { stroke: #1A1A1A; stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * .8), 500%; transition: stroke-dasharray .05s ease-in-out; }
-.loading-progress-text { position: absolute; text-align: center; font-weight: bold; inset: calc(20vh + 3.25rem) 0 auto 0; }
-.loading-progress-text:after { content: var(--blazor-load-percentage-text, "در حال بارگذاری"); }
+/* قواعد .loading-progress و .loading-progress-text اینجا بودند و لودر سبک قدیمی
+   را می‌ساختند. آن لودر با صفحه آغاز نماد بی‌نهایت جایگزین شد و مارک‌آپش از
+   index.html حذف شده؛ پس این پنج قاعده کاملاً مرده بودند و پاک شدند. */
 #blazor-error-ui {
     background: #1A1A1A; color: #fff; bottom: 0; display: none;
     left: 0; padding: .8rem 1.2rem; position: fixed; width: 100%; z-index: 1000;

@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>صفحه آغاز — نماد بی‌نهایت | SolonBeauty</title>
+<style>
+/* ==========================================================================
+   SolonBeauty — صفحه آغاز (Splash) با نماد بینهایت
+   --------------------------------------------------------------------------
+   این فایل کنار app.css بارگذاری میشود و کاملاً خودبسنده است: همه توکنهای
+   رنگ داخل خودش تعریف شدهاند (روی .s-splash، نه :root). دلیل انتخاب دامنه
+   بهجای :root: این فایل در همه صفحات سایت بارگذاری میشود و نباید هیچ
+   متغیر سراسری یا قاعدهای را به بیرون درز بدهد. هرچه اینجاست، فقط داخل
+   خود صفحه آغاز اثر دارد.
+
+   نکته معماری: مارکآپ این صفحه مستقیماً در index.html مینشیند (نه بهعنوان
+   کامپوننت رِیزور) و بهصورت خواهرِ عنصر #app قرار میگیرد، نه فرزندش.
+   دلیل: Blazor با اولین رندر، محتوای #app را دور میریزد؛ پس هر چیزی که
+   داخلش باشد ناپدید میشود و کاربر پرش میبیند. با قرار گرفتن بیرون، این
+   صفحه از لحظه اول تا پایان کار پیوسته روی صفحه میماند.
+
+   انیمیشنها فقط روی transform، opacity و ویژگیهای stroke اجرا میشوند:
+   هیچ ویژگی چیدمانی (width/height/top/left) انیمیت نمیشود، پس هیچ جابهجایی
+   چیدمانی (Layout Shift) رخ نمیدهد.
+   ========================================================================== */
+
+/* ==========================================================================
+   ۱) پوسته صفحه آغاز
+   ========================================================================== */
+.s-splash {
+    /* ---------- رنگهای برند ---------- */
+    --sp-bg: #14110F;
+    --sp-glow: #2A221B;
+    --sp-gold: #C6A46A;
+    --sp-gold-dark: #A8854B;
+    --sp-gold-light: #F1DDAE;
+    --sp-text: #EDE6DA;
+    --sp-text-dim: #A89F93;
+
+    /* سر نور: گرم و نزدیک به سفید. اگر همان طلایی روشن میبود، نقطه از خط
+       پیشرفت جدا دیده نمیشد و حس «نور» از بین میرفت. */
+    --sp-head: #FFF6E2;
+
+    /* ---------- نماد ---------- */
+    --sp-track: rgba(198, 164, 106, 0.18);   /* مسیر خالی: کمرنگ و نیمهشفاف */
+    --sp-track-w: 2.4;
+    --sp-line-w: 3.8;
+
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    overflow: hidden;                        /* هیچ سرریز یا اسکرولی در صفحه آغاز نیست */
+    display: grid;
+    place-items: center;
+
+    /* پس‌زمینه گرم و تاریک: مرکز #2A221B و لبه‌ها #14110F.
+       گرادیان شعاعی و بیضی‌شکل است تا مرکز روشن زیر نماد بنشیند و چشم
+       ناخودآگاه به همان‌جا کشیده شود. */
+    background: radial-gradient(125% 95% at 50% 42%, var(--sp-glow) 0%, var(--sp-bg) 68%);
+    color: var(--sp-text);
+    font-family: Vazirmatn, Tahoma, system-ui, -apple-system, sans-serif;
+
+    /* هدف لمس/رندر روی دستگاههای ناچدار.
+       max یعنی هرکدام بزرگتر بود، همان برنده است: در گوشی معمولی ۱۶ پیکسل
+       و در آیفون ناچدار مقدار درست safe-area. */
+    padding-block: max(16px, env(safe-area-inset-top))
+                   max(16px, env(safe-area-inset-bottom));
+    padding-inline: max(16px, env(safe-area-inset-right))
+                    max(16px, env(safe-area-inset-left));
+
+    /* اگر مرورگر از dvh پشتیبانی نکند، inset:0 همین کار را میکند */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   ۲) ظرف تعریفهای SVG — یک بار برای کل سند
+   --------------------------------------------------------------------------
+   مسیر هندسی نماد تنها همین یک جا تعریف میشود و هر سه لایه (Track، Glow،
+   Fill) با <use> به آن ارجاع میدهند. اگر مسیر را در سه جا تکرار میکردیم،
+   هر اصلاح هندسی باید سه بار انجام میشد و دیر یا زود از هم میافتادند.
+   width/height صفر است چون این عنصر فقط ظرف تعریف است و چیزی رسم نمیکند.
+   ========================================================================== */
+.s-splash__defs {
+    position: absolute;
+    inline-size: 0;
+    block-size: 0;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   ۳) صحنه: ستون عمودی وسطچین
+   ========================================================================== */
+.s-splash__stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 3.5vh, 26px);
+    text-align: center;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+}
+
+/* ==========================================================================
+   ۴) نماد بینهایت
+   --------------------------------------------------------------------------
+   اندازه: ۹۰٪ عرض صفحه، با سقف ۴۶۰ پیکسل.
+   چرا سقف: روی مانیتور عریض، بیسقف گذاشتن نماد آن را به یک شکل غولآسا و
+   کشیده تبدیل میکند و حس «اپلیکیشن» از بین میرود. با سقف، در تبلت و دسکتاپ
+   نماد وسطچین و در اندازه درست خودش میماند.
+   ارتفاع خودکار از نسبت viewBox میآید (۳۲۰×۱۸۰)، پس هرگز کشیده نمیشود.
+   ========================================================================== */
+.s-inf {
+    display: block;
+    inline-size: min(90vw, 460px);
+    block-size: auto;
+}
+
+/* هر سه لایه روی یک هندسه سوارند، پس فقط رنگ و ضخامتشان فرق میکند */
+.s-inf__track,
+.s-inf__glow,
+.s-inf__fill {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---------- مسیر خالی ----------
+   از همان ابتدا کل شکل ∞ دیده میشود تا کاربر بداند چه چیزی در انتظار اوست.
+   کمرنگ و نیمهشفاف است تا با خط پیشرفت اشتباه گرفته نشود. */
+.s-inf__track {
+    stroke: var(--sp-track);
+    stroke-width: var(--sp-track-w);
+}
+
+/* ---------- لایه تار پشت خط ----------
+   حس نور میدهد. فیلتر SVG (نه filter: blur سیشیاس) چون stdDeviation در
+   مختصات کاربر اثر میکند و با بزرگ و کوچک شدن نماد، هاله هم به همان نسبت
+   بزرگ میشود؛ با blur سیشیاس باید در هر بریکپوینت عدد را دستی عوض میکردیم.
+   dasharray و dashoffset عیناً مثل لایه اصلی است تا هاله دقیقاً زیر خط بماند. */
+.s-inf__glow {
+    stroke: var(--sp-gold);
+    stroke-width: var(--sp-line-w);
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--inf-p, 0));
+    filter: url(#solon-inf-soft);
+    opacity: 0.55;
+}
+
+/* ---------- خط پیشرفت ----------
+   تکنیک: pathLength="1" روی مسیر تعریف شده، پس dasharray و dashoffset در
+   بازه ۰ تا ۱ کار میکنند و هیچ عدد جادویی (طول واقعی مسیر) در CSS نمیآید.
+   این یعنی اگر هندسه مسیر روزی عوض شود، این قواعد دستنخورده درست میمانند.
+   مقدار --inf-p از سمت جاوااسکریپت روی خود عنصر <svg> ست میشود. */
+.s-inf__fill {
+    stroke: url(#solon-inf-grad);
+    stroke-width: var(--sp-line-w);
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--inf-p, 0));
+}
+
+/* ---------- ایستگاههای گرادیان ----------
+   رنگها اینجا و از توکن میآیند، نه بهصورت کدرنگ خام روی خود عنصر stop در
+   مارکآپ. دلیل: بریف میگوید هیچ کدرنگ پراکندهای نباشد. اگر روزی طلایی
+   برند عوض شود، فقط :root همین فایل تغییر میکند و گرادیان خودبهخود دنبالش
+   میآید. stop-color از طریق CSS در همه مرورگرهای مدرن قابل تنظیم است.
+   این عناصر داخل .s-splash هستند، پس توکنها را به ارث میبرند. */
+.s-inf__stop-a { stop-color: var(--sp-gold-dark); }
+.s-inf__stop-b { stop-color: var(--sp-gold-light); }
+.s-inf__stop-c { stop-color: var(--sp-gold); }
+
+/* ==========================================================================
+   ۵) سر نور
+   --------------------------------------------------------------------------
+   موقعیت این گروه با getPointAtLength محاسبه و با transform جابهجا میشود.
+   transform انتخاب شده چون روی مسیر انیمیشن، مرورگر فقط لایه را جابهجا
+   میکند و هیچ چیدمانی دوباره حساب نمیشود.
+   مختصات اولیه در مارکآپ روی مرکز تقاطع ست شده تا پیش از اجرای
+   جاوااسکریپت، نقطه در گوشه ۰٬۰ (بیرون نماد) دیده نشود.
+   ========================================================================== */
+.s-inf__head {
+    transition: opacity 300ms ease-out;
+}
+
+.s-inf__head-halo {
+    fill: var(--sp-gold);
+    opacity: 0.34;
+    filter: url(#solon-inf-soft);
+}
+
+.s-inf__head-core {
+    fill: var(--sp-head);                   /* گرم و نزدیک به سفید تا «سر نور» خوانده شود */
+}
+
+/* ==========================================================================
+   ۶) احترام به prefers-reduced-motion
+   --------------------------------------------------------------------------
+   نرمسازی حرکت در جاوااسکریپت خاموش میشود (نه اینجا) تا پیشرفت واقعی
+   همچنان نمایش داده شود. اینجا فقط گذارهای تزئینی حذف میشوند.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .s-inf__head {
+        transition: none;
+    }
+}
+
+/* ==========================================================================
+   ۷) هاله نفس‌کش پشت نماد و ذرات
+   --------------------------------------------------------------------------
+   هر دو عنصر تزئینی‌اند: pointer-events خاموش و aria-hidden در مارک‌آپ، تا
+   نه کلیک کاربر را بگیرند و نه به صفحه‌خوان‌ها اعلام شوند.
+   ========================================================================== */
+
+/* هاله طلاییِ بسیار نرم پشت نماد. با همان ریتم ذرات نفس می‌کشد تا کل صفحه
+   یک حرکت واحد حس شود، نه چند انیمیشن جدا. */
+.s-splash__glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(46% 38% at 50% 44%, var(--sp-glow-gold), transparent 70%);
+    animation: s-glow-breathe 9s ease-in-out infinite;
+}
+
+@keyframes s-glow-breathe {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%      { opacity: 1;    transform: scale(1.08); }
+}
+
+/* ---------- ذرات ----------
+   بریف می‌گوید «ذرات بسیار ریز و کم‌رنگ، فقط با CSS، بدون جاوااسکریپت سنگین».
+   راه‌حل: هر لایه یک عنصر است که چند گرادیان شعاعی به‌عنوان پس‌زمینه دارد.
+   یعنی ۲۴ ذره با سه گره DOM رسم می‌شود — نه ۲۴ عنصر جدا. حرکت هر لایه هم
+   یک transform روی همان یک عنصر است، پس بار رندر ناچیز می‌ماند.
+   inset منفی است تا ذرات تا بیرون کادر هم پخش شوند و لبه‌ها خالی نمانند. */
+.s-splash__particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.s-splash__particles i {
+    position: absolute;
+    inset: -12%;
+    display: block;
+    background-repeat: no-repeat;
+    animation: s-breathe var(--dur, 12s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+}
+
+@keyframes s-breathe {
+    0%, 100% { opacity: 0.35; transform: translate3d(0, 0, 0) scale(1); }
+    50%      { opacity: 0.9;  transform: translate3d(0, -6px, 0) scale(1.05); }
+}
+
+/* لایه یک: ذرات ریز و نزدیک */
+.s-splash__particles i:nth-child(1) {
+    --dur: 11s;
+    --delay: 0s;
+    background-image:
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%);
+    background-size: 3px 3px, 2px 2px, 3px 3px, 2px 2px, 3px 3px, 2px 2px, 3px 3px, 2px 2px;
+    background-position: 8% 18%, 22% 74%, 37% 31%, 55% 11%,
+                         68% 83%, 84% 42%, 93% 66%, 14% 47%;
+}
+
+/* لایه دو: ذرات متوسط و کمی درشت‌تر، با ریتم کندتر */
+.s-splash__particles i:nth-child(2) {
+    --dur: 14s;
+    --delay: -3s;
+    opacity: 0.75;
+    background-image:
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%);
+    background-size: 4px 4px, 3px 3px, 4px 4px, 3px 3px, 4px 4px, 3px 3px;
+    background-position: 5% 62%, 31% 12%, 46% 88%, 62% 28%, 78% 58%, 96% 22%;
+}
+
+/* لایه سه: ذرات دور و کم‌رنگ — عمق می‌دهد بدون اینکه شلوغ شود */
+.s-splash__particles i:nth-child(3) {
+    --dur: 17s;
+    --delay: -7s;
+    opacity: 0.5;
+    background-image:
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%);
+    background-size: 5px 5px, 6px 6px, 5px 5px, 6px 6px, 5px 5px;
+    background-position: 12% 86%, 27% 52%, 51% 6%, 72% 71%, 88% 34%;
+}
+
+/* ==========================================================================
+   ۸) برند، متن بارگذاری و درصد
+   ========================================================================== */
+.s-splash__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+/* نام لاتین با فاصله‌ی حروف باز.
+   چرا فاصله‌ی باز روی نام لاتین و نه نام فارسی: خط فارسی پیوسته است و
+   letter-spacing بین حروفِ یک کلمه فاصله می‌اندازد و اتصال حروف را می‌شکند.
+   پس اثر بصری موردنظر بریف روی نام لاتین اجرا می‌شود و نام فارسی با
+   فاصله‌ی بسیار کم و امن می‌آید. */
+/* شبکه ایمنی برای داده واقعی: نام سالن از دیتابیس می‌آید و تا ۱۰۰ نویسه
+   می‌تواند باشد. اگر بلندتر از عرض صفحه باشد، این دو خط در مرز کادر
+   می‌شکنند و هرگز سرریز افقی نمی‌سازند. break-word فقط وقتی لازم شد
+   می‌شکند، پس کلمه‌های معمولی سالم می‌مانند. */
+.s-splash__brand-name,
+.s-splash__brand-latin {
+    max-inline-size: 100%;
+    overflow-wrap: break-word;
+}
+
+.s-splash__brand-latin {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-size: clamp(0.78rem, 3.1vw, 0.95rem);
+    font-weight: 700;
+    letter-spacing: 0.34em;
+    /* letter-spacing در پایان خط یک فاصله اضافه می‌گذارد که متن را نسبت به
+       مرکز نامتقارن می‌کند؛ این padding آن را جبران می‌کند. */
+    padding-inline-start: 0.34em;
+    text-transform: uppercase;
+    color: var(--sp-gold);
+}
+
+.s-splash__brand-name {
+    font-size: clamp(0.95rem, 3.8vw, 1.15rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--sp-text);
+}
+
+.s-splash__brand-logo {
+    max-inline-size: min(46vw, 168px);
+    max-block-size: 62px;
+    block-size: auto;
+    object-fit: contain;
+}
+
+/* ---------- ردیف وضعیت ---------- */
+.s-splash__status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+}
+
+.s-splash__loading {
+    margin: 0;
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+    font-weight: 500;
+    /* کم‌رنگ‌تر از نام برند: سلسله‌مراتب «نام سالن مهم‌تر از ردیف وضعیت
+       است». کنتراست #A89F93 روی مرکز گرادیان ۶:۱ است، پس همچنان بالای ۴٫۵. */
+    color: var(--sp-text-dim);
+}
+
+/* سه نقطه‌ی متحرک. هر نقطه با تأخیر ۰٫۱۸ ثانیه‌ای پشت سر هم بالا می‌آید،
+   پس چشم یک حرکت پیوسته می‌بیند نه سه پرش جدا. */
+.s-splash__dots {
+    display: inline-flex;
+    gap: 4px;
+    margin-inline-start: 7px;
+    vertical-align: middle;
+}
+
+.s-splash__dots b {
+    inline-size: 4px;
+    block-size: 4px;
+    border-radius: 50%;
+    background: var(--sp-gold);
+    animation: s-dot 1.2s ease-in-out infinite;
+}
+
+.s-splash__dots b:nth-child(2) { animation-delay: 0.18s; }
+.s-splash__dots b:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes s-dot {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30%           { opacity: 1;   transform: translateY(-4px); }
+}
+
+/* ---------- درصد ----------
+   رقم‌ها از سمت جاوااسکریپت به رقم فارسی تبدیل و اینجا نوشته می‌شوند.
+   tabular-nums مهم است: بدون آن، عرض رقم‌ها موقع شمردن تغییر می‌کند و
+   عدد می‌لرزد. font-variant-numeric با ارقام فارسی هم کار می‌کند. */
+.s-splash__pct {
+    margin: 0;
+    font-size: clamp(1.05rem, 4.4vw, 1.35rem);
+    font-weight: 800;
+    color: var(--sp-gold);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    min-block-size: 1.6em;                   /* جای عدد از قبل رزرو است تا چیدمان نلرزد */
+}
+
+/* متن فقط برای صفحه‌خوان.
+   چرا لازم است: عدد روی صفحه در هر تغییر یک درصد بازنویسی می‌شود؛ اگر خودش
+   داخل ناحیه زنده باشد، صفحه‌خوان تا ۱۰۰ اعلام پشت سر هم می‌کند. پس عدد
+   دیده‌شدنی از درخت دسترس‌پذیری کنار گذاشته شده و این عنصر پنهان — که در
+   همان ناحیه زنده است — فقط سر هر ۱۰ درصد یک اعلام تازه می‌دهد. */
+.s-splash__sr {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ==========================================================================
+   ۹) حالت خطا
+   --------------------------------------------------------------------------
+   نماد همان‌جا که هست خشک می‌شود (جاوااسکریپت حلقه را متوقف می‌کند)، متن
+   بارگذاری و درصد کنار می‌روند و پیام ساده فارسی با دکمه تلاش دوباره می‌آید.
+   ========================================================================== */
+.s-splash__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+}
+
+.s-splash__error[hidden] { display: none; }
+
+.s-splash__error-msg {
+    margin: 0;
+    /* اندازه سطر خوانا برای پیام وسط‌چین: نه یک خط بسیار بلند روی دسکتاپ،
+       نه شکستن زودهنگام روی گوشی. */
+    max-inline-size: min(100%, 38ch);
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+    line-height: 1.9;
+    color: var(--sp-danger);
+}
+
+/* دکمه تلاش دوباره: حداقل ۴۴ پیکسل ارتفاع برای هدف لمس (معیار بریف) */
+.s-splash__retry {
+    min-block-size: 44px;
+    min-inline-size: 132px;
+    padding: 0 22px;
+    border-radius: 999px;
+    border: 1px solid var(--sp-gold-dark);
+    background: transparent;
+    color: var(--sp-gold-light);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.s-splash__retry:hover { background: var(--sp-gold-tint); }
+.s-splash__retry:active { transform: scale(0.97); }
+
+.s-splash__retry:focus-visible {
+    outline: 2px solid var(--sp-gold-light);
+    outline-offset: 3px;
+}
+
+/* وقتی خطا رخ داده، ردیف وضعیت جایش را به پیام خطا می‌دهد */
+.s-splash.is-failed .s-splash__status { display: none; }
+
+/* ==========================================================================
+   ۱۰) پایان کار
+   --------------------------------------------------------------------------
+   محو شدن نرم به صفحه بعدی. فقط opacity انیمیت می‌شود (بدون جابه‌جایی
+   چیدمانی) و پس از پایان گذار، visibility از دسترس خارج می‌شود تا این لایه
+   دیگر هیچ کلیکی را نگیرد.
+   ========================================================================== */
+.s-splash.is-done {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 460ms ease, visibility 0s linear 460ms;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   ۱۱) صفحه‌های کوتاه — گوشی در حالت افقی
+   --------------------------------------------------------------------------
+   در حالت افقی، ارتفاع کم است و نماد ۹۰vw بیش از حد بزرگ می‌شود و متن‌ها
+   از کادر بیرون می‌زنند. اینجا هر دو کوچک می‌شوند تا همه‌چیز جا شود.
+   پوسته overflow:hidden است، پس حتی در بدترین حالت اسکرول یا سرریز افقی
+   رخ نمی‌دهد؛ این قاعده فقط از بریدگی جلوگیری می‌کند.
+   ========================================================================== */
+@media (max-height: 520px) {
+    .s-inf { inline-size: min(46vw, 320px); }
+    .s-splash__stage { gap: 10px; }
+    .s-splash__pct { font-size: 1rem; min-block-size: 1.3em; }
+}
+
+/* ==========================================================================
+   ۱۲) احترام به prefers-reduced-motion
+   --------------------------------------------------------------------------
+   همه انیمیشن‌های تزئینی خاموش می‌شوند: ذرات، هاله، نقطه‌های متحرک.
+   پیشرفت واقعی بارگذاری همچنان نمایش داده می‌شود — نرم‌سازی حرکت در
+   جاوااسکریپت خاموش می‌شود (نه اینجا) و نوار مقدار واقعی را نشان می‌دهد.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .s-inf__head { transition: none; }
+    .s-splash__glow,
+    .s-splash__particles i,
+    .s-splash__dots b { animation: none; }
+    .s-splash__particles i:nth-child(1) { opacity: 0.5; }
+    .s-splash__particles i:nth-child(2) { opacity: 0.4; }
+    .s-splash__particles i:nth-child(3) { opacity: 0.3; }
+    .s-splash__dots b { opacity: 0.6; }
+    .s-splash__retry { transition: none; }
+}
+
+
+/* ==========================================================================
+   چیدمان خودِ صفحه پیش‌نمایش — بخشی از اپ نیست
+   ========================================================================== */
+body {
+    margin: 0;
+    background: #0C0A08;
+    color: #EDE6DA;
+    font-family: 'Vazirmatn', Tahoma, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1500px; margin: 0 auto; padding: 26px; }
+
+.note {
+    max-width: 900px; padding: 26px 0 10px;
+    font-size: .82rem; line-height: 2; color: rgba(237,230,218,.68);
+}
+.note h1 { margin: 0 0 14px; font-size: 1.12rem; color: #F7F2EA; font-weight: 800; }
+.note h2 { margin: 26px 0 8px; font-size: .92rem; color: #C6A46A; font-weight: 700; }
+.note strong { color: #C6A46A; font-weight: 700; }
+.note code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: rgba(237,230,218,.08); padding: 1px 6px; border-radius: 5px; font-size: .92em;
+}
+.note ul { margin: 8px 0 0; padding-inline-start: 20px; }
+.note li { margin-block-end: 5px; }
+.note .ok { color: #8FCB9B; }
+.note .warn { color: #E8C07D; }
+
+/* قاب آزمایش: اندازه‌های واقعی دستگاه‌ها.
+   .s-splash در اپ fixed است؛ اینجا absolute می‌شود تا داخل قاب بماند. */
+.frames { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; margin-top: 22px; }
+.frame { display: flex; flex-direction: column; gap: 9px; }
+.frame-label {
+    font-size: .74rem; font-weight: 700; color: rgba(237,230,218,.55);
+    display: flex; align-items: center; gap: 8px;
+}
+.frame-label b { color: #C6A46A; font-variant-numeric: tabular-nums; }
+
+.lab {
+    position: relative;
+    border-radius: 20px;
+    border: 1px solid rgba(237,230,218,.1);
+    overflow: hidden;
+    flex: none;
+}
+.lab .s-splash { position: absolute; }
+
+/* عرض‌های واقعی دستگاه‌ها */
+.w320 { inline-size: 320px; block-size: 560px; }
+.w390 { inline-size: 390px; block-size: 760px; }
+.w768 { inline-size: 768px; block-size: 620px; }
+.w1100 { inline-size: 1100px; block-size: 560px; }
+.h320 { inline-size: 700px; block-size: 320px; }   /* گوشی افقی */
+
+/* تخته تنظیم زنده */
+.scrub { margin-top: 26px; max-width: 900px; }
+.scrub-row {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(237,230,218,.05);
+    border: 1px solid rgba(237,230,218,.12);
+    border-radius: 14px; padding: 14px 16px;
+}
+.scrub input[type="range"] { flex: 1; accent-color: #C6A46A; height: 24px; cursor: pointer; }
+.scrub-val {
+    min-inline-size: 62px; text-align: center; font-weight: 800;
+    color: #F1DDAE; font-variant-numeric: tabular-nums;
+}
+.scrub-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.scrub-btns button {
+    font-family: inherit; font-size: .78rem; font-weight: 700;
+    padding: 9px 16px; border-radius: 9px; cursor: pointer;
+    border: 1px solid rgba(198,164,106,.45); background: transparent; color: #F1DDAE;
+}
+.scrub-btns button:hover { background: rgba(198,164,106,.14); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="note">
+    <h1>صفحه آغاز — نماد بی‌نهایت</h1>
+    <p>
+        این فایل از <strong>CSS و JS واقعی پروژه</strong> ساخته شده
+        (<code>splash.css</code> و <code>splash.js</code>) و مارک‌آپش همان مارک‌آپی است
+        که در <code>index.html</code> می‌نشیند. پس هر چه اینجا می‌بینید، همان چیزی است
+        که کاربر می‌بیند.
+    </p>
+
+    <h2>۱) قاب‌های دستگاه — ببینید واکنش‌گرایی درست کار می‌کند</h2>
+    <ul>
+        <li>گوشی ۳۲۰px و ۳۹۰px: نماد ۹۰٪ عرض را می‌گیرد و وسط‌چین است.</li>
+        <li>تبلت ۷۶۸px: عرض نماد به سقف ۴۶۰ پیکسل رسیده و وسط‌چین مانده — کشیده نشده.</li>
+        <li>دسکتاپ ۱۱۰۰px: همان سقف ۴۶۰ پیکسل. بدون سقف، نماد غول‌آسا می‌شد.</li>
+        <li>گوشی افقی (۳۲۰px ارتفاع): قاعده مخصوص صفحه‌های کوتاه نماد و متن را
+        کوچک می‌کند تا چیزی از کادر بیرون نزند.</li>
+    </ul>
+
+    <h2>۲) تخته تنظیم — حرکت سر نور و شمارش درصد</h2>
+    <ul>
+        <li>نوار را بالا ببرید: خط طلایی پشت سر نور پر می‌شود و درصد فارسی می‌شمارد.</li>
+        <li><span class="warn">نوار فقط بالا می‌رود</span> — این عمدی است. نگهبان یک‌نوا
+        در <code>setProgress</code> هر مقدار نزولی را دور می‌ریزد تا نوار عقب نرود.
+        برای برگشت، «از صفر» را بزنید.</li>
+    </ul>
+
+    <h2>۳) دکمه‌ها — سه وضعیت واقعی</h2>
+    <ul>
+        <li><strong>خطا</strong>: نماد همان‌جا خشک می‌شود، ردیف درصد کنار می‌رود و پیام
+        فارسی با دکمه «تلاش دوباره» می‌آید.</li>
+        <li><strong>پایان</strong>: لایه با یک محو شدن نرم کنار می‌رود (روی نمونه اصلی).</li>
+    </ul>
+
+    <h2>۴) چه چیزی را چشمی تأیید کنید</h2>
+    <ul>
+        <li>شکل ∞ متقارن است و دو رشته در وسط با زاویه از هم می‌گذرند، نه چسبیده.</li>
+        <li>ذرات بسیار کم‌رنگ‌اند و «نفس می‌کشند» — نباید شبیه ستاره‌های شلوغ باشند.</li>
+        <li>هاله پشت نماد هم با همان ریتم نفس می‌کشد.</li>
+        <li>نام فارسی حروفش به هم چسبیده مانده (فاصله حروف فقط روی نام لاتین باز است).</li>
+    </ul>
+</div>
+
+<div class="scrub">
+    <div class="scrub-row">
+        <span style="font-size:.78rem;color:rgba(237,230,218,.6)">پیشرفت نمونه اصلی</span>
+        <input type="range" id="scrub" min="0" max="1" step="0.01" value="0.45"
+               aria-label="تنظیم دستی پیشرفت" />
+        <span class="scrub-val" id="scrubval">۴۵٪</span>
+    </div>
+    <div class="scrub-btns">
+        <button type="button" id="btn-reset">از صفر</button>
+        <button type="button" id="btn-finish">پایان (محو شدن)</button>
+        <button type="button" id="btn-fail">خطا</button>
+        <button type="button" id="btn-40">برو به ۴۰٪</button>
+    </div>
+</div>
+
+<div class="frames">
+    <div class="frame">
+        <span class="frame-label">نمونه اصلی — زنده، با تخته تنظیم <b>#solon-splash</b></span>
+        <div class="lab w390"><div class="s-splash" id="solon-splash" data-progress="0">
+  <svg class="s-splash__defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <!-- تنها تعریف هندسه در کل سند. هر سه لایه با use به همین ارجاع می‌دهند.
+           pathLength="1" یعنی dasharray و dashoffset در بازه ۰ تا ۱ کار می‌کنند
+           و هیچ عدد جادویی طول مسیر در CSS نمی‌آید. -->
+      <path class="s-inf__geom" id="solon-inf-path" pathLength="1" fill="none" d="M160 90 C190 28 286 20 286 90 C286 160 190 152 160 90 C130 28 34 20 34 90 C34 160 130 152 160 90" />
+
+      <linearGradient id="solon-inf-grad" x1="0" y1="0" x2="1" y2="0">
+        <!-- رنگ‌ها از CSS می‌آیند تا هیچ کدرنگ خامی در مارک‌آپ نماند -->
+        <stop class="s-inf__stop-a" offset="0" />
+        <stop class="s-inf__stop-b" offset=".5" />
+        <stop class="s-inf__stop-c" offset="1" />
+      </linearGradient>
+
+      <filter id="solon-inf-soft" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- تزئینی: هاله نفس‌کش و ذرات. aria-hidden چون هیچ اطلاعاتی حمل نمی‌کنند -->
+  <div class="s-splash__glow" aria-hidden="true"></div>
+  <div class="s-splash__particles" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="s-splash__stage">
+    <div class="s-splash__brand">
+      <!-- لوگو از Tbl_SalonSetting.LogoUrl می‌آید. تا وقتی تصویر واقعاً بار
+           نشده hidden است، پس هرگز کادر خالی دیده نمی‌شود. -->
+      <img class="s-splash__brand-logo" data-logo alt="" hidden />
+      <span class="s-splash__brand-latin" data-brand-latin>HADIS BEAUTY</span>
+      <span class="s-splash__brand-name" data-brand>سالن زیبایی حدیث</span>
+    </div>
+
+    <svg class="s-inf" viewBox="0 0 320 180" role="presentation" aria-hidden="true" focusable="false">
+      <use class="s-inf__track" href="#solon-inf-path" />
+      <use class="s-inf__glow" href="#solon-inf-path" />
+      <use class="s-inf__fill" href="#solon-inf-path" />
+      <!-- نقطه شروع همان مرکز تقاطع ست شده تا پیش از اجرای جاوااسکریپت در
+           گوشه ۰٬۰ (بیرون نماد) دیده نشود. -->
+      <g class="s-inf__head" style="transform: translate(160px, 90px)">
+        <circle class="s-inf__head-halo" r="13" cx="0" cy="0" />
+        <circle class="s-inf__head-core" r="4.6" cx="0" cy="0" />
+      </g>
+    </svg>
+
+    <!-- role=status + aria-live: متن و درصد به‌عنوان یک وضعیت زنده اعلام می‌شوند.
+         عدد دیده‌شدنی aria-hidden است چون صدها بار بازنویسی می‌شود؛ اعلام‌ها از
+         عنصر پنهان s-splash__sr می‌آید که فقط سر هر ۱۰ درصد عوض می‌شود. -->
+    <div class="s-splash__status" role="status" aria-live="polite">
+      <p class="s-splash__loading">در حال بارگذاری نرم‌افزار<i class="s-splash__dots" aria-hidden="true"><b></b><b></b><b></b></i></p>
+      <p class="s-splash__pct" aria-hidden="true"><span data-pct>۰٪</span></p>
+      <span class="s-splash__sr" data-sr></span>
+    </div>
+
+    <div class="s-splash__error" data-error hidden>
+      <p class="s-splash__error-msg" data-error-msg>بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.</p>
+      <button type="button" class="s-splash__retry" data-retry>تلاش دوباره</button>
+    </div>
+  </div>
+</div></div>
+    </div>
+    <div class="frame">
+        <span class="frame-label">گوشی کوچک <b>320 × 560</b></span>
+        <div class="lab w320"><div class="s-splash" data-progress="0.62">
+  
+
+  <!-- تزئینی: هاله نفس‌کش و ذرات. aria-hidden چون هیچ اطلاعاتی حمل نمی‌کنند -->
+  <div class="s-splash__glow" aria-hidden="true"></div>
+  <div class="s-splash__particles" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="s-splash__stage">
+    <div class="s-splash__brand">
+      <!-- لوگو از Tbl_SalonSetting.LogoUrl می‌آید. تا وقتی تصویر واقعاً بار
+           نشده hidden است، پس هرگز کادر خالی دیده نمی‌شود. -->
+      <img class="s-splash__brand-logo" data-logo alt="" hidden />
+      <span class="s-splash__brand-latin" data-brand-latin>HADIS BEAUTY</span>
+      <span class="s-splash__brand-name" data-brand>سالن زیبایی حدیث</span>
+    </div>
+
+    <svg class="s-inf" viewBox="0 0 320 180" role="presentation" aria-hidden="true" focusable="false">
+      <use class="s-inf__track" href="#solon-inf-path" />
+      <use class="s-inf__glow" href="#solon-inf-path" />
+      <use class="s-inf__fill" href="#solon-inf-path" />
+      <!-- نقطه شروع همان مرکز تقاطع ست شده تا پیش از اجرای جاوااسکریپت در
+           گوشه ۰٬۰ (بیرون نماد) دیده نشود. -->
+      <g class="s-inf__head" style="transform: translate(160px, 90px)">
+        <circle class="s-inf__head-halo" r="13" cx="0" cy="0" />
+        <circle class="s-inf__head-core" r="4.6" cx="0" cy="0" />
+      </g>
+    </svg>
+
+    <!-- role=status + aria-live: متن و درصد به‌عنوان یک وضعیت زنده اعلام می‌شوند.
+         عدد دیده‌شدنی aria-hidden است چون صدها بار بازنویسی می‌شود؛ اعلام‌ها از
+         عنصر پنهان s-splash__sr می‌آید که فقط سر هر ۱۰ درصد عوض می‌شود. -->
+    <div class="s-splash__status" role="status" aria-live="polite">
+      <p class="s-splash__loading">در حال بارگذاری نرم‌افزار<i class="s-splash__dots" aria-hidden="true"><b></b><b></b><b></b></i></p>
+      <p class="s-splash__pct" aria-hidden="true"><span data-pct>۰٪</span></p>
+      <span class="s-splash__sr" data-sr></span>
+    </div>
+
+    <div class="s-splash__error" data-error hidden>
+      <p class="s-splash__error-msg" data-error-msg>بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.</p>
+      <button type="button" class="s-splash__retry" data-retry>تلاش دوباره</button>
+    </div>
+  </div>
+</div></div>
+    </div>
+    <div class="frame">
+        <span class="frame-label">تبلت <b>768</b></span>
+        <div class="lab w768"><div class="s-splash" data-progress="0.28">
+  
+
+  <!-- تزئینی: هاله نفس‌کش و ذرات. aria-hidden چون هیچ اطلاعاتی حمل نمی‌کنند -->
+  <div class="s-splash__glow" aria-hidden="true"></div>
+  <div class="s-splash__particles" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="s-splash__stage">
+    <div class="s-splash__brand">
+      <!-- لوگو از Tbl_SalonSetting.LogoUrl می‌آید. تا وقتی تصویر واقعاً بار
+           نشده hidden است، پس هرگز کادر خالی دیده نمی‌شود. -->
+      <img class="s-splash__brand-logo" data-logo alt="" hidden />
+      <span class="s-splash__brand-latin" data-brand-latin>HADIS BEAUTY</span>
+      <span class="s-splash__brand-name" data-brand>سالن زیبایی حدیث</span>
+    </div>
+
+    <svg class="s-inf" viewBox="0 0 320 180" role="presentation" aria-hidden="true" focusable="false">
+      <use class="s-inf__track" href="#solon-inf-path" />
+      <use class="s-inf__glow" href="#solon-inf-path" />
+      <use class="s-inf__fill" href="#solon-inf-path" />
+      <!-- نقطه شروع همان مرکز تقاطع ست شده تا پیش از اجرای جاوااسکریپت در
+           گوشه ۰٬۰ (بیرون نماد) دیده نشود. -->
+      <g class="s-inf__head" style="transform: translate(160px, 90px)">
+        <circle class="s-inf__head-halo" r="13" cx="0" cy="0" />
+        <circle class="s-inf__head-core" r="4.6" cx="0" cy="0" />
+      </g>
+    </svg>
+
+    <!-- role=status + aria-live: متن و درصد به‌عنوان یک وضعیت زنده اعلام می‌شوند.
+         عدد دیده‌شدنی aria-hidden است چون صدها بار بازنویسی می‌شود؛ اعلام‌ها از
+         عنصر پنهان s-splash__sr می‌آید که فقط سر هر ۱۰ درصد عوض می‌شود. -->
+    <div class="s-splash__status" role="status" aria-live="polite">
+      <p class="s-splash__loading">در حال بارگذاری نرم‌افزار<i class="s-splash__dots" aria-hidden="true"><b></b><b></b><b></b></i></p>
+      <p class="s-splash__pct" aria-hidden="true"><span data-pct>۰٪</span></p>
+      <span class="s-splash__sr" data-sr></span>
+    </div>
+
+    <div class="s-splash__error" data-error hidden>
+      <p class="s-splash__error-msg" data-error-msg>بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.</p>
+      <button type="button" class="s-splash__retry" data-retry>تلاش دوباره</button>
+    </div>
+  </div>
+</div></div>
+    </div>
+    <div class="frame">
+        <span class="frame-label">دسکتاپ <b>1100</b></span>
+        <div class="lab w1100"><div class="s-splash" data-progress="0.85">
+  
+
+  <!-- تزئینی: هاله نفس‌کش و ذرات. aria-hidden چون هیچ اطلاعاتی حمل نمی‌کنند -->
+  <div class="s-splash__glow" aria-hidden="true"></div>
+  <div class="s-splash__particles" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="s-splash__stage">
+    <div class="s-splash__brand">
+      <!-- لوگو از Tbl_SalonSetting.LogoUrl می‌آید. تا وقتی تصویر واقعاً بار
+           نشده hidden است، پس هرگز کادر خالی دیده نمی‌شود. -->
+      <img class="s-splash__brand-logo" data-logo alt="" hidden />
+      <span class="s-splash__brand-latin" data-brand-latin>HADIS BEAUTY</span>
+      <span class="s-splash__brand-name" data-brand>سالن زیبایی حدیث</span>
+    </div>
+
+    <svg class="s-inf" viewBox="0 0 320 180" role="presentation" aria-hidden="true" focusable="false">
+      <use class="s-inf__track" href="#solon-inf-path" />
+      <use class="s-inf__glow" href="#solon-inf-path" />
+      <use class="s-inf__fill" href="#solon-inf-path" />
+      <!-- نقطه شروع همان مرکز تقاطع ست شده تا پیش از اجرای جاوااسکریپت در
+           گوشه ۰٬۰ (بیرون نماد) دیده نشود. -->
+      <g class="s-inf__head" style="transform: translate(160px, 90px)">
+        <circle class="s-inf__head-halo" r="13" cx="0" cy="0" />
+        <circle class="s-inf__head-core" r="4.6" cx="0" cy="0" />
+      </g>
+    </svg>
+
+    <!-- role=status + aria-live: متن و درصد به‌عنوان یک وضعیت زنده اعلام می‌شوند.
+         عدد دیده‌شدنی aria-hidden است چون صدها بار بازنویسی می‌شود؛ اعلام‌ها از
+         عنصر پنهان s-splash__sr می‌آید که فقط سر هر ۱۰ درصد عوض می‌شود. -->
+    <div class="s-splash__status" role="status" aria-live="polite">
+      <p class="s-splash__loading">در حال بارگذاری نرم‌افزار<i class="s-splash__dots" aria-hidden="true"><b></b><b></b><b></b></i></p>
+      <p class="s-splash__pct" aria-hidden="true"><span data-pct>۰٪</span></p>
+      <span class="s-splash__sr" data-sr></span>
+    </div>
+
+    <div class="s-splash__error" data-error hidden>
+      <p class="s-splash__error-msg" data-error-msg>بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.</p>
+      <button type="button" class="s-splash__retry" data-retry>تلاش دوباره</button>
+    </div>
+  </div>
+</div></div>
+    </div>
+    <div class="frame">
+        <span class="frame-label">گوشی افقی <b>700 × 320</b></span>
+        <div class="lab h320"><div class="s-splash" data-progress="0.5">
+  
+
+  <!-- تزئینی: هاله نفس‌کش و ذرات. aria-hidden چون هیچ اطلاعاتی حمل نمی‌کنند -->
+  <div class="s-splash__glow" aria-hidden="true"></div>
+  <div class="s-splash__particles" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="s-splash__stage">
+    <div class="s-splash__brand">
+      <!-- لوگو از Tbl_SalonSetting.LogoUrl می‌آید. تا وقتی تصویر واقعاً بار
+           نشده hidden است، پس هرگز کادر خالی دیده نمی‌شود. -->
+      <img class="s-splash__brand-logo" data-logo alt="" hidden />
+      <span class="s-splash__brand-latin" data-brand-latin>HADIS BEAUTY</span>
+      <span class="s-splash__brand-name" data-brand>سالن زیبایی حدیث</span>
+    </div>
+
+    <svg class="s-inf" viewBox="0 0 320 180" role="presentation" aria-hidden="true" focusable="false">
+      <use class="s-inf__track" href="#solon-inf-path" />
+      <use class="s-inf__glow" href="#solon-inf-path" />
+      <use class="s-inf__fill" href="#solon-inf-path" />
+      <!-- نقطه شروع همان مرکز تقاطع ست شده تا پیش از اجرای جاوااسکریپت در
+           گوشه ۰٬۰ (بیرون نماد) دیده نشود. -->
+      <g class="s-inf__head" style="transform: translate(160px, 90px)">
+        <circle class="s-inf__head-halo" r="13" cx="0" cy="0" />
+        <circle class="s-inf__head-core" r="4.6" cx="0" cy="0" />
+      </g>
+    </svg>
+
+    <!-- role=status + aria-live: متن و درصد به‌عنوان یک وضعیت زنده اعلام می‌شوند.
+         عدد دیده‌شدنی aria-hidden است چون صدها بار بازنویسی می‌شود؛ اعلام‌ها از
+         عنصر پنهان s-splash__sr می‌آید که فقط سر هر ۱۰ درصد عوض می‌شود. -->
+    <div class="s-splash__status" role="status" aria-live="polite">
+      <p class="s-splash__loading">در حال بارگذاری نرم‌افزار<i class="s-splash__dots" aria-hidden="true"><b></b><b></b><b></b></i></p>
+      <p class="s-splash__pct" aria-hidden="true"><span data-pct>۰٪</span></p>
+      <span class="s-splash__sr" data-sr></span>
+    </div>
+
+    <div class="s-splash__error" data-error hidden>
+      <p class="s-splash__error-msg" data-error-msg>بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.</p>
+      <button type="button" class="s-splash__retry" data-retry>تلاش دوباره</button>
+    </div>
+  </div>
+</div></div>
+    </div>
+    <div class="frame">
+        <span class="frame-label">حالت خطا — نماد خشک‌شده <b>is-failed</b></span>
+        <div class="lab w320"><div class="s-splash is-failed" data-progress="0.42">
+  
+
+  <!-- تزئینی: هاله نفس‌کش و ذرات. aria-hidden چون هیچ اطلاعاتی حمل نمی‌کنند -->
+  <div class="s-splash__glow" aria-hidden="true"></div>
+  <div class="s-splash__particles" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <div class="s-splash__stage">
+    <div class="s-splash__brand">
+      <!-- لوگو از Tbl_SalonSetting.LogoUrl می‌آید. تا وقتی تصویر واقعاً بار
+           نشده hidden است، پس هرگز کادر خالی دیده نمی‌شود. -->
+      <img class="s-splash__brand-logo" data-logo alt="" hidden />
+      <span class="s-splash__brand-latin" data-brand-latin>HADIS BEAUTY</span>
+      <span class="s-splash__brand-name" data-brand>سالن زیبایی حدیث</span>
+    </div>
+
+    <svg class="s-inf" viewBox="0 0 320 180" role="presentation" aria-hidden="true" focusable="false">
+      <use class="s-inf__track" href="#solon-inf-path" />
+      <use class="s-inf__glow" href="#solon-inf-path" />
+      <use class="s-inf__fill" href="#solon-inf-path" />
+      <!-- نقطه شروع همان مرکز تقاطع ست شده تا پیش از اجرای جاوااسکریپت در
+           گوشه ۰٬۰ (بیرون نماد) دیده نشود. -->
+      <g class="s-inf__head" style="transform: translate(160px, 90px)">
+        <circle class="s-inf__head-halo" r="13" cx="0" cy="0" />
+        <circle class="s-inf__head-core" r="4.6" cx="0" cy="0" />
+      </g>
+    </svg>
+
+    <!-- role=status + aria-live: متن و درصد به‌عنوان یک وضعیت زنده اعلام می‌شوند.
+         عدد دیده‌شدنی aria-hidden است چون صدها بار بازنویسی می‌شود؛ اعلام‌ها از
+         عنصر پنهان s-splash__sr می‌آید که فقط سر هر ۱۰ درصد عوض می‌شود. -->
+    <div class="s-splash__status" role="status" aria-live="polite" style="display:none">
+      <p class="s-splash__loading">در حال بارگذاری نرم‌افزار<i class="s-splash__dots" aria-hidden="true"><b></b><b></b><b></b></i></p>
+      <p class="s-splash__pct" aria-hidden="true"><span data-pct>۰٪</span></p>
+      <span class="s-splash__sr" data-sr></span>
+    </div>
+
+    <div class="s-splash__error" data-error>
+      <p class="s-splash__error-msg" data-error-msg>بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.</p>
+      <button type="button" class="s-splash__retry" data-retry>تلاش دوباره</button>
+    </div>
+  </div>
+</div></div>
+    </div>
+</div>
+
+</div>
+
+<script>
+/* ==========================================================================
+   SolonBeauty — موتور صفحه آغاز (نماد بی‌نهایت)
+   --------------------------------------------------------------------------
+   قرارداد عمومی:
+       window.solonSplash.setProgress(p)        // p بین ۰ و ۱
+       window.solonSplash.getProgress()         // مقدار نمایش‌داده‌شده
+       window.solonSplash.setBrand(o)           // { name, latin, logo } از تنظیمات سالن
+       window.solonSplash.watchBlazorLoad(cap)  // فاز اول: پیشرفت واقعی خود Blazor
+       window.solonSplash.stopWatching()        // پایان فاز اول (شروع فاز دوم)
+       window.solonSplash.preloadImage(url, ms) // Promise<bool>
+       window.solonSplash.awaitFont(spec, ms)   // Promise<bool>
+       window.solonSplash.finish()              // Promise — پایان واقعی و محو شدن نرم
+       window.solonSplash.fail(msg)             // خطا: خشک شدن نماد + پیام + تلاش دوباره
+       window.solonSplash.init()                // آماده‌سازی دستی (معمولاً لازم نیست)
+
+   --------------------------------------------------------------------------
+   دو فاز پیشرفت، هر دو واقعی:
+
+   فاز اول (۰ تا ۴۵٪) — پیش از بالا آمدن دات‌نت.
+   Blazor خودش هنگام دانلود فایل‌ها متغیر --blazor-load-percentage را روی ریشه
+   سند می‌نویسد. ما همان را رصد می‌کنیم. این فاز باید خودکار و از همین فایل
+   شروع شود، نه از کد سی‌شارپ: چون این دانلود *پیش از* اجرای دات‌نت اتفاق
+   می‌افتد، و اگر منتظر سی‌شارپ بمانیم، دیگر تمام شده است.
+
+   فاز دوم (۴۵ تا ۱۰۰٪) — مراحل واقعی کار نرم‌افزار.
+   در BootService.cs: خواندن نشست و توکن، گرفتن تنظیمات سالن از API، لوگو،
+   فونت وزیرمتن و تصویر هیرو. هر مرحله سقف زمانی دارد و کل فاز بودجه زمانی
+   دارد تا هیچ‌چیز نتواند نوار را برای همیشه میخ‌کوب کند.
+
+   --------------------------------------------------------------------------
+   سه تصمیم مهم:
+
+   ۱) نگهبان یک‌نوا. یک ایشوی شناخته‌شده در مخزن aspnetcore می‌گوید مقدار
+      --blazor-load-percentage می‌تواند از ۱۰۰٪ به ۹۸٪ برگردد، چون مخرج کسر
+      (تعداد کل منابع) در حین کار بزرگ‌تر می‌شود. اگر همین‌طور به کاربر نشان
+      داده شود، نوار عقب می‌رود و حس خطا می‌دهد. پس همه ورودی‌ها — از هر دو
+      فاز — از یک قیف یک‌نوا رد می‌شوند.
+
+   ۲) خزیدن محدود در فاز اول. دانلود یک فایل بزرگ (مثل dotnet.wasm) می‌تواند
+      چند ثانیه طول بکشد و در این فاصله درصدی که Blazor گزارش می‌کند تکان
+      نمی‌خورد. برای اینکه نوار «یخ‌زده» حس نشود، اگر دو ثانیه هیچ گزارش
+      تازه‌ای نرسد، مقدار نمایش‌داده‌شده آرام‌آرام به سقف فاز اول نزدیک
+      می‌شود — ولی هرگز از آن رد نمی‌شود و هرگز به ۱۰۰ نمی‌رسد. یعنی حرکت به
+      کاربر «زنده بودن» می‌دهد بدون اینکه درباره پایان کار دروغ بگوید.
+
+   ۳) بدون وابستگی بیرونی. کل فایل با API استاندارد مرورگر نوشته شده.
+   ========================================================================== */
+
+(function () {
+    'use strict';
+
+    /* ---------- زمان شروع ----------
+       این اسکریپت آخر بدنه صفحه اجرا می‌شود، یعنی دقیقاً پیش از نخستین رنگ
+       آمیزی صفحه آغاز. پس همین لحظه بهترین تخمین برای «از کِی کاربر این صفحه
+       را می‌بیند» است و مبنای قاعده حداقل زمان نمایش قرار می‌گیرد. */
+    var t0 = Date.now();
+
+    /* ---------- تنظیمات ---------- */
+
+    // ضریب نرم‌سازی: هر فریم چه کسری از فاصله باقی‌مانده پیموده شود.
+    var EASE = 0.14;
+
+    // زیر این فاصله، پرش مستقیم به هدف و توقف حلقه.
+    var SNAP = 0.0006;
+
+    // سقف فاز اول. فاز دوم (BootService) از همین‌جا ادامه می‌دهد.
+    var BOOT_CAP = 0.45;
+
+    // حداقل زمان نمایش. صفحه آغاز نباید چشمک بزند: اگر همه‌چیز سریع آماده
+    // شد، این مدت صبر می‌کنیم و بعد محو می‌شویم.
+    var MIN_VISIBLE_MS = 800;
+
+    // سقف بی‌کاری فاز اول پیش از شروع خزیدن، و خود نرخ خزیدن.
+    var CREEP_AFTER_MS = 2000;
+    var CREEP_STEP = 0.004;        // هر ۲۵۰ میلی‌ثانیه ≈ ۱٫۶٪ در ثانیه
+    var CREEP_CEILING = 0.92;      // تا ۹۲٪ سقف فاز اول، نه بیشتر
+
+    // اگر پس از این مدت هیچ‌چیز از دات‌نت خبری نشد، یعنی خود Blazor بالا
+    // نیامده و هیچ کد سی‌شارپی نمی‌تواند این را تشخیص دهد یا گزارش کند.
+    // پس نگهبان همین‌جا در جاوااسکریپت می‌ماند.
+    var WATCHDOG_MS = 20000;
+
+    var FA_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+
+    try {
+        if (window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            EASE = 1;   // پیشرفت واقعی می‌ماند، فقط نرم‌سازی حرکت حذف می‌شود
+        }
+    } catch (e) { /* مرورگر قدیمی — مقدار پیش‌فرض می‌ماند */ }
+
+    /* ---------- وضعیت ---------- */
+
+    var instances = [];
+    var geomPath = null;      // مسیر هندسی مشترک — تنها تعریف هندسه در کل سند
+    var totalLen = 0;         // طول واقعی مسیر، برای getPointAtLength
+    var loadObserver = null;
+    var creepTimer = null;
+    var watchdogTimer = null;
+    var lastRealUpdate = 0;
+
+    /* ---------- کمکی‌ها ---------- */
+
+    function now() { return Date.now(); }
+
+    function clamp01(v) {
+        v = Number(v);
+        if (!isFinite(v)) return 0;
+        return v < 0 ? 0 : (v > 1 ? 1 : v);
+    }
+
+    /** تبدیل عدد به رشته با ارقام فارسی */
+    function toPersianDigits(n) {
+        return String(n).replace(/\d/g, function (d) { return FA_DIGITS[+d]; });
+    }
+
+    /**
+     * خواندن طول واقعی مسیر. فقط یک بار انجام می‌شود چون getTotalLength
+     * اجباری است و نتیجه‌اش تا آخر عمر صفحه ثابت می‌ماند.
+     */
+    function measure() {
+        if (geomPath) return totalLen > 0;
+
+        // سراسری جست‌وجو می‌شود، نه داخل ریشه یک نمونه: هندسه در کل سند یکی
+        // است و نمونه‌ها آن را به اشتراک می‌گذارند.
+        geomPath = document.querySelector('.s-inf__geom');
+        if (!geomPath) return false;
+
+        try {
+            totalLen = geomPath.getTotalLength();
+        } catch (e) {
+            totalLen = 0;
+        }
+        return totalLen > 0;
+    }
+
+    /**
+     * کشیدن وضعیت جاری روی صفحه. همه چیز از یک عدد تغذیه می‌شود، پس خط
+     * پیشرفت و نقطه نور و درصد هرگز از هم جدا نمی‌افتند.
+     */
+    function render(inst) {
+        if (!inst.svg) return;
+
+        // خط پیشرفت و هاله هر دو از همین متغیر تغذیه می‌کنند
+        inst.svg.style.setProperty('--inf-p', String(inst.shown));
+
+        // ---- نقطه نور ----
+        var head = inst.head;
+        if (head && totalLen > 0) {
+            var pt = geomPath.getPointAtLength(totalLen * inst.shown);
+            head.style.transform = 'translate(' + pt.x + 'px,' + pt.y + 'px)';
+
+            // سر نور در صفر کاملاً محو است و در ۵٪ کامل ظاهر می‌شود. دلیل:
+            // در شروع هیچ نوری روی مسیر نیست، ولی یک نقطه تنها در وسط نماد
+            // شبیه باقی‌مانده یا باگ دیده می‌شود.
+            head.style.opacity = inst.shown <= 0.002
+                ? '0'
+                : String(Math.min(1, inst.shown * 20));
+        }
+
+        // ---- درصد ----
+        var pct = Math.round(inst.shown * 100);
+
+        if (pct !== inst.pctShown) {
+            inst.pctShown = pct;
+
+            if (inst.pctEl) inst.pctEl.textContent = toPersianDigits(pct) + '٪';
+
+            // اعلام برای صفحه‌خوان فقط سر هر ۱۰ درصد. عددِ دیده‌شدنی در هر
+            // تغییر بازنویسی می‌شود؛ اگر خودش در ناحیه زنده بود، تا ۱۰۰ اعلام
+            // پشت سر هم می‌شد و تجربه را خراب می‌کرد.
+            var decade = Math.floor(pct / 10);
+
+            // سر دهگان صفر اعلامی ندارد: گفتن «۰ درصد بارگذاری شد» در همان
+            // لحظه ورود فقط سر و صداست و اطلاعاتی اضافه نمی‌کند.
+            if (inst.srEl && decade > 0 && decade !== inst.srDecade) {
+                inst.srDecade = decade;
+                inst.srEl.textContent = 'در حال بارگذاری نرم‌افزار، '
+                    + toPersianDigits(decade * 10) + ' درصد';
+            }
+        }
+    }
+
+    /* ---------- حلقه نرم‌سازی ---------- */
+
+    function tick(inst) {
+        inst.raf = null;
+
+        var delta = inst.target - inst.shown;
+
+        if (Math.abs(delta) < SNAP) {
+            inst.shown = inst.target;
+            render(inst);
+            return;                          // حلقه تمام می‌شود؛ بدون کار، بدون فریم
+        }
+
+        inst.shown += delta * EASE;
+        render(inst);
+        inst.raf = requestAnimationFrame(function () { tick(inst); });
+    }
+
+    /**
+     * ثبت مقدار هدف. اینجا همان نگهبان یک‌نوا است: مقدار مساوی یا کمتر
+     * نادیده گرفته می‌شود.
+     */
+    function setTarget(inst, value) {
+        var next = clamp01(value);
+
+        if (next <= inst.target) return;     // هرگز عقب نمی‌رویم
+        if (inst.done || inst.failed) return;
+
+        inst.target = next;
+
+        if (inst.raf === null) {
+            inst.raf = requestAnimationFrame(function () { tick(inst); });
+        }
+    }
+
+    /* ---------- آماده‌سازی ---------- */
+
+    function makeInstance(root) {
+        var svg = root.querySelector('.s-inf');
+        if (!svg) return null;
+
+        return {
+            root: root,
+            svg: svg,
+            head: svg.querySelector('.s-inf__head'),
+            pctEl: root.querySelector('[data-pct]'),
+            srEl: root.querySelector('[data-sr]'),
+            // «حالت زنده» یعنی نمونه‌ای که مقدار ثابت نمایشی ندارد. در اپ،
+            // ویژگی data-progress خالی است و همین پرچم روشن می‌شود.
+            live: root.getAttribute('data-progress') === null,
+            target: 0,
+            shown: 0,
+            pctShown: -1,
+            srDecade: -1,
+            raf: null,
+            done: false,
+            failed: false
+        };
+    }
+
+    /**
+     * قفل کردن اسکرول پس‌زمینه تا وقتی صفحه آغاز روی صحنه است.
+     *
+     * چرا لازم است: پوسته صفحه آغاز fixed و پوشاننده است، ولی این جلوی
+     * اسکرول لمسی صفحه زیرین را نمی‌گیرد. کاربر می‌تواند ناخواسته صفحه را
+     * جابه‌جا کند و لحظه محو شدن، جهش محتوا ببیند. با این قفل، «هیچ اسکرولی
+     * وجود ندارد» به‌طور واقعی درست می‌شود و بعد از پایان هم آزاد می‌شود.
+     */
+    function lockScroll(on) {
+        try {
+            document.documentElement.style.overflow = on ? 'hidden' : '';
+        } catch (e) { /* بی‌اهمیت */ }
+        try {
+            if (document.body) document.body.style.overflow = on ? 'hidden' : '';
+        } catch (e) { /* بی‌اهمیت */ }
+    }
+
+    function bindRetry(root) {
+        var btn = root.querySelector('[data-retry]');
+        if (!btn || btn.dataset.bound === '1') return;
+
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', function () {
+            // بارگذاری کامل صفحه. دلیل انتخاب این و نه «اجرای دوباره مراحل»:
+            // اگر خود Blazor بالا نیامده باشد، هیچ کد سی‌شارپی برای شنیدن
+            // این کلیک وجود ندارد؛ بارگذاری مجدد در هر دو حالت کار می‌کند.
+            window.location.reload();
+        });
+    }
+
+    function init() {
+        var nodes = document.querySelectorAll('.s-splash');
+        if (!nodes.length) return false;
+
+        measure();
+        instances = [];
+
+        Array.prototype.forEach.call(nodes, function (node) {
+            var inst = makeInstance(node);
+            if (!inst) return;
+
+            instances.push(inst);
+            render(inst);
+            bindRetry(node);
+
+            // مقدار شروع از data-progress می‌آید. در اپ این ویژگی وجود ندارد
+            // و پیشرفت صفر می‌ماند تا مراحل واقعی آن را بالا ببرند. در
+            // پیش‌نمایش، هر نمونه با یک عدد ثابت به حرکت درمی‌آید.
+            var seed = node.getAttribute('data-progress');
+            if (seed !== null) setTarget(inst, seed);
+        });
+
+        if (!instances.length) return false;
+
+        var main = primary();
+
+        // هم قفل اسکرول و هم فاز اول و هم نگهبان، فقط در «حالت زنده» فعال
+        // می‌شوند؛ یعنی جایی که این صفحه، پوشاننده واقعی نرم‌افزار است. در
+        // پیش‌نمایش که چند نمونه کنار هم روی یک صفحه می‌نشینند، قفل اسکرول
+        // فقط صفحه پیش‌نمایش را بی‌استفاده می‌کرد.
+        if (main && main.live) {
+            lockScroll(true);
+
+            // فاز اول از همین‌جا خودکار شروع می‌شود، چون دانلود فایل‌های
+            // Blazor پیش از اجرای دات‌نت اتفاق می‌افتد.
+            watchBlazorLoad(BOOT_CAP);
+            armWatchdog(WATCHDOG_MS);
+        }
+
+        return true;
+    }
+
+    /** نمونه اصلی همان است که شناسه solon-splash دارد. */
+    function primary() {
+        for (var i = 0; i < instances.length; i++) {
+            if (instances[i].root.id === 'solon-splash') return instances[i];
+        }
+        return instances[0] || null;
+    }
+
+    /* ---------- فاز اول: پیشرفت واقعی خود Blazor ---------- */
+
+    /** خواندن --blazor-load-percentage و نگاشت آن به سقف فاز اول. */
+    function readBlazorLoad(cap) {
+        var raw = '';
+        try {
+            raw = getComputedStyle(document.documentElement)
+                .getPropertyValue('--blazor-load-percentage') || '';
+        } catch (e) { return; }
+
+        var num = parseFloat(String(raw).replace('%', '').trim());
+        if (!isFinite(num)) return;
+
+        lastRealUpdate = now();
+
+        var inst = primary();
+        if (inst) setTarget(inst, (num / 100) * cap);
+    }
+
+    /**
+     * خزیدن محدود: اگر گزارش تازه‌ای نرسیده باشد، آرام به سقف نزدیک می‌شویم.
+     * این یک تایمر تقلبی نیست — هیچ‌وقت از سقف فاز اول رد نمی‌شود و هرگز
+     * عدد ۱۰۰ را نشان نمی‌دهد؛ فقط از حس «یخ‌زدگی» جلوگیری می‌کند.
+     */
+    function startCreep(cap) {
+        if (creepTimer) return;
+
+        var ceiling = cap * CREEP_CEILING;
+
+        creepTimer = setInterval(function () {
+            var inst = primary();
+            if (!inst || inst.done || inst.failed) return;
+            if (now() - lastRealUpdate < CREEP_AFTER_MS) return;
+            if (inst.target >= ceiling) return;
+
+            setTarget(inst, Math.min(inst.target + CREEP_STEP, ceiling));
+        }, 250);
+    }
+
+    function watchBlazorLoad(cap) {
+        if (loadObserver || typeof MutationObserver === 'undefined') return;
+
+        var limit = isFinite(Number(cap)) && Number(cap) > 0 ? Number(cap) : BOOT_CAP;
+
+        lastRealUpdate = now();
+        readBlazorLoad(limit);               // شاید مقدار از قبل ست شده باشد
+
+        // چرا MutationObserver و نه خواندن دوره‌ای: Blazor این متغیر را
+        // به‌عنوان style درون‌خطی روی ریشه سند می‌نویسد. با رصد تغییر ویژگی
+        // style، هر به‌روزرسانی بدون هیچ نظرسنجی دوره‌ای گرفته می‌شود.
+        loadObserver = new MutationObserver(function () { readBlazorLoad(limit); });
+        loadObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+
+        startCreep(limit);
+    }
+
+    /** پایان فاز اول. BootService در شروع فاز دوم این را صدا می‌زند. */
+    function stopWatching() {
+        if (loadObserver) {
+            loadObserver.disconnect();
+            loadObserver = null;
+        }
+        if (creepTimer) {
+            clearInterval(creepTimer);
+            creepTimer = null;
+        }
+    }
+
+    /* ---------- نگهبان ---------- */
+
+    /**
+     * اگر پس از این مدت نه پایان بیاید و نه خطا، یعنی خود Blazor بالا نیامده
+     * (مثلاً فایلش دانلود نشده). در آن حالت هیچ کد سی‌شارپی وجود ندارد که
+     * این را گزارش کند، پس پیام خطا از همین‌جا می‌آید.
+     */
+    function armWatchdog(ms) {
+        if (watchdogTimer) return;
+
+        watchdogTimer = setTimeout(function () {
+            var inst = primary();
+            if (!inst || inst.done || inst.failed) return;
+
+            fail('بارگذاری نرم‌افزار کامل نشد. اتصال اینترنت را بررسی کنید و '
+                + 'دوباره تلاش کنید.');
+        }, ms);
+    }
+
+    function disarmWatchdog() {
+        if (watchdogTimer) {
+            clearTimeout(watchdogTimer);
+            watchdogTimer = null;
+        }
+    }
+
+    /* ---------- کمکی‌های بارگذاری واقعی ---------- */
+
+    /**
+     * پیش‌بارگذاری تصویر. همیشه resolve می‌شود (هرگز reject) تا سمت سی‌شارپ
+     * به try/catch نیاز نداشته باشد: true یعنی واقعاً بار شد، false یعنی
+     * خطا یا گذشت زمان.
+     */
+    function preloadImage(url, timeoutMs) {
+        return new Promise(function (resolve) {
+            if (!url) { resolve(false); return; }
+
+            var settled = false;
+            var timer = setTimeout(function () {
+                if (settled) return;
+                settled = true;
+                resolve(false);
+            }, timeoutMs || 6000);
+
+            var img = new Image();
+            img.onload = function () {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(true);
+            };
+            img.onerror = function () {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(false);
+            };
+            img.src = url;
+        });
+    }
+
+    /**
+     * انتظار برای آماده شدن فونت.
+     * document.fonts.load وقتی فونت واقعاً بار شده باشد آرایه‌ای با حداقل یک
+     * عضو می‌دهد و وقتی خانواده پیدا نشود آرایه خالی. پس مقدار بازگشتی
+     * معنادار است، نه فقط «تایم‌اوت نشد».
+     */
+    function awaitFont(spec, timeoutMs) {
+        return new Promise(function (resolve) {
+            if (!document.fonts || typeof document.fonts.load !== 'function') {
+                resolve(false);
+                return;
+            }
+
+            var settled = false;
+            var timer = setTimeout(function () {
+                if (settled) return;
+                settled = true;
+                resolve(false);
+            }, timeoutMs || 6000);
+
+            document.fonts.load(spec || '1rem Vazirmatn').then(function (faces) {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(!!faces && faces.length > 0);
+            }, function () {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(false);
+            });
+        });
+    }
+
+    /* ---------- سطح عمومی ---------- */
+
+    function setProgress(value) {
+        if (!instances.length && !init()) return;
+
+        var inst = primary();
+        if (!inst) return;
+
+        setTarget(inst, value);
+    }
+
+    function getProgress() {
+        var inst = primary();
+        return inst ? inst.shown : 0;
+    }
+
+    /**
+     * نشاندن اطلاعات برند از تنظیمات سالن.
+     * همه فیلدها اختیاری‌اند و اگر نیایند، همان مقادیر پیش‌فرض داخل HTML سر
+     * جای خودشان می‌مانند. پس هرگز متن خالی یا جای خالی دیده نمی‌شود.
+     */
+    function setBrand(o) {
+        var inst = primary();
+        if (!inst || !o) return;
+
+        var root = inst.root;
+        var nameEl = root.querySelector('[data-brand]');
+        var latinEl = root.querySelector('[data-brand-latin]');
+        var logoEl = root.querySelector('[data-logo]');
+        var node;
+
+        if (o.name && nameEl) {
+            nameEl.textContent = o.name;
+            try {
+                document.title = o.latin ? (o.name + ' | ' + o.latin) : o.name;
+            } catch (e) { }
+        }
+        if (o.latin && latinEl) latinEl.textContent = o.latin;
+
+        // لوگو اگر از API آمد جای نام لاتین را می‌گیرد. تا وقتی تصویر واقعاً
+        // بار نشده، hidden برداشته نمی‌شود؛ با onload این کار انجام می‌گیرد
+        // تا هرگز کادر خالی یا آیکون تصویر شکسته دیده نشود.
+        if (o.logo && logoEl) {
+            node = logoEl;
+            node.addEventListener('load', function () {
+                node.hidden = false;
+                if (latinEl) latinEl.hidden = true;
+            });
+            node.addEventListener('error', function () {
+                node.hidden = true;          // آدرس خراب بود: مونوگرام متنی می‌ماند
+                if (latinEl) latinEl.hidden = false;
+            });
+            node.src = o.logo;
+        }
+    }
+
+    /**
+     * پایان واقعی: محو شدن نرم و کنار رفتن لایه.
+     * یک Promise برمی‌گرداند که پس از کامل شدن محو شدن resolve می‌شود، تا
+     * سمت سی‌شارپ بتواند اگر لازم بود منتظر بماند.
+     */
+    function finish() {
+        var inst = primary();
+
+        if (!inst || inst.done || inst.failed) {
+            return Promise.resolve(false);
+        }
+
+        inst.done = true;
+        disarmWatchdog();
+        stopWatching();
+        if (inst.raf !== null) { cancelAnimationFrame(inst.raf); inst.raf = null; }
+
+        inst.shown = inst.target = 1;
+        render(inst);
+
+        // پاداش زمانی: هیچ‌چیز پیش از این مقدار ظاهر نمی‌شود. اگر بارگذاری
+        // سریع تمام شده باشد، باقی‌مانده اینجا صبر می‌شود.
+        var wait = Math.max(0, (t0 + MIN_VISIBLE_MS) - now());
+
+        return new Promise(function (resolve) {
+            setTimeout(function () { doFinish(inst, resolve); }, wait);
+        });
+    }
+
+    function doFinish(inst, resolve) {
+        var root = inst.root;
+        var settled = false;
+
+        var done = function () {
+            if (settled) return;
+            settled = true;
+            root.hidden = true;              // کاملاً از دسترس و از دید خارج می‌شود
+            lockScroll(false);               // اسکرول صفحه آزاد می‌شود
+            resolve(true);
+        };
+
+        root.classList.add('is-done');
+
+        // هم transitionend و هم یک زمان‌سنج ایمنی: اگر زبانه در پس‌زمینه باشد
+        // گذار ممکن است رویداد ندهد و لایه روی صفحه بماند.
+        root.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 900);
+    }
+
+    /** خطا: نماد همان‌جا خشک می‌شود و پیام ساده فارسی می‌آید. */
+    function fail(msg) {
+        var inst = primary();
+        if (!inst || inst.done || inst.failed) return false;
+
+        inst.failed = true;
+        disarmWatchdog();
+        stopWatching();
+        if (inst.raf !== null) { cancelAnimationFrame(inst.raf); inst.raf = null; }
+
+        lockScroll(false);                   // در حالت خطا هم اسکرول آزاد می‌شود
+
+        var root = inst.root;
+        var box = root.querySelector('[data-error]');
+        var txt = root.querySelector('[data-error-msg]');
+
+        if (txt && msg) txt.textContent = msg;
+        if (box) box.hidden = false;
+
+        root.classList.add('is-failed');
+        return true;
+    }
+
+    /* ---------- راه‌اندازی ---------- */
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    window.solonSplash = {
+        init: init,
+        setProgress: setProgress,
+        getProgress: getProgress,
+        setBrand: setBrand,
+        watchBlazorLoad: watchBlazorLoad,
+        stopWatching: stopWatching,
+        preloadImage: preloadImage,
+        awaitFont: awaitFont,
+        finish: finish,
+        fail: fail,
+        toPersianDigits: toPersianDigits,
+        elapsedMs: function () { return now() - t0; }
+    };
+})();
+
+</script>
+<script>
+/* فقط برای همین پیش‌نمایش: تخته تنظیم دستی. در اپ پیشرفت از مراحل واقعی
+   بارگذاری می‌آید (BootService.cs). */
+(function () {
+    var FA = '۰۱۲۳۴۵۶۷۸۹';
+    function pct(v) {
+        var n = Math.round(v * 100);
+        return String(n).replace(/\d/g, function (d) { return FA[+d]; }) + '٪';
+    }
+
+    var slider = document.getElementById('scrub');
+    var label = document.getElementById('scrubval');
+    if (!slider || !window.solonSplash) return;
+
+    slider.addEventListener('input', function () {
+        var v = parseFloat(slider.value);
+        label.textContent = pct(v);
+        window.solonSplash.setProgress(v);
+    });
+
+    document.getElementById('btn-40').addEventListener('click', function () {
+        slider.value = 0.4; label.textContent = pct(0.4);
+        window.solonSplash.setProgress(0.4);
+    });
+
+    document.getElementById('btn-finish').addEventListener('click', function () {
+        slider.value = 1; label.textContent = pct(1);
+        window.solonSplash.finish();
+    });
+
+    document.getElementById('btn-fail').addEventListener('click', function () {
+        window.solonSplash.fail('بارگذاری نرم‌افزار کامل نشد. ارتباط با سرور را بررسی کنید.');
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', function () {
+        location.reload();
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,9 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@using BlazorAppSolon.Components.Boot
 
+@* BootGate بیرون از Router می‌نشیند تا مراحل واقعی بارگذاری را موازی با
+   رندر برنامه اجرا کند و در پایان، صفحه آغاز را کنار بزند. *@
+<BootGate>
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
@@ -20,9 +24,10 @@
                         </div>
                     }
                 </NotAuthorized>
-                <Authorizing>
-                    <div class="section light"><div class="container" style="text-align:center">در حال بررسی دسترسی...</div></div>
-                </Authorizing>
+                @* بررسی دسترسی معمولاً چند میلی‌ثانیه است و پشت صفحه آغاز
+                   انجام می‌شود؛ هر متن یا کادر روشنی اینجا فقط پرش رنگ ایجاد
+                   می‌کرد. پس عمداً خالی است. *@
+                <Authorizing />
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
@@ -43,3 +48,4 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+</BootGate>

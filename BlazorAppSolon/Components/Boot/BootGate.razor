@@ -1,0 +1,91 @@
+@* ==========================================================================
+   BootGate — دروازه راه‌اندازی نرم‌افزار
+
+   چه کاری می‌کند:
+   ۱) فرزندانش (کل برنامه، یعنی Router) را بی‌درنگ رندر می‌کند.
+   ۲) هم‌زمان و به‌صورت موازی، مراحل واقعی بارگذاری را در BootService اجرا
+      می‌کند و پیشرفت را به صفحه آغاز گزارش می‌دهد.
+   ۳) اگر کاربر روی «/» فرود آمده و نشست معتبر دارد، او را مستقیم به پنل
+      خودش می‌فرستد.
+
+   دو تصمیم مهم:
+
+   • چرا رندر را قفل نمی‌کند: اگر OnInitializedAsync را منتظر مراحل می‌گذاشتیم،
+     تا پایان بارگذاری هیچ‌چیز رندر نمی‌شد و کاربر پشت یک صفحه سیاه می‌ماند.
+     اینجا برنامه بلافاصله بالا می‌آید و صفحه آغاز فقط روی آن را می‌پوشاند؛
+     پس وقتی لایه کنار می‌رود، صفحه بعدی از قبل آماده است و پرشی دیده نمی‌شود.
+
+   • چرا هدایت هوشمند فقط از مسیر «/» انجام می‌شود: اگر کاربر روی پیوند عمیق
+     (/services یا /login یا /panel/...) فرود آمده باشد، پرت کردن او به پنل
+     یعنی خراب‌کردن همان کاری که آمده انجام دهد. پس در همه مسیرهای دیگر
+     دست به ناوبری نمی‌زنیم.
+   ========================================================================== *@
+@using System.Security.Claims
+@using BlazorAppSolon.Services
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject BootService Boot
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+
+@ChildContent
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>پرچم یک‌بارمصرف: هدایت خودکار فقط یک بار در طول عمر برنامه اجرا می‌شود.</summary>
+    private bool _redirectChecked;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // مراحل واقعی بارگذاری. اگر خطا بدهد، خود BootService پیام را روی
+        // صفحه آغاز نشان داده است؛ اینجا کاری برای انجام دادن نمی‌ماند.
+        await Boot.RunAsync();
+
+        if (Boot.Failed) return;
+
+        await TrySmartRedirectAsync();
+    }
+
+    /// <summary>
+    /// «/» تنها مسیری است که کاربر عمداً جای خاصی را نخواسته. اگر در همان
+    /// نقطه نشست معتبر داشته باشد، به پنل نقش خودش می‌رود.
+    /// </summary>
+    private async Task TrySmartRedirectAsync()
+    {
+        if (_redirectChecked) return;
+        _redirectChecked = true;
+
+        if (!IsRootLanding()) return;
+
+        var state = await AuthState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated != true) return;
+
+        var role = state.User.Claims
+            .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value
+            ?? AppRoles.Customer;
+
+        // بدون forceLoad: ناوبری درون همان برنامه انجام می‌شود و صفحه آغاز
+        // تا پایان محو شدن روی صحنه می‌ماند.
+        Nav.NavigateTo(AppRoles.PanelUrl(role));
+    }
+
+    /// <summary>
+    /// تشخیص فرود روی ریشه. ToBaseRelativePath مقدار «/» را به رشته خالی
+    /// تبدیل می‌کند، ولی کوئری و هش را نگه می‌دارد؛ پس هر دو بریده می‌شوند.
+    /// </summary>
+    private bool IsRootLanding()
+    {
+        var relative = Nav.ToBaseRelativePath(Nav.Uri);
+
+        var query = relative.IndexOf('?');
+        if (query >= 0) relative = relative.Substring(0, query);
+
+        var hash = relative.IndexOf('#');
+        if (hash >= 0) relative = relative.Substring(0, hash);
+
+        return relative.Trim('/').Length == 0;
+    }
+}

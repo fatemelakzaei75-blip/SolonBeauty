@@ -34,6 +34,9 @@ builder.Services.AddScoped<ReportApiService>();
 builder.Services.AddScoped<DiscountApiService>();
 builder.Services.AddScoped<SalonSettingApiService>();
 
+// مراحل واقعی بارگذاری برای صفحه آغاز (فاز دوم نوار پیشرفت)
+builder.Services.AddScoped<BootService>();
+
 // ---------- منبع داده و کش پنل‌ها ----------
 builder.Services.AddSingleton<MockDb>();
 builder.Services.AddScoped<IDataStore, ApiDataStore>();

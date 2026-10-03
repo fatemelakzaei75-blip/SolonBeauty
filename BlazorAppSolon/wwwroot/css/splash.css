@@ -1,0 +1,522 @@
+/* ==========================================================================
+   SolonBeauty — صفحه آغاز (Splash) با نماد بینهایت
+   --------------------------------------------------------------------------
+   این فایل کنار app.css بارگذاری میشود و کاملاً خودبسنده است: همه توکنهای
+   رنگ داخل خودش تعریف شدهاند (روی .s-splash، نه :root). دلیل انتخاب دامنه
+   بهجای :root: این فایل در همه صفحات سایت بارگذاری میشود و نباید هیچ
+   متغیر سراسری یا قاعدهای را به بیرون درز بدهد. هرچه اینجاست، فقط داخل
+   خود صفحه آغاز اثر دارد.
+
+   نکته معماری: مارکآپ این صفحه مستقیماً در index.html مینشیند (نه بهعنوان
+   کامپوننت رِیزور) و بهصورت خواهرِ عنصر #app قرار میگیرد، نه فرزندش.
+   دلیل: Blazor با اولین رندر، محتوای #app را دور میریزد؛ پس هر چیزی که
+   داخلش باشد ناپدید میشود و کاربر پرش میبیند. با قرار گرفتن بیرون، این
+   صفحه از لحظه اول تا پایان کار پیوسته روی صفحه میماند.
+
+   انیمیشنها فقط روی transform، opacity و ویژگیهای stroke اجرا میشوند:
+   هیچ ویژگی چیدمانی (width/height/top/left) انیمیت نمیشود، پس هیچ جابهجایی
+   چیدمانی (Layout Shift) رخ نمیدهد.
+   ========================================================================== */
+
+/* ==========================================================================
+   ۱) پوسته صفحه آغاز
+   ========================================================================== */
+.s-splash {
+    /* ---------- رنگهای برند ---------- */
+    --sp-bg: #14110F;
+    --sp-glow: #2A221B;
+    --sp-gold: #C6A46A;
+    --sp-gold-dark: #A8854B;
+    --sp-gold-light: #F1DDAE;
+    --sp-text: #EDE6DA;
+    --sp-text-dim: #A89F93;
+
+    /* سر نور: گرم و نزدیک به سفید. اگر همان طلایی روشن میبود، نقطه از خط
+       پیشرفت جدا دیده نمیشد و حس «نور» از بین میرفت. */
+    --sp-head: #FFF6E2;
+
+    /* ---------- نماد ---------- */
+    --sp-track: rgba(198, 164, 106, 0.18);   /* مسیر خالی: کمرنگ و نیمهشفاف */
+    --sp-track-w: 2.4;
+    --sp-line-w: 3.8;
+
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    overflow: hidden;                        /* هیچ سرریز یا اسکرولی در صفحه آغاز نیست */
+    display: grid;
+    place-items: center;
+
+    /* پس‌زمینه گرم و تاریک: مرکز #2A221B و لبه‌ها #14110F.
+       گرادیان شعاعی و بیضی‌شکل است تا مرکز روشن زیر نماد بنشیند و چشم
+       ناخودآگاه به همان‌جا کشیده شود. */
+    background: radial-gradient(125% 95% at 50% 42%, var(--sp-glow) 0%, var(--sp-bg) 68%);
+    color: var(--sp-text);
+    font-family: Vazirmatn, Tahoma, system-ui, -apple-system, sans-serif;
+
+    /* هدف لمس/رندر روی دستگاههای ناچدار.
+       max یعنی هرکدام بزرگتر بود، همان برنده است: در گوشی معمولی ۱۶ پیکسل
+       و در آیفون ناچدار مقدار درست safe-area. */
+    padding-block: max(16px, env(safe-area-inset-top))
+                   max(16px, env(safe-area-inset-bottom));
+    padding-inline: max(16px, env(safe-area-inset-right))
+                    max(16px, env(safe-area-inset-left));
+
+    /* اگر مرورگر از dvh پشتیبانی نکند، inset:0 همین کار را میکند */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   ۲) ظرف تعریفهای SVG — یک بار برای کل سند
+   --------------------------------------------------------------------------
+   مسیر هندسی نماد تنها همین یک جا تعریف میشود و هر سه لایه (Track، Glow،
+   Fill) با <use> به آن ارجاع میدهند. اگر مسیر را در سه جا تکرار میکردیم،
+   هر اصلاح هندسی باید سه بار انجام میشد و دیر یا زود از هم میافتادند.
+   width/height صفر است چون این عنصر فقط ظرف تعریف است و چیزی رسم نمیکند.
+   ========================================================================== */
+.s-splash__defs {
+    position: absolute;
+    inline-size: 0;
+    block-size: 0;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   ۳) صحنه: ستون عمودی وسطچین
+   ========================================================================== */
+.s-splash__stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(14px, 3.5vh, 26px);
+    text-align: center;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+}
+
+/* ==========================================================================
+   ۴) نماد بینهایت
+   --------------------------------------------------------------------------
+   اندازه: ۹۰٪ عرض صفحه، با سقف ۴۶۰ پیکسل.
+   چرا سقف: روی مانیتور عریض، بیسقف گذاشتن نماد آن را به یک شکل غولآسا و
+   کشیده تبدیل میکند و حس «اپلیکیشن» از بین میرود. با سقف، در تبلت و دسکتاپ
+   نماد وسطچین و در اندازه درست خودش میماند.
+   ارتفاع خودکار از نسبت viewBox میآید (۳۲۰×۱۸۰)، پس هرگز کشیده نمیشود.
+   ========================================================================== */
+.s-inf {
+    display: block;
+    inline-size: min(90vw, 460px);
+    block-size: auto;
+}
+
+/* هر سه لایه روی یک هندسه سوارند، پس فقط رنگ و ضخامتشان فرق میکند */
+.s-inf__track,
+.s-inf__glow,
+.s-inf__fill {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---------- مسیر خالی ----------
+   از همان ابتدا کل شکل ∞ دیده میشود تا کاربر بداند چه چیزی در انتظار اوست.
+   کمرنگ و نیمهشفاف است تا با خط پیشرفت اشتباه گرفته نشود. */
+.s-inf__track {
+    stroke: var(--sp-track);
+    stroke-width: var(--sp-track-w);
+}
+
+/* ---------- لایه تار پشت خط ----------
+   حس نور میدهد. فیلتر SVG (نه filter: blur سیشیاس) چون stdDeviation در
+   مختصات کاربر اثر میکند و با بزرگ و کوچک شدن نماد، هاله هم به همان نسبت
+   بزرگ میشود؛ با blur سیشیاس باید در هر بریکپوینت عدد را دستی عوض میکردیم.
+   dasharray و dashoffset عیناً مثل لایه اصلی است تا هاله دقیقاً زیر خط بماند. */
+.s-inf__glow {
+    stroke: var(--sp-gold);
+    stroke-width: var(--sp-line-w);
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--inf-p, 0));
+    filter: url(#solon-inf-soft);
+    opacity: 0.55;
+}
+
+/* ---------- خط پیشرفت ----------
+   تکنیک: pathLength="1" روی مسیر تعریف شده، پس dasharray و dashoffset در
+   بازه ۰ تا ۱ کار میکنند و هیچ عدد جادویی (طول واقعی مسیر) در CSS نمیآید.
+   این یعنی اگر هندسه مسیر روزی عوض شود، این قواعد دستنخورده درست میمانند.
+   مقدار --inf-p از سمت جاوااسکریپت روی خود عنصر <svg> ست میشود. */
+.s-inf__fill {
+    stroke: url(#solon-inf-grad);
+    stroke-width: var(--sp-line-w);
+    stroke-dasharray: 1;
+    stroke-dashoffset: calc(1 - var(--inf-p, 0));
+}
+
+/* ---------- ایستگاههای گرادیان ----------
+   رنگها اینجا و از توکن میآیند، نه بهصورت کدرنگ خام روی خود عنصر stop در
+   مارکآپ. دلیل: بریف میگوید هیچ کدرنگ پراکندهای نباشد. اگر روزی طلایی
+   برند عوض شود، فقط :root همین فایل تغییر میکند و گرادیان خودبهخود دنبالش
+   میآید. stop-color از طریق CSS در همه مرورگرهای مدرن قابل تنظیم است.
+   این عناصر داخل .s-splash هستند، پس توکنها را به ارث میبرند. */
+.s-inf__stop-a { stop-color: var(--sp-gold-dark); }
+.s-inf__stop-b { stop-color: var(--sp-gold-light); }
+.s-inf__stop-c { stop-color: var(--sp-gold); }
+
+/* ==========================================================================
+   ۵) سر نور
+   --------------------------------------------------------------------------
+   موقعیت این گروه با getPointAtLength محاسبه و با transform جابهجا میشود.
+   transform انتخاب شده چون روی مسیر انیمیشن، مرورگر فقط لایه را جابهجا
+   میکند و هیچ چیدمانی دوباره حساب نمیشود.
+   مختصات اولیه در مارکآپ روی مرکز تقاطع ست شده تا پیش از اجرای
+   جاوااسکریپت، نقطه در گوشه ۰٬۰ (بیرون نماد) دیده نشود.
+   ========================================================================== */
+.s-inf__head {
+    transition: opacity 300ms ease-out;
+}
+
+.s-inf__head-halo {
+    fill: var(--sp-gold);
+    opacity: 0.34;
+    filter: url(#solon-inf-soft);
+}
+
+.s-inf__head-core {
+    fill: var(--sp-head);                   /* گرم و نزدیک به سفید تا «سر نور» خوانده شود */
+}
+
+/* ==========================================================================
+   ۶) احترام به prefers-reduced-motion
+   --------------------------------------------------------------------------
+   نرمسازی حرکت در جاوااسکریپت خاموش میشود (نه اینجا) تا پیشرفت واقعی
+   همچنان نمایش داده شود. اینجا فقط گذارهای تزئینی حذف میشوند.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .s-inf__head {
+        transition: none;
+    }
+}
+
+/* ==========================================================================
+   ۷) هاله نفس‌کش پشت نماد و ذرات
+   --------------------------------------------------------------------------
+   هر دو عنصر تزئینی‌اند: pointer-events خاموش و aria-hidden در مارک‌آپ، تا
+   نه کلیک کاربر را بگیرند و نه به صفحه‌خوان‌ها اعلام شوند.
+   ========================================================================== */
+
+/* هاله طلاییِ بسیار نرم پشت نماد. با همان ریتم ذرات نفس می‌کشد تا کل صفحه
+   یک حرکت واحد حس شود، نه چند انیمیشن جدا. */
+.s-splash__glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(46% 38% at 50% 44%, var(--sp-glow-gold), transparent 70%);
+    animation: s-glow-breathe 9s ease-in-out infinite;
+}
+
+@keyframes s-glow-breathe {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%      { opacity: 1;    transform: scale(1.08); }
+}
+
+/* ---------- ذرات ----------
+   بریف می‌گوید «ذرات بسیار ریز و کم‌رنگ، فقط با CSS، بدون جاوااسکریپت سنگین».
+   راه‌حل: هر لایه یک عنصر است که چند گرادیان شعاعی به‌عنوان پس‌زمینه دارد.
+   یعنی ۲۴ ذره با سه گره DOM رسم می‌شود — نه ۲۴ عنصر جدا. حرکت هر لایه هم
+   یک transform روی همان یک عنصر است، پس بار رندر ناچیز می‌ماند.
+   inset منفی است تا ذرات تا بیرون کادر هم پخش شوند و لبه‌ها خالی نمانند. */
+.s-splash__particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.s-splash__particles i {
+    position: absolute;
+    inset: -12%;
+    display: block;
+    background-repeat: no-repeat;
+    animation: s-breathe var(--dur, 12s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+}
+
+@keyframes s-breathe {
+    0%, 100% { opacity: 0.35; transform: translate3d(0, 0, 0) scale(1); }
+    50%      { opacity: 0.9;  transform: translate3d(0, -6px, 0) scale(1.05); }
+}
+
+/* لایه یک: ذرات ریز و نزدیک */
+.s-splash__particles i:nth-child(1) {
+    --dur: 11s;
+    --delay: 0s;
+    background-image:
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%),
+        radial-gradient(circle, var(--sp-dot) 0 38%, transparent 62%);
+    background-size: 3px 3px, 2px 2px, 3px 3px, 2px 2px, 3px 3px, 2px 2px, 3px 3px, 2px 2px;
+    background-position: 8% 18%, 22% 74%, 37% 31%, 55% 11%,
+                         68% 83%, 84% 42%, 93% 66%, 14% 47%;
+}
+
+/* لایه دو: ذرات متوسط و کمی درشت‌تر، با ریتم کندتر */
+.s-splash__particles i:nth-child(2) {
+    --dur: 14s;
+    --delay: -3s;
+    opacity: 0.75;
+    background-image:
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%),
+        radial-gradient(circle, var(--sp-dot) 0 42%, transparent 64%);
+    background-size: 4px 4px, 3px 3px, 4px 4px, 3px 3px, 4px 4px, 3px 3px;
+    background-position: 5% 62%, 31% 12%, 46% 88%, 62% 28%, 78% 58%, 96% 22%;
+}
+
+/* لایه سه: ذرات دور و کم‌رنگ — عمق می‌دهد بدون اینکه شلوغ شود */
+.s-splash__particles i:nth-child(3) {
+    --dur: 17s;
+    --delay: -7s;
+    opacity: 0.5;
+    background-image:
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%),
+        radial-gradient(circle, var(--sp-dot) 0 46%, transparent 68%);
+    background-size: 5px 5px, 6px 6px, 5px 5px, 6px 6px, 5px 5px;
+    background-position: 12% 86%, 27% 52%, 51% 6%, 72% 71%, 88% 34%;
+}
+
+/* ==========================================================================
+   ۸) برند، متن بارگذاری و درصد
+   ========================================================================== */
+.s-splash__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+/* نام لاتین با فاصله‌ی حروف باز.
+   چرا فاصله‌ی باز روی نام لاتین و نه نام فارسی: خط فارسی پیوسته است و
+   letter-spacing بین حروفِ یک کلمه فاصله می‌اندازد و اتصال حروف را می‌شکند.
+   پس اثر بصری موردنظر بریف روی نام لاتین اجرا می‌شود و نام فارسی با
+   فاصله‌ی بسیار کم و امن می‌آید. */
+/* شبکه ایمنی برای داده واقعی: نام سالن از دیتابیس می‌آید و تا ۱۰۰ نویسه
+   می‌تواند باشد. اگر بلندتر از عرض صفحه باشد، این دو خط در مرز کادر
+   می‌شکنند و هرگز سرریز افقی نمی‌سازند. break-word فقط وقتی لازم شد
+   می‌شکند، پس کلمه‌های معمولی سالم می‌مانند. */
+.s-splash__brand-name,
+.s-splash__brand-latin {
+    max-inline-size: 100%;
+    overflow-wrap: break-word;
+}
+
+.s-splash__brand-latin {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-size: clamp(0.78rem, 3.1vw, 0.95rem);
+    font-weight: 700;
+    letter-spacing: 0.34em;
+    /* letter-spacing در پایان خط یک فاصله اضافه می‌گذارد که متن را نسبت به
+       مرکز نامتقارن می‌کند؛ این padding آن را جبران می‌کند. */
+    padding-inline-start: 0.34em;
+    text-transform: uppercase;
+    color: var(--sp-gold);
+}
+
+.s-splash__brand-name {
+    font-size: clamp(0.95rem, 3.8vw, 1.15rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--sp-text);
+}
+
+.s-splash__brand-logo {
+    max-inline-size: min(46vw, 168px);
+    max-block-size: 62px;
+    block-size: auto;
+    object-fit: contain;
+}
+
+/* ---------- ردیف وضعیت ---------- */
+.s-splash__status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+}
+
+.s-splash__loading {
+    margin: 0;
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+    font-weight: 500;
+    /* کم‌رنگ‌تر از نام برند: سلسله‌مراتب «نام سالن مهم‌تر از ردیف وضعیت
+       است». کنتراست #A89F93 روی مرکز گرادیان ۶:۱ است، پس همچنان بالای ۴٫۵. */
+    color: var(--sp-text-dim);
+}
+
+/* سه نقطه‌ی متحرک. هر نقطه با تأخیر ۰٫۱۸ ثانیه‌ای پشت سر هم بالا می‌آید،
+   پس چشم یک حرکت پیوسته می‌بیند نه سه پرش جدا. */
+.s-splash__dots {
+    display: inline-flex;
+    gap: 4px;
+    margin-inline-start: 7px;
+    vertical-align: middle;
+}
+
+.s-splash__dots b {
+    inline-size: 4px;
+    block-size: 4px;
+    border-radius: 50%;
+    background: var(--sp-gold);
+    animation: s-dot 1.2s ease-in-out infinite;
+}
+
+.s-splash__dots b:nth-child(2) { animation-delay: 0.18s; }
+.s-splash__dots b:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes s-dot {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30%           { opacity: 1;   transform: translateY(-4px); }
+}
+
+/* ---------- درصد ----------
+   رقم‌ها از سمت جاوااسکریپت به رقم فارسی تبدیل و اینجا نوشته می‌شوند.
+   tabular-nums مهم است: بدون آن، عرض رقم‌ها موقع شمردن تغییر می‌کند و
+   عدد می‌لرزد. font-variant-numeric با ارقام فارسی هم کار می‌کند. */
+.s-splash__pct {
+    margin: 0;
+    font-size: clamp(1.05rem, 4.4vw, 1.35rem);
+    font-weight: 800;
+    color: var(--sp-gold);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    min-block-size: 1.6em;                   /* جای عدد از قبل رزرو است تا چیدمان نلرزد */
+}
+
+/* متن فقط برای صفحه‌خوان.
+   چرا لازم است: عدد روی صفحه در هر تغییر یک درصد بازنویسی می‌شود؛ اگر خودش
+   داخل ناحیه زنده باشد، صفحه‌خوان تا ۱۰۰ اعلام پشت سر هم می‌کند. پس عدد
+   دیده‌شدنی از درخت دسترس‌پذیری کنار گذاشته شده و این عنصر پنهان — که در
+   همان ناحیه زنده است — فقط سر هر ۱۰ درصد یک اعلام تازه می‌دهد. */
+.s-splash__sr {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ==========================================================================
+   ۹) حالت خطا
+   --------------------------------------------------------------------------
+   نماد همان‌جا که هست خشک می‌شود (جاوااسکریپت حلقه را متوقف می‌کند)، متن
+   بارگذاری و درصد کنار می‌روند و پیام ساده فارسی با دکمه تلاش دوباره می‌آید.
+   ========================================================================== */
+.s-splash__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+}
+
+.s-splash__error[hidden] { display: none; }
+
+.s-splash__error-msg {
+    margin: 0;
+    /* اندازه سطر خوانا برای پیام وسط‌چین: نه یک خط بسیار بلند روی دسکتاپ،
+       نه شکستن زودهنگام روی گوشی. */
+    max-inline-size: min(100%, 38ch);
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+    line-height: 1.9;
+    color: var(--sp-danger);
+}
+
+/* دکمه تلاش دوباره: حداقل ۴۴ پیکسل ارتفاع برای هدف لمس (معیار بریف) */
+.s-splash__retry {
+    min-block-size: 44px;
+    min-inline-size: 132px;
+    padding: 0 22px;
+    border-radius: 999px;
+    border: 1px solid var(--sp-gold-dark);
+    background: transparent;
+    color: var(--sp-gold-light);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.s-splash__retry:hover { background: var(--sp-gold-tint); }
+.s-splash__retry:active { transform: scale(0.97); }
+
+.s-splash__retry:focus-visible {
+    outline: 2px solid var(--sp-gold-light);
+    outline-offset: 3px;
+}
+
+/* وقتی خطا رخ داده، ردیف وضعیت جایش را به پیام خطا می‌دهد */
+.s-splash.is-failed .s-splash__status { display: none; }
+
+/* ==========================================================================
+   ۱۰) پایان کار
+   --------------------------------------------------------------------------
+   محو شدن نرم به صفحه بعدی. فقط opacity انیمیت می‌شود (بدون جابه‌جایی
+   چیدمانی) و پس از پایان گذار، visibility از دسترس خارج می‌شود تا این لایه
+   دیگر هیچ کلیکی را نگیرد.
+   ========================================================================== */
+.s-splash.is-done {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 460ms ease, visibility 0s linear 460ms;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   ۱۱) صفحه‌های کوتاه — گوشی در حالت افقی
+   --------------------------------------------------------------------------
+   در حالت افقی، ارتفاع کم است و نماد ۹۰vw بیش از حد بزرگ می‌شود و متن‌ها
+   از کادر بیرون می‌زنند. اینجا هر دو کوچک می‌شوند تا همه‌چیز جا شود.
+   پوسته overflow:hidden است، پس حتی در بدترین حالت اسکرول یا سرریز افقی
+   رخ نمی‌دهد؛ این قاعده فقط از بریدگی جلوگیری می‌کند.
+   ========================================================================== */
+@media (max-height: 520px) {
+    .s-inf { inline-size: min(46vw, 320px); }
+    .s-splash__stage { gap: 10px; }
+    .s-splash__pct { font-size: 1rem; min-block-size: 1.3em; }
+}
+
+/* ==========================================================================
+   ۱۲) احترام به prefers-reduced-motion
+   --------------------------------------------------------------------------
+   همه انیمیشن‌های تزئینی خاموش می‌شوند: ذرات، هاله، نقطه‌های متحرک.
+   پیشرفت واقعی بارگذاری همچنان نمایش داده می‌شود — نرم‌سازی حرکت در
+   جاوااسکریپت خاموش می‌شود (نه اینجا) و نوار مقدار واقعی را نشان می‌دهد.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .s-inf__head { transition: none; }
+    .s-splash__glow,
+    .s-splash__particles i,
+    .s-splash__dots b { animation: none; }
+    .s-splash__particles i:nth-child(1) { opacity: 0.5; }
+    .s-splash__particles i:nth-child(2) { opacity: 0.4; }
+    .s-splash__particles i:nth-child(3) { opacity: 0.3; }
+    .s-splash__dots b { opacity: 0.6; }
+    .s-splash__retry { transition: none; }
+}
