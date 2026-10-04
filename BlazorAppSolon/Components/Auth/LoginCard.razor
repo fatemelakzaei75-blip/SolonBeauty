@@ -189,19 +189,15 @@
             @* پیش‌فرض: نسخه‌های بهینه‌شده + ابعاد ثابت (بدون جابه‌جایی چیدمان).
                ترتیب منبع‌ها مهم است: مرورگر اولی را که پشتیبانی کند برمی‌دارد. *@
             <picture>
-                <source srcset="img/login-illustration.avif" type="image/avif" />
-                <source srcset="img/login-illustration.webp" type="image/webp" />
+               @*  <source srcset="img/login-illustration.avif" type="image/avif" />
+                <source srcset="img/login-illustration.webp" type="image/webp" /> *@
                 <img class="lg-photo" src="img/login-illustration.jpg" alt="" aria-hidden="true"
                      width="736" height="983" decoding="async" fetchpriority="high" />
             </picture>
         }
     </div>
 
-    @* ---------- موج‌ها ----------
-       هر دو در DOM می‌مانند؛ CSS بر اساس اندازهٔ صفحه یکی را نشان می‌دهد.
-       کلاس lg-card__wave جای‌گذاری را می‌دهد و Orientation جهتِ موج. *@
-    <WaveDivider Orientation="vertical" Class="lg-card__wave lg-card__wave--desktop" />
-    <WaveDivider Orientation="horizontal" Class="lg-card__wave lg-card__wave--mobile" />
+ 
 
 </div>
 

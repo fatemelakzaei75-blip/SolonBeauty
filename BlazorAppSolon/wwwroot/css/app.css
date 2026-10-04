@@ -2248,9 +2248,11 @@ html, body {
 * {
     box-sizing: border-box;
 }
+
 img, svg, video {
     max-width: 100%;
     height: auto;
+ 
 }
 
 /* ۱. برند متنی در نوار ناوبری بالا */
@@ -2982,4 +2984,417 @@ input[type="number"]::-webkit-inner-spin-button {
         border-bottom: none;
         padding: 14px 0;
     }
+}
+
+
+
+
+:root {
+    --login-gold: #c8a45d;
+    --login-gold-light: #e4c989;
+    --login-dark: #171513;
+    --login-text: #292622;
+    --login-muted: #817b72;
+    --login-border: rgba(200, 164, 93, 0.20);
+    --login-bg: #f7f4ef;
+}
+
+
+.lg {
+   /* min-height: 100dvh;
+    width: 100%;*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    background: radial-gradient( circle at 15% 20%, rgba(200, 164, 93, 0.10), transparent 32% ), radial-gradient( circle at 85% 80%, rgba(200, 164, 93, 0.08), transparent 30% ), #f7f4ef;
+    box-sizing: border-box;
+}
+
+.lg-shell {
+    width: min(100%, 980px);
+    margin: 0 auto;
+}
+
+
+.lg-card {
+    width: 100%;
+    max-width: 980px;
+    min-height: 590px;
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(0, 0, 0, 0.055);
+    border-radius: 28px;
+    box-shadow: 0 30px 80px rgba(39, 32, 22, 0.12), 0 8px 25px rgba(39, 32, 22, 0.05);
+    position: relative;
+}
+
+
+.lg-card__form {
+    padding: 56px 54px 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.98);
+    position: relative;
+    z-index: 2;
+}
+
+
+.lg-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 38px;
+}
+
+.lg-brand__mark {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--login-gold);
+    border: 1px solid rgba(200, 164, 93, 0.28);
+    border-radius: 13px;
+    background: linear-gradient( 145deg, rgba(200, 164, 93, 0.13), rgba(200, 164, 93, 0.035) );
+}
+
+.lg-brand__glyph {
+    width: 24px;
+    height: 24px;
+}
+
+.lg-brand__name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #4b463f;
+    letter-spacing: -0.2px;
+}
+
+
+.lg-title {
+    margin: 0 0 30px;
+    font-size: clamp(27px, 3vw, 35px);
+    line-height: 1.25;
+    font-weight: 800;
+    color: var(--login-text);
+    letter-spacing: -0.8px;
+}
+
+
+.lg-form__fields {
+    width: 100%;
+}
+
+.lg-field {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.lg-field__label {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #514b43;
+}
+
+.lg-field__req {
+    color: var(--login-gold);
+    margin-right: 4px;
+}
+
+
+.lg-field__box {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e7e1d8;
+    border-radius: 15px;
+    background: #fbfaf8;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+    .lg-field__box:focus-within {
+        background: #fff;
+        border-color: rgba(200, 164, 93, 0.75);
+        box-shadow: 0 0 0 4px rgba(200, 164, 93, 0.10);
+    }
+
+.lg-field__icon {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    margin-right: 16px;
+    color: #a99570;
+}
+
+.lg-field__input {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    padding: 0 16px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    color: #27231f;
+}
+
+    .lg-field__input::placeholder {
+        color: #aaa39a;
+        font-weight: 400;
+    }
+
+
+.lg-btn {
+    min-height: 54px;
+    border-radius: 15px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+    .lg-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .lg-btn:active {
+        transform: translateY(0);
+    }
+
+
+.lg-btn--primary {
+    border: 1px solid transparent;
+    color: #fff;
+    background: linear-gradient( 135deg, #b38b42, #d7b66c );
+    box-shadow: 0 10px 24px rgba(181, 139, 66, 0.22);
+}
+
+    .lg-btn--primary:hover {
+        box-shadow: 0 14px 30px rgba(181, 139, 66, 0.30);
+    }
+
+/* OTP */
+
+.lg-btn--ghost {
+    border: 1px solid rgba(200, 164, 93, 0.32);
+    color: #6f5930;
+    background: #fffdf9;
+}
+
+    .lg-btn--ghost:hover {
+        border-color: rgba(200, 164, 93, 0.60);
+        background: #faf6ed;
+    }
+
+
+.lg-divider {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin: 20px 0;
+    color: #aaa39a;
+    font-size: 12px;
+}
+
+    .lg-divider::before,
+    .lg-divider::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: #ebe6de;
+    }
+
+
+.lg-form__links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.lg-link {
+    padding: 5px;
+    border: 0;
+    background: transparent;
+    color: #8a6d37;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+    .lg-link:hover {
+        color: #5f471e;
+    }
+
+
+.lg-card__media {
+    position: relative;
+    min-height: 590px;
+    overflow: hidden;
+    background: #1d1915;
+}
+
+.lg-photo {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.01);
+}
+
+
+.lg-card__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( 180deg, rgba(20, 17, 13, 0.05), rgba(20, 17, 13, 0.35) );
+    pointer-events: none;
+}
+
+.lg-shell__foot {
+    margin: 18px 0 0;
+    text-align: center;
+    color: #918a80;
+    font-size: 11px;
+}
+
+.lg-dev {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    opacity: 0.55;
+}
+
+.lg-dev__label {
+    width: 100%;
+    text-align: center;
+    font-size: 9px;
+    color: #aaa39a;
+}
+
+.lg-dev__chip {
+    padding: 5px 9px;
+    border: 1px solid #ddd6cb;
+    border-radius: 8px;
+    background: #fff;
+    color: #827b72;
+    font-family: inherit;
+    font-size: 9px;
+}
+
+@media (max-width: 850px) {
+
+    .lg {
+        padding: 24px 16px;
+    }
+
+    .lg-card {
+        grid-template-columns: 1fr;
+        max-width: 560px;
+        min-height: auto;
+    }
+
+    .lg-card__media {
+        display: none;
+    }
+
+    .lg-card__form {
+        padding: 46px 42px 40px;
+    }
+
+    .lg-brand {
+        margin-bottom: 32px;
+    }
+}
+
+@media (max-width: 560px) {
+
+    .lg {
+        min-height: 100dvh;
+        padding: 14px;
+        align-items: center;
+    }
+
+    .lg-card {
+        border-radius: 22px;
+        box-shadow: 0 20px 50px rgba(39, 32, 22, 0.10);
+    }
+
+    .lg-card__form {
+        padding: 34px 24px 28px;
+    }
+
+    .lg-brand {
+        margin-bottom: 28px;
+    }
+
+    .lg-brand__mark {
+        width: 38px;
+        height: 38px;
+    }
+
+    .lg-brand__name {
+        font-size: 13px;
+    }
+
+    .lg-title {
+        margin-bottom: 25px;
+        font-size: 27px;
+    }
+
+    .lg-field {
+        margin-bottom: 17px;
+    }
+
+    .lg-field__box {
+        height: 54px;
+    }
+
+    .lg-btn {
+        min-height: 53px;
+    }
+
+    .lg-form__links {
+        margin-top: 17px;
+    }
+}
+
+@media (max-width: 380px) {
+
+    .lg {
+        padding: 10px;
+    }
+
+    .lg-card__form {
+        padding: 28px 18px 24px;
+    }
+
+    .lg-title {
+        font-size: 25px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .lg-btn,
+    .lg-field__box,
+    .lg-link {
+        transition: none;
+    }
+
+        .lg-btn:hover {
+            transform: none;
+        }
 }
