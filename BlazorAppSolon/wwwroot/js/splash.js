@@ -340,11 +340,14 @@
         var num = parseFloat(String(raw).replace('%', '').trim());
         if (!isFinite(num)) return;
 
+        // فقط نشانه زنده بودن — نه محرک نوار! دلیل: مخرج کسر این متغیر
+        // (تعداد کل منابع) در حین کار بزرگ‌تر می‌شود و مقدار می‌تواند زودتر
+        // از موعد به ۱۰۰٪ برسد و بعد عقب بیاید (اشکال شناخته‌شده aspnetcore).
+        // اگر این مقدار نوار را جلو می‌برد، قیف یک‌نوا همان جهش زودهنگام را
+        // برای همیشه قفل می‌کرد (همان گیر کردن روی ۳۷٪). محرک واقعی نوار
+        // حالا setBootUnits از boot-loader.js است: پیشرفت بایت‌به‌بایت واقعی.
         lastRealUpdate = now();
-        kickWatchdog();                    // گزارش تازه = شبکه زنده است
-
-        var inst = primary();
-        if (inst) setTarget(inst, (num / 100) * cap);
+        kickWatchdog();
     }
 
     /**
@@ -429,13 +432,47 @@
      * تمدید نگهبان با هر نشانه‌ای از زنده بودن. اگر نگهبان اصلاً فعال نباشد
      * (مثلاً در صفحه‌های پیش‌نمایش) بی‌اثر می‌ماند. اگر فعال باشد، زمان‌سنج
      * از نو شروع می‌شود: یعنی «شصت ثانیه بی‌خبری مطلق» ملاک است، نه شصت ثانیه
-     * از لحظه ورود.
+     * از لحظه ورود. با ms می‌توان مهلت بلندتری داد (مثلاً فاز خاموش کامپایل).
      */
-    function kickWatchdog() {
+    function kickWatchdog(ms) {
         if (!watchdogTimer) return;
         clearTimeout(watchdogTimer);
         watchdogTimer = null;
-        armWatchdog(WATCHDOG_MS);
+        armWatchdog(ms || WATCHDOG_MS);
+    }
+
+    /**
+     * نشانه زنده بودن از بیرون (boot-loader.js): هر بایت دانلودشده.
+     */
+    function touch() {
+        kickWatchdog();
+    }
+
+    /**
+     * مهلت ویژه برای فازی که هیچ رویدادی ندارد (کامپایل WASM و راه‌اندازی
+     * runtime). فقط نگهبان فعال را تمدید می‌کند؛ اگر کار تمام شده باشد
+     * (finish/fail) بی‌اثر است.
+     */
+    function grant(ms) {
+        kickWatchdog(ms);
+    }
+
+    /**
+     * پیشرفت واقعی دانلود از boot-loader.js: done/total از کسرهای بایتی.
+     * از همان قیف یک‌نوا می‌گذرد و هر بار نگهبان را تمدید می‌کند.
+     */
+    function setBootUnits(done, total) {
+        if (!instances.length && !init()) return;
+        if (!(total > 0)) return;
+
+        kickWatchdog();
+
+        var inst = primary();
+        if (!inst) return;
+
+        var frac = done / total;
+        if (frac > 1) frac = 1;
+        setTarget(inst, frac * BOOT_CAP);
     }
 
     /* ---------- کمکی‌های بارگذاری واقعی ---------- */
@@ -649,6 +686,9 @@
         init: init,
         setProgress: setProgress,
         getProgress: getProgress,
+        setBootUnits: setBootUnits,
+        touch: touch,
+        grant: grant,
         setBrand: setBrand,
         watchBlazorLoad: watchBlazorLoad,
         stopWatching: stopWatching,

@@ -150,7 +150,12 @@
          نوار پیشرفت، همان متغیری است که آن اسکریپت هنگام دانلود فایل‌ها
          می‌نویسد و باید از قبل رصد شده باشد. -->
     <script src="js/splash.js"></script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <!-- لودر زیرنظر: دانلودهای Blazor را بایت‌به‌بایت به نوار پیشرفت گزارش
+         می‌کند، دانلودهای مرده را با پیام روشن متوقف می‌کند و نگهبان را با
+         هر بایت تمدید می‌کند. autostart عمداً خاموش است تا این لودر بتواند
+         از طریق Blazor.start({ loadBootResource }) وصل شود. -->
+    <script src="js/boot-loader.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 
