@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,13 +6,25 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!--
+    نکته مهم: بسته‌های EF Core در این پروژه با PrivateAssets="all" معرفی می‌شوند.
+    دلیل: کلاینت BlazorWebAssembly به این پروژه (برای موجودیت‌ها) وابسته است و
+    بدون این قفل، کل پشته EF Core + SqlClient + Azure.Identity به مرورگر هم
+    جاری می‌شد و چند مگابایت بی‌جهت به بارگذاری اولیه اضافه می‌کرد. سرور
+    (WebApiSolon) بسته‌های EF را مستقیم و بدون این قفل دارد؛ پس انتشار سرور
+    دست‌نخورده می‌ماند. تغییر ندهید مگر با دانستن همین نکته.
+  -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

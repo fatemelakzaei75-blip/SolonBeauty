@@ -12,6 +12,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <!--
+      EF Core فقط برای کامپایل BaseRepository و سرویس‌های ریپازیتوری لازم است.
+      PrivateAssets="all" یعنی این بسته به مصرف‌کننده‌ها — به‌ویژه کلاینت
+      BlazorWebAssembly — جاری نمی‌شود. کلاینت فقط از SeoService و
+      PersianDateHelper و موجودیت‌ها استفاده می‌کند و هرگز به EF نیاز ندارد.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
